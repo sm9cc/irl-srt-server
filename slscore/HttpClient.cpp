@@ -562,14 +562,14 @@ std:
 				this, m_http_method);
 		return SLS_ERROR;
 	}
-	sprintf(data, "%s %s HTTP/1.1\r\n", m_http_method, m_uri);
+	snprintf(data, sizeof(data), "%s %s HTTP/1.1\r\n", m_http_method, m_uri);
 	http_header = std::string(data);
 
 	http_header += std::string(HTTP_REQUEST_HEADER_ACCEPT);
 	http_header += std::string(HTTP_REQUEST_HEADER_USER_AGENT);
 	http_header += std::string(HTTP_REQUEST_HEADER_CONTENT_TYPE);
 
-	sprintf(data, "Host: %s\r\n", m_remote_host);
+	snprintf(data, sizeof(data), "Host: %s\r\n", m_remote_host);
 	http_header += std::string(data);
 
 	if (data_len > 0)
