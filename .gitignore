@@ -1,3 +1,2 @@
-logs
-obj
-bin
+logs/
+build/
