@@ -210,8 +210,7 @@ sls_conf_base_t *sls_conf_create_block_by_name(string n, sls_runtime_conf_t *&p_
     }
     return p;
 }
-//#define new_conf(n, i)\
-//        sls_conf_##n conf_##n##_##i##_info = new sls_conf_##n ;
+
 int sls_conf_parse_block(ifstream &ifs, int &line, sls_conf_base_t *b, bool &child, sls_runtime_conf_t *p_runtime, int brackets_layers)
 {
     int ret = SLS_ERROR;

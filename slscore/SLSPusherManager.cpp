@@ -58,7 +58,7 @@ int CSLSPusherManager::connect_all()
 	{
 		char szURL[1024] = {0};
 		const char *szTmp = m_sri->m_upstreams[i].c_str();
-		sprintf(szURL, "srt://%s/%s", szTmp, m_stream_name);
+		snprintf(szURL, sizeof(szURL), "srt://%s/%s", szTmp, m_stream_name);
 		ret = connect(szURL);
 		if (SLS_OK != ret)
 		{
@@ -82,7 +82,7 @@ int CSLSPusherManager::start()
 
 	//check publisher
 	char key_stream_name[URL_MAX_LEN] = {0};
-	sprintf(key_stream_name, "%s/%s", m_app_uplive, m_stream_name);
+	snprintf(key_stream_name, sizeof(key_stream_name), "%s/%s", m_app_uplive, m_stream_name);
 	if (NULL != m_map_publisher)
 	{
 		CSLSRole *publisher = m_map_publisher->get_publisher(key_stream_name);
@@ -119,7 +119,7 @@ CSLSRelay *CSLSPusherManager::create_relay()
 int CSLSPusherManager::set_relay_param(CSLSRelay *relay)
 {
 	char key_stream_name[1024] = {0};
-	sprintf(key_stream_name, "%s/%s", m_app_uplive, m_stream_name);
+	snprintf(key_stream_name, sizeof(key_stream_name), "%s/%s", m_app_uplive, m_stream_name);
 	relay->set_map_data(key_stream_name, m_map_data);
 	relay->set_map_publisher(m_map_publisher);
 	relay->set_relay_manager(this);
@@ -178,7 +178,7 @@ int CSLSPusherManager::reconnect(int64_t cur_tm_ms)
 	//check publisher
 	bool no_publisher = false;
 	char key_stream_name[1024] = {0};
-	sprintf(key_stream_name, "%s/%s", m_app_uplive, m_stream_name);
+	snprintf(key_stream_name, sizeof(key_stream_name), "%s/%s", m_app_uplive, m_stream_name);
 	if (NULL != m_map_publisher)
 	{
 		CSLSRole *publisher = m_map_publisher->get_publisher(key_stream_name);
