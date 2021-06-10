@@ -22,10 +22,8 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 #include <errno.h>
 #include <string.h>
-
 
 #include "SLSPlayer.hpp"
 #include "SLSLog.hpp"
@@ -45,13 +43,7 @@ CSLSPlayer::~CSLSPlayer()
 {
 }
 
-
-
 int CSLSPlayer::handler()
 {
-    return handler_write_data() ;
+    return handler_write_data();
 }
-
-
-
-

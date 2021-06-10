@@ -22,7 +22,6 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 #ifndef _SLSPlayer_INCLUDE_
 #define _SLSPlayer_INCLUDE_
 
@@ -31,18 +30,15 @@
 /**
  * CSLSPlayer
  */
-class CSLSPlayer: public CSLSRole
+class CSLSPlayer : public CSLSRole
 {
-public :
+public:
 	CSLSPlayer();
 	~CSLSPlayer();
 
-    virtual int handler();
+	virtual int handler();
 
 private:
-
-
 };
-
 
 #endif

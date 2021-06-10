@@ -22,7 +22,6 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 #ifndef _SLSRoleList_INCLUDE_
 #define _SLSRoleList_INCLUDE_
 
@@ -36,22 +35,20 @@
  */
 class CSLSRoleList
 {
-public :
-	CSLSRoleList();
+public:
+    CSLSRoleList();
     ~CSLSRoleList();
 
-    int       push(CSLSRole *role);
+    int push(CSLSRole *role);
     CSLSRole *pop();
-    void      erase();
-    int       size();
+    void erase();
+    int size();
 
 protected:
-
 private:
-    std::list<CSLSRole * > m_list_role;
+    std::list<CSLSRole *> m_list_role;
 
     CSLSMutex m_mutex;
 };
-
 
 #endif

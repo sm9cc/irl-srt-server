@@ -22,10 +22,8 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 #include <errno.h>
 #include <string.h>
-
 
 #include "SLSRoleList.hpp"
 #include "SLSLog.hpp"
@@ -42,39 +40,42 @@ CSLSRoleList::~CSLSRoleList()
 {
 }
 
-int CSLSRoleList::push(CSLSRole * role)
+int CSLSRoleList::push(CSLSRole *role)
 {
-	if (role) {
-	    CSLSLock lock(&m_mutex);
-	    m_list_role.push_back(role);
-	}
-	return 0;
+    if (role)
+    {
+        CSLSLock lock(&m_mutex);
+        m_list_role.push_back(role);
+    }
+    return 0;
 }
 
-CSLSRole * CSLSRoleList::pop()
+CSLSRole *CSLSRoleList::pop()
 {
-	CSLSLock lock(&m_mutex);
-	CSLSRole * role = NULL;
-    if (!m_list_role.empty()) {
+    CSLSLock lock(&m_mutex);
+    CSLSRole *role = NULL;
+    if (!m_list_role.empty())
+    {
         role = m_list_role.front();
         m_list_role.pop_front();
     }
-	return role;
+    return role;
 }
 
 void CSLSRoleList::erase()
 {
     CSLSLock lock(&m_mutex);
     sls_log(SLS_LOG_TRACE, "[%p]CSLSRoleList::erase, list.count=%d", this, m_list_role.size());
-    std::list<CSLSRole * >::iterator it_erase;
-    for (std::list<CSLSRole * >::iterator it = m_list_role.begin(); it != m_list_role.end();)
+    std::list<CSLSRole *>::iterator it_erase;
+    for (std::list<CSLSRole *>::iterator it = m_list_role.begin(); it != m_list_role.end();)
     {
-        CSLSRole * role = *it;
-        if (role) {
-        	role->uninit();
+        CSLSRole *role = *it;
+        if (role)
+        {
+            role->uninit();
             delete role;
         }
-        it ++;
+        it++;
     }
     m_list_role.clear();
 }
@@ -82,9 +83,5 @@ void CSLSRoleList::erase()
 int CSLSRoleList::size()
 {
     CSLSLock lock(&m_mutex);
-	return m_list_role.size();
+    return m_list_role.size();
 }
-
-
-
-

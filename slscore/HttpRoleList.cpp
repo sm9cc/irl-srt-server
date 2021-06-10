@@ -21,13 +21,10 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
-
 #include "HttpRoleList.hpp"
 
 #include <errno.h>
 #include <string.h>
-
 
 #include "SLSLog.hpp"
 #include "SLSLock.hpp"
@@ -43,45 +40,47 @@ CHttpRoleList::~CHttpRoleList()
 {
 }
 
-int CHttpRoleList::push(CHttpClient * role)
+int CHttpRoleList::push(CHttpClient *role)
 {
-	if (role) {
-	    CSLSLock lock(&m_mutex);
-	    m_list_role.push_back(role);
-	}
-	return 0;
+    if (role)
+    {
+        CSLSLock lock(&m_mutex);
+        m_list_role.push_back(role);
+    }
+    return 0;
 }
 
-CHttpClient * CHttpRoleList::pop()
+CHttpClient *CHttpRoleList::pop()
 {
-	CSLSLock lock(&m_mutex);
-	CHttpClient * role = NULL;
-    if (!m_list_role.empty()) {
+    CSLSLock lock(&m_mutex);
+    CHttpClient *role = NULL;
+    if (!m_list_role.empty())
+    {
         role = m_list_role.front();
         m_list_role.pop_front();
     }
-	return role;
+    return role;
 }
 
 int CHttpRoleList::size()
 {
     CSLSLock lock(&m_mutex);
-	return m_list_role.size();
+    return m_list_role.size();
 }
 
 void CHttpRoleList::erase()
 {
     CSLSLock lock(&m_mutex);
     sls_log(SLS_LOG_TRACE, "[%p]CHttpRoleList::erase, list.count=%d", this, m_list_role.size());
-    for (std::list<CHttpClient * >::iterator it = m_list_role.begin(); it != m_list_role.end();)
+    for (std::list<CHttpClient *>::iterator it = m_list_role.begin(); it != m_list_role.end();)
     {
-    	CHttpClient * role = *it;
-        if (role) {
-        	role->close();
+        CHttpClient *role = *it;
+        if (role)
+        {
+            role->close();
             delete role;
         }
-        it ++;
+        it++;
     }
     m_list_role.clear();
 }
-

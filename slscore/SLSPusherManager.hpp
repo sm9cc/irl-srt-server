@@ -22,7 +22,6 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 #ifndef _SLSPusherManager_INCLUDE_
 #define _SLSPusherManager_INCLUDE_
 
@@ -35,16 +34,15 @@
 /**
  * CSLSPusherManager
  */
-class CSLSPusherManager: public CSLSRelayManager
+class CSLSPusherManager : public CSLSRelayManager
 {
-public :
-	CSLSPusherManager();
+public:
+    CSLSPusherManager();
     virtual ~CSLSPusherManager();
 
     virtual int start();
-    virtual int add_reconnect_stream(char* relay_url);
+    virtual int add_reconnect_stream(char *relay_url);
     virtual int reconnect(int64_t cur_tm_ms);
-
 
 private:
     int connect_all();
@@ -53,10 +51,8 @@ private:
     int check_relay_param();
     int reconnect_all(int64_t cur_tm_ms, bool no_publisher);
 
-    CSLSRWLock          m_rwclock;
-    std::map<std::string, int64_t> m_map_reconnect_relay;//relay:timeout
-
+    CSLSRWLock m_rwclock;
+    std::map<std::string, int64_t> m_map_reconnect_relay; //relay:timeout
 };
-
 
 #endif

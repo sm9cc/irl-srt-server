@@ -25,7 +25,6 @@
 #ifndef _COMMON_INCLUDE_
 #define _COMMON_INCLUDE_
 
-
 #include <stddef.h>
 #include <stdint.h>
 #include <string>
@@ -47,32 +46,38 @@ using namespace std;
 #define SLSUNERROR(e) (e)
 #endif
 
-#define MKTAG(a,b,c,d) ((a) | ((b) << 8) | ((c) << 16) | ((unsigned)(d) << 24))
+#define MKTAG(a, b, c, d) ((a) | ((b) << 8) | ((c) << 16) | ((unsigned)(d) << 24))
 #define SLSERRTAG(a, b, c, d) (-(int)MKTAG(a, b, c, d))
 
-#define SLS_OK                      SLSERRTAG(0x0,0x0,0x0,0x0 ) ///< OK
-#define SLS_ERROR                   SLSERRTAG(0x0,0x0,0x0,0x1 ) ///<
-#define SLSERROR_BSF_NOT_FOUND      SLSERRTAG(0xF8,'B','S','F') ///< Bitstream filter not found
-#define SLSERROR_BUG                SLSERRTAG( 'B','U','G','!') ///< Internal bug, also see SLSERROR_BUG2
-#define SLSERROR_BUFFER_TOO_SMALL   SLSERRTAG( 'B','U','F','S') ///< Buffer too small
-#define SLSERROR_EOF                SLSERRTAG( 'E','O','F',' ') ///< End of file
-#define SLSERROR_EXIT               SLSERRTAG( 'E','X','I','T') ///< Immediate exit was requested; the called function should not be restarted
-#define SLSERROR_EXTERNAL           SLSERRTAG( 'E','X','T',' ') ///< Generic error in an external library
-#define SLSERROR_INVALIDDATA        SLSERRTAG( 'I','N','D','A') ///< Invalid data found when processing input
-#define SLSERROR_OPTION_NOT_FOUND   SLSERRTAG(0xF8,'O','P','T') ///< Option not found
-#define SLSERROR_PROTOCOL_NOT_FOUND SLSERRTAG(0xF8,'P','R','O') ///< Protocol not found
-#define SLSERROR_STREAM_NOT_FOUND   SLSERRTAG(0xF8,'S','T','R') ///< Stream of the StreamID not found
-#define SLSERROR_UNKNOWN            SLSERRTAG( 'U','N','K','N') ///< Unknown error, typically from an external library
+#define SLS_OK SLSERRTAG(0x0, 0x0, 0x0, 0x0)                       ///< OK
+#define SLS_ERROR SLSERRTAG(0x0, 0x0, 0x0, 0x1)                    ///<
+#define SLSERROR_BSF_NOT_FOUND SLSERRTAG(0xF8, 'B', 'S', 'F')      ///< Bitstream filter not found
+#define SLSERROR_BUG SLSERRTAG('B', 'U', 'G', '!')                 ///< Internal bug, also see SLSERROR_BUG2
+#define SLSERROR_BUFFER_TOO_SMALL SLSERRTAG('B', 'U', 'F', 'S')    ///< Buffer too small
+#define SLSERROR_EOF SLSERRTAG('E', 'O', 'F', ' ')                 ///< End of file
+#define SLSERROR_EXIT SLSERRTAG('E', 'X', 'I', 'T')                ///< Immediate exit was requested; the called function should not be restarted
+#define SLSERROR_EXTERNAL SLSERRTAG('E', 'X', 'T', ' ')            ///< Generic error in an external library
+#define SLSERROR_INVALIDDATA SLSERRTAG('I', 'N', 'D', 'A')         ///< Invalid data found when processing input
+#define SLSERROR_OPTION_NOT_FOUND SLSERRTAG(0xF8, 'O', 'P', 'T')   ///< Option not found
+#define SLSERROR_PROTOCOL_NOT_FOUND SLSERRTAG(0xF8, 'P', 'R', 'O') ///< Protocol not found
+#define SLSERROR_STREAM_NOT_FOUND SLSERRTAG(0xF8, 'S', 'T', 'R')   ///< Stream of the StreamID not found
+#define SLSERROR_UNKNOWN SLSERRTAG('U', 'N', 'K', 'N')             ///< Unknown error, typically from an external library
 
-
-#define SLSERROR_INVALID_SOCK       SLSERRTAG( 'I','N','V','S') ///< Unknown error, typically from an external library
+#define SLSERROR_INVALID_SOCK SLSERRTAG('I', 'N', 'V', 'S') ///< Unknown error, typically from an external library
 /**
  * end
  **********************************************/
 
 //#define SAFE_CREATE(p, class_name) { if (!p) new class_name(); }
-#define SAFE_DELETE(p) {if (p) { delete p; p = NULL; }}
-#define msleep(ms) usleep(ms*1000)
+#define SAFE_DELETE(p) \
+    {                  \
+        if (p)         \
+        {              \
+            delete p;  \
+            p = NULL;  \
+        }              \
+    }
+#define msleep(ms) usleep(ms * 1000)
 
 #define TS_PACK_LEN 188
 #define TS_UDP_LEN 1316 //7*188
@@ -84,27 +89,24 @@ using namespace std;
 #define INET6_ADDRSTRLEN 46
 #define IP_MAX_LEN INET6_ADDRSTRLEN
 
-
-
-int64_t sls_gettime_ms(void);//rturn millisecond
-int64_t sls_gettime(void);//rturn microsecond
-void    sls_gettime_fmt(char *dst, int64_t cur_time_sec, char *fmt);
-void    sls_gettime_default_string(char *cur_time);
-char  * sls_strupper(char * str);
-void    sls_remove_marks(char *s);
+int64_t sls_gettime_ms(void); //rturn millisecond
+int64_t sls_gettime(void);    //rturn microsecond
+void sls_gettime_fmt(char *dst, int64_t cur_time_sec, char *fmt);
+void sls_gettime_default_string(char *cur_time);
+char *sls_strupper(char *str);
+void sls_remove_marks(char *s);
 
 uint32_t sls_hash_key(const char *data, int len);
-int      sls_gethostbyname(const char *hostname, char *ip);
-int      sls_mkdir_p(const char *path);
+int sls_gethostbyname(const char *hostname, char *ip);
+int sls_mkdir_p(const char *path);
 
 int sls_read_pid();
 int sls_write_pid(int pid);
 int sls_remove_pid();
 int sls_send_cmd(const char *cmd);
 
-void sls_split_string(std::string str, std::string separator, std::vector<std::string> &result, int count=-1);
+void sls_split_string(std::string str, std::string separator, std::vector<std::string> &result, int count = -1);
 std::string sls_find_string(std::vector<std::string> &src, std::string &dst);
-
 
 /*
  * parse ts packet
@@ -117,25 +119,24 @@ std::string sls_find_string(std::vector<std::string> &src, std::string &dst);
 #define INVALID_DTS_PTS -1
 #define MAX_PES_PAYLOAD 200 * 1024
 
-typedef struct ts_info {
-    int      es_pid;
-    int64_t  dts;
-    int64_t  pts;
-    bool     need_spspps;
-    int      sps_len;
-    uint8_t  sps[TS_PACK_LEN];
-    int      pps_len;
-    uint8_t  pps[TS_PACK_LEN];
-    uint8_t  ts_data[TS_UDP_LEN];
-    uint8_t  pat[TS_PACK_LEN];
-    int      pat_len;
-    int      pmt_pid;
-    uint8_t  pmt[TS_PACK_LEN];
-    int      pmt_len;
-
+typedef struct ts_info
+{
+    int es_pid;
+    int64_t dts;
+    int64_t pts;
+    bool need_spspps;
+    int sps_len;
+    uint8_t sps[TS_PACK_LEN];
+    int pps_len;
+    uint8_t pps[TS_PACK_LEN];
+    uint8_t ts_data[TS_UDP_LEN];
+    uint8_t pat[TS_PACK_LEN];
+    int pat_len;
+    int pmt_pid;
+    uint8_t pmt[TS_PACK_LEN];
+    int pmt_len;
 };
 void sls_init_ts_info(ts_info *ti);
-int  sls_parse_ts_info(const uint8_t *packet, ts_info *ti);
-
+int sls_parse_ts_info(const uint8_t *packet, ts_info *ti);
 
 #endif

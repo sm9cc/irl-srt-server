@@ -44,46 +44,46 @@
 
 #include "conf.hpp"
 
-typedef struct DATA_PARAM {
-	bool readable;
-	bool writable;
+typedef struct DATA_PARAM
+{
+    bool readable;
+    bool writable;
 };
 /**
  * CTCPRole , the base of tcp client
  */
 class CTCPRole
 {
-public :
+public:
     CTCPRole();
-	virtual ~CTCPRole();
+    virtual ~CTCPRole();
 
-    int         open(int port, int backlog);
-    int         open(char *host, int port);
+    int open(int port, int backlog);
+    int open(char *host, int port);
     virtual int close();
 
     virtual int handler(DATA_PARAM *p);
 
-    int         write(const char *buf, int size);
-    int         read(char *buf, int size);
+    int write(const char *buf, int size);
+    int read(char *buf, int size);
 
-    char       *get_role_name();
-    int         set_nonblock();
-    int         get_fd();
+    char *get_role_name();
+    int set_nonblock();
+    int get_fd();
 
-    bool        is_valid();
+    bool is_valid();
+
 protected:
-    int         m_fd;
-    int         m_port;
-    char        m_role_name[256];
-    char        m_remote_host[256];
-    int         m_remote_port;
-    bool        m_valid;
+    int m_fd;
+    int m_port;
+    char m_role_name[256];
+    char m_remote_host[256];
+    int m_remote_port;
+    bool m_valid;
 
-    int         setup();
-    int         listen(int port, int backlog);
-    int         connect(char *host, int port);
-
+    int setup();
+    int listen(int port, int backlog);
+    int connect(char *host, int port);
 };
-
 
 #endif

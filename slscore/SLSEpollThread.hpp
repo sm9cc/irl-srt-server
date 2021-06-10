@@ -22,7 +22,6 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 #ifndef _SLSEpollThread_INCLUDE_
 #define _SLSEpollThread_INCLUDE_
 
@@ -34,27 +33,25 @@
 /**
  * CSLSEpollThread , the base thread class
  */
-class CSLSEpollThread: public CSLSThread
+class CSLSEpollThread : public CSLSThread
 {
-public :
-	CSLSEpollThread();
+public:
+    CSLSEpollThread();
     ~CSLSEpollThread();
 
-    virtual int     work();
+    virtual int work();
 
     int init_epoll();
     int uninit_epoll();
 
 protected:
-    virtual int     handler();
+    virtual int handler();
 
-    int         add_to_epoll(int fd, bool write) ;
+    int add_to_epoll(int fd, bool write);
 
-    int        m_eid;
-    SRTSOCKET  m_read_socks[MAX_SOCK_COUNT];
-    SRTSOCKET  m_write_socks[MAX_SOCK_COUNT];
-
+    int m_eid;
+    SRTSOCKET m_read_socks[MAX_SOCK_COUNT];
+    SRTSOCKET m_write_socks[MAX_SOCK_COUNT];
 };
-
 
 #endif

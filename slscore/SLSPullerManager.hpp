@@ -22,7 +22,6 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 #ifndef _SLSPulllerManager_INCLUDE_
 #define _SLSPulllerManager_INCLUDE_
 
@@ -35,26 +34,23 @@
 /**
  * CSLSPullerManager
  */
-class CSLSPullerManager: public CSLSRelayManager
+class CSLSPullerManager : public CSLSRelayManager
 {
-public :
-	CSLSPullerManager();
+public:
+    CSLSPullerManager();
     virtual ~CSLSPullerManager();
 
     virtual int start();
-    virtual int add_reconnect_stream(char* relay_url);
+    virtual int add_reconnect_stream(char *relay_url);
     virtual int reconnect(int64_t cur_tm_ms);
 
 protected:
-
     int connect_loop();
     virtual CSLSRelay *create_relay();
     virtual int set_relay_param(CSLSRelay *relay);
     int check_relay_param();
 
-    int   m_cur_loop_index;
-
+    int m_cur_loop_index;
 };
-
 
 #endif

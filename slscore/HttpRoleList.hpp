@@ -21,8 +21,6 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
-
 #ifndef _HttpRoleList_INCLUDE_
 #define _HttpRoleList_INCLUDE_
 
@@ -36,21 +34,19 @@
  */
 class CHttpRoleList
 {
-public :
-	CHttpRoleList();
+public:
+    CHttpRoleList();
     ~CHttpRoleList();
 
-    int          push(CHttpClient *role);
+    int push(CHttpClient *role);
     CHttpClient *pop();
-    void         erase();
-    int          size();
+    void erase();
+    int size();
 
 protected:
-
 private:
-    std::list<CHttpClient * > m_list_role;
-    CSLSMutex                 m_mutex;
+    std::list<CHttpClient *> m_list_role;
+    CSLSMutex m_mutex;
 };
-
 
 #endif

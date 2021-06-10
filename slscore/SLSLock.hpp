@@ -22,7 +22,6 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 #ifndef _SLSLock_INCLUDE_
 #define _SLSLock_INCLUDE_
 
@@ -30,14 +29,13 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-
 /**
  * CSLSMutex
  */
 
 class CSLSMutex
 {
-public :
+public:
     CSLSMutex()
     {
         pthread_mutex_init(&m_mutex, NULL);
@@ -46,10 +44,10 @@ public :
     {
         pthread_mutex_destroy(&m_mutex);
     }
-    pthread_mutex_t * get_mutex() {  return &m_mutex; }
+    pthread_mutex_t *get_mutex() { return &m_mutex; }
+
 private:
     pthread_mutex_t m_mutex;
-
 };
 
 class CSLSRWLock
@@ -59,19 +57,25 @@ public:
     {
         m_inited = false;
         int ret = pthread_rwlock_init(&m_rwlock, NULL);
-        if (0 == ret) {
+        if (0 == ret)
+        {
             m_inited = true;
-        } else {
-            printf("pthread_rwlock_init faild, ret=%d.", ret);;
+        }
+        else
+        {
+            printf("pthread_rwlock_init faild, ret=%d.", ret);
+            ;
         }
     }
     ~CSLSRWLock()
     {
-        if (m_inited) {
+        if (m_inited)
+        {
             int ret = pthread_rwlock_destroy(&m_rwlock);
             if (0 != ret)
             {
-                printf("pthread_rwlock_destroy faild, ret=%d.", ret);;
+                printf("pthread_rwlock_destroy faild, ret=%d.", ret);
+                ;
             }
         }
     }
@@ -96,9 +100,10 @@ public:
     {
         return pthread_rwlock_unlock(&m_rwlock);
     }
+
 private:
     pthread_rwlock_t m_rwlock;
-    bool             m_inited;
+    bool m_inited;
 };
 
 /**
@@ -106,43 +111,52 @@ private:
  */
 class CSLSLock
 {
-public :
-    CSLSLock(CSLSRWLock * clock, int write)
+public:
+    CSLSLock(CSLSRWLock *clock, int write)
     {
         m_mutex = NULL;
         m_clock = NULL;
-        m_locked =false;
-	    if (NULL == clock)
-	        return ;
-	    int ret = 0;
-	    if (write) {
-	        ret = clock->lock_write();
-        } else {
+        m_locked = false;
+        if (NULL == clock)
+            return;
+        int ret = 0;
+        if (write)
+        {
+            ret = clock->lock_write();
+        }
+        else
+        {
             ret = clock->lock_read();
         }
-	    if (0 != ret) {
+        if (0 != ret)
+        {
             printf("SLS Error: clock failure, ret=%d.\n", ret);
-	    } else {
-	        m_clock = clock;
-	        m_locked =true;
-	    }
+        }
+        else
+        {
+            m_clock = clock;
+            m_locked = true;
+        }
     }
 
-    CSLSLock(CSLSMutex * m)
+    CSLSLock(CSLSMutex *m)
     {
         m_clock = NULL;
         m_mutex = NULL;
-        m_locked =false;
-        if (m) {
+        m_locked = false;
+        if (m)
+        {
             m_mutex = m->get_mutex();
             int ret = pthread_mutex_lock(m_mutex);
-            if (0 == ret) {
+            if (0 == ret)
+            {
                 m_locked = true;
-            } else {
+            }
+            else
+            {
                 printf("SLS Error: pthread_mutex_lock failure, ret=%d.\n", ret);
             }
         }
-
     }
 
     ~CSLSLock()
@@ -152,17 +166,12 @@ public :
         if (m_locked && m_clock)
             m_clock->unlock();
     }
-private:
 
-    pthread_mutex_t * m_mutex;
-    CSLSRWLock      * m_clock;
+private:
+    pthread_mutex_t *m_mutex;
+    CSLSRWLock *m_clock;
 
     bool m_locked;
-
 };
-
-
-
-
 
 #endif
