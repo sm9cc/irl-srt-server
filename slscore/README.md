@@ -1,1 +1,1 @@
-core file for srt-live-server
+Core files for srt-live-server
