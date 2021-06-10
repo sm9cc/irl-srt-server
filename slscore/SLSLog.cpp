@@ -85,7 +85,7 @@ void CSLSLog::print_log(int level, const char *fmt, va_list vl)
     vsnprintf (buf , 4095 , fmt , vl);
     //sprintf(buf_info, "%s %s: %s\n" , cur_time, LOG_LEVEL_NAME[level], buf);
     sprintf(buf_info, "%s:%03d %s %s: %s\n" , cur_time, (int)cur_time_msec, APP_NAME, LOG_LEVEL_NAME[level], buf);
-    puts(buf_info);
+    printf("%s", buf_info);
 
     if (m_log_file) {
         fwrite(buf_info, strlen(buf_info), 1, m_log_file);
