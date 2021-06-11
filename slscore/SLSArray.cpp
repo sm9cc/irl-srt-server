@@ -23,6 +23,7 @@
  */
 
 #include <stdio.h>
+#include "spdlog/spdlog.h"
 
 #include "SLSArray.hpp"
 #include "SLSLog.hpp"
@@ -78,8 +79,8 @@ int CSLSArray::put(const uint8_t *data, int len)
 {
     if (NULL == data || len <= 0)
     {
-        sls_log(SLS_LOG_INFO, "[%p]CSLSArray::put, failed, data=%p, len=%d.",
-                this, data, len);
+        spdlog::error("[{}] CSLSArray::put, failed, data={}, len={:d}.",
+                      fmt::ptr(this), data, len);
         return SLS_ERROR;
     }
 
@@ -91,8 +92,8 @@ int CSLSArray::put(const uint8_t *data, int len)
         //need expand data buff
         //ext at least DEFAULT_MAX_DATA_SIZE each time.
         int ext_len = m_nDataSize + (DEFAULT_MAX_DATA_SIZE >= len ? DEFAULT_MAX_DATA_SIZE : len); //m_nDataCount + len;
-        sls_log(SLS_LOG_INFO, "[%p]CSLSArray::put, len=%d is bigger than nRemainder=%d, ext m_nDataSize=%d to ext_len=%d.",
-                this, data, len, m_nDataSize, ext_len);
+        spdlog::info("[{}] CSLSArray::put, len={:d} is bigger than nRemainder={:d}, ext m_nDataSize={:d} to ext_len={:d}.",
+                     fmt::ptr(this), data, len, m_nDataSize, ext_len);
 
         uint8_t *ext_data = new uint8_t[ext_len];
         int re = get_inline(ext_data, m_nDataCount);
@@ -125,8 +126,8 @@ int CSLSArray::put(const uint8_t *data, int len)
 
     //no consider int wrapround;
     m_nDataCount += len;
-    sls_log(SLS_LOG_TRACE, "[%p]CSLSArray::put, len=%d, m_nWritePos=%d, m_nDataCount=%d, m_nDataSize=%d.",
-            this, len, m_nWritePos, m_nDataCount, m_nDataSize);
+    spdlog::info("[{}] CSLSArray::put, len={:d}, m_nWritePos={:d}, m_nDataCount={:d}, m_nDataSize={:d}.",
+                 fmt::ptr(this), len, m_nWritePos, m_nDataCount, m_nDataSize);
     return len;
 }
 
@@ -140,17 +141,17 @@ int CSLSArray::get_inline(uint8_t *data, int size)
 {
     if (NULL == m_arrayData)
     {
-        sls_log(SLS_LOG_INFO, "[%p]CSLSArray::get, failed, m_arrayData is NULL.", this);
+        spdlog::error("[{}] CSLSArray::get, failed, m_arrayData is NULL.", fmt::ptr(this));
         return SLS_ERROR;
     }
 
     if (0 == m_nDataCount)
     {
-        sls_log(SLS_LOG_TRACE, "[%p]CSLSArray::get, no new data.", this);
+        spdlog::trace("[{}] CSLSArray::get, no new data.", fmt::ptr(this));
         return SLS_OK;
     }
-    sls_log(SLS_LOG_TRACE, "[%p]CSLSArray::get, m_nReadPos=%d, m_nWritePos=%d, m_nDataCount=%d, m_nDataSize=%d.",
-            this, m_nReadPos, m_nWritePos, m_nDataCount, m_nDataSize);
+    spdlog::trace("[{}] CSLSArray::get, m_nReadPos={:d}, m_nWritePos={:d}, m_nDataCount={:d}, m_nDataSize={:d}.",
+                  fmt::ptr(this), m_nReadPos, m_nWritePos, m_nDataCount, m_nDataSize);
 
     int ready_data_len = 0;
     int copy_data_len = 0;
@@ -159,8 +160,8 @@ int CSLSArray::get_inline(uint8_t *data, int size)
         //read pos is behind in the write pos
         ready_data_len = m_nWritePos - m_nReadPos;
         copy_data_len = ready_data_len <= size ? ready_data_len : size;
-        //sls_log(SLS_LOG_TRACE, "[%p]CSLSArray::get, read pos is behind in the write pos, copy_data_len=%d, ready_data_len=%d, size=%d.",
-        //		this, copy_data_len, ready_data_len, size);
+        // spdlog::trace("[{}] CSLSArray::get, read pos is behind in the write pos, copy_data_len={:d}, ready_data_len={:d}, size={:d}.",
+        //		fmt::ptr(this), copy_data_len, ready_data_len, size);
         memcpy(data, m_arrayData + m_nReadPos, copy_data_len);
         m_nReadPos += copy_data_len;
         m_nDataCount -= copy_data_len;
@@ -169,8 +170,8 @@ int CSLSArray::get_inline(uint8_t *data, int size)
     {
         ready_data_len = m_nDataSize - m_nReadPos + m_nWritePos;
         copy_data_len = ready_data_len <= size ? ready_data_len : size;
-        //sls_log(SLS_LOG_TRACE, "[%p]CSLSArray::get, read pos is before of the write pos, copy_data_len=%d, ready_data_len=%d, size=%d.",
-        //		this, copy_data_len, ready_data_len, size);
+        //spdlog::trace("[{}] CSLSArray::get, read pos is before of the write pos, copy_data_len={:d}, ready_data_len={:d}, size={:d}.",
+        //		fmt::ptr(this), copy_data_len, ready_data_len, size);
         if (m_nDataSize - m_nReadPos >= copy_data_len)
         {
             //no wrap round
@@ -191,11 +192,11 @@ int CSLSArray::get_inline(uint8_t *data, int size)
 
     if (m_nReadPos > m_nDataSize)
     {
-        sls_log(SLS_LOG_WARNING, "[%p]CSLSArray::get, m_nReadPos=%d, but m_nDataSize=%d.",
-                this, m_nReadPos, m_nDataSize);
+        spdlog::warn("[{}] CSLSArray::get, m_nReadPos={:d}, but m_nDataSize={:d}.",
+                fmt::ptr(this), m_nReadPos, m_nDataSize);
         m_nReadPos = 0;
     }
-    sls_log(SLS_LOG_TRACE, "[%p]CSLSArray::get, copy_data_lens=%d.",
-            this, copy_data_len);
+    spdlog::trace("[{}] CSLSArray::get, copy_data_lens={:d}.",
+            fmt::ptr(this), copy_data_len);
     return copy_data_len;
 }

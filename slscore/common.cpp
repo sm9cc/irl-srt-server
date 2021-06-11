@@ -40,6 +40,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "spdlog/spdlog.h"
+
 #include <string>
 #include <vector>
 
@@ -147,7 +149,7 @@ int sls_gethostbyname(const char *hostname, char *ip)
 
     if ((hptr = gethostbyname(ptr)) == NULL)
     {
-        printf("sls_gethostbyname: gethostbyname error for host:%s\n", ptr);
+        spdlog::warn("sls_gethostbyname: gethostbyname error for host: {0}", ptr);
         return ret;
     }
 
@@ -171,7 +173,7 @@ int sls_gethostbyname(const char *hostname, char *ip)
         ret = SLS_OK;
         break;
     default:
-        printf("sls_gethostbyname: unknown address type\n");
+        spdlog::warn("sls_gethostbyname: unknown address type");
         break;
     }
 
@@ -351,14 +353,14 @@ int sls_read_pid()
     int ret = stat(pid_file_name, &stat_file);
     if (0 != ret)
     {
-        printf("no pid file='%s'.\n", pid_file_name);
+        spdlog::warn("no pid file='{0}'.", pid_file_name);
         return 0;
     }
 
     int fd = open(pid_file_name, O_RDONLY);
     if (0 == fd)
     {
-        printf("open file='%s' failed.\n", pid_file_name);
+        spdlog::error("open file='{0}' failed.", pid_file_name);
         return 0;
     }
     char pid[128] = {0};
@@ -375,21 +377,21 @@ int sls_write_pid(int pid)
 
     if (sls_mkdir_p(pid_path_name) == -1 && errno != EEXIST)
     {
-        printf("mkdir '%s' failed.\n", pid_path_name);
+        spdlog::error("mkdir '{0}' failed.", pid_path_name);
         return -1;
     }
     fd = open(pid_file_name, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IXOTH);
 
     if (0 == fd)
     {
-        printf("open file='%s' failed, '%s'.\n", pid_file_name, strerror(errno));
+        spdlog::error("open file='{0}' failed, '{1}'.", pid_file_name, strerror(errno));
         return -1;
     }
     char buf[128] = {0};
     sprintf(buf, "%d", pid);
     write(fd, buf, strlen(buf));
     close(fd);
-    printf("write pid ok, file='%s', pid=%s.\n", pid_file_name, buf);
+    spdlog::info("write pid ok, file='{0}', pid={1}.", pid_file_name, buf);
     return 0;
 }
 
@@ -408,13 +410,13 @@ int sls_send_cmd(const char *cmd)
 {
     if (NULL == cmd)
     {
-        printf("sls_send_cmd failed, cmd is null.\n");
+        spdlog::error("sls_send_cmd failed, cmd is null.");
         return SLS_ERROR;
     }
     int pid = sls_read_pid();
     if (0 >= pid)
     {
-        printf("sls_send_cmd failed, pid is invalid.\n", pid);
+        spdlog::error("sls_send_cmd failed, pid is invalid [pid={0:d}].", pid);
         return SLS_OK;
     }
 
@@ -422,7 +424,7 @@ int sls_send_cmd(const char *cmd)
     if (strcmp(cmd, "reload") == 0)
     {
         //reload the existed sls
-        printf("sls_send_cmd ok, reload, sls pid = %d, send SIGUP to it.\n", pid);
+        spdlog::info("sls_send_cmd ok, reload, sls pid = {0:d}, send SIGUP to it.", pid);
         kill(pid, SIGHUP);
         return SLS_OK;
     }
@@ -431,7 +433,7 @@ int sls_send_cmd(const char *cmd)
     if (strcmp(cmd, "stop") == 0)
     {
         //
-        printf("sls_send_cmd ok, stop, sls pid = %d, send SIGINT to it.\n", pid);
+        spdlog::info("sls_send_cmd ok, stop, sls pid = {0:d}, send SIGINT to it.", pid);
         kill(pid, SIGINT);
         return SLS_OK;
     }
@@ -539,7 +541,7 @@ static int sls_parse_spspps(const uint8_t *es, int es_len, ts_info *ti)
                 }
                 else
                 {
-                    printf("parse_spspps, wrong nal type=%d.\n", nal_type);
+                    spdlog::error("parse_spspps, wrong nal type={0:d}.", nal_type);
                 }
 
                 if (ti->sps_len > 0 && ti->pps_len > 0)
@@ -580,7 +582,7 @@ static int sls_parse_spspps(const uint8_t *es, int es_len, ts_info *ti)
         }
         else
         {
-            printf("parse_spspps, wrong nal type=%d.\n", nal_type);
+            spdlog::error("parse_spspps, wrong nal type={0:d}.", nal_type);
         }
         if (ti->sps_len > 0 && ti->pps_len > 0)
         {
@@ -594,7 +596,7 @@ static int sls_pes2es(const uint8_t *pes_frame, int pes_len, ts_info *ti, int pi
 {
     if (!pes_frame)
     {
-        printf("pes2es: pes_frame is null.\n");
+        spdlog::error("pes2es: pes_frame is null.");
         return SLS_ERROR;
     }
     uint8_t *pes = (uint8_t *)pes_frame;
@@ -614,7 +616,7 @@ static int sls_pes2es(const uint8_t *pes_frame, int pes_len, ts_info *ti, int pi
     int stream_id = (pes[0] & 0xFF);
     if (stream_id != 0xE0 && stream_id != 0xC0)
     {
-        printf("pes2es: pid=%d, wrong pes stream_id=0x%x.", pid, stream_id);
+        spdlog::error("pes2es: pid={0:d}, wrong pes stream_id={1:#x}.", pid, stream_id);
         return SLS_ERROR;
     }
     pes++;
@@ -688,7 +690,7 @@ static int sls_pes2es(const uint8_t *pes_frame, int pes_len, ts_info *ti, int pi
             len = len + 9 + 5; //pes len
             if (len > TS_PACK_LEN - 4)
             {
-                printf("pid=%d, pes size=%d is abnormal!!!!\n", pid, len);
+                spdlog::error("pid={0:d}, pes size={1:d} is abnormal!!!!\n", pid, len);
                 return ret;
             }
             pos++;
@@ -777,7 +779,7 @@ int sls_parse_ts_info(const uint8_t *packet, ts_info *ti)
 
     if (packet[0] != TS_SYNC_BYTE)
     {
-        printf("ts2es: packet[0]=0x%x not 0x47.\n", packet[0]);
+        spdlog::error("ts2es: packet[0]={0:#x} not 0x47.\n", packet[0]);
         return SLS_ERROR;
     }
 
@@ -843,7 +845,7 @@ int sls_parse_ts_info(const uint8_t *packet, ts_info *ti)
     /* if past the end of packet, ignore */
     if (pos >= TS_PACK_LEN || 1 != has_payload)
     {
-        printf("ts2es: pid=%d, payload len=%d, >188.\n", pid, pos);
+        spdlog::error("ts2es: pid={0:d}, payload len={1:d}, >188.\n", pid, pos);
         return SLS_ERROR;
     }
 

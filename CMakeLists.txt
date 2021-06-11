@@ -1,9 +1,11 @@
-cmake_minimum_required(VERSION 3.18)
-project(srt_live_server_project CXX)
+cmake_minimum_required(VERSION 3.0.0)
+project(srt-live-server VERSION 0.1.0)
+
+include(CTest)
+enable_testing()
 
 # Use threads library
 find_package(Threads)
-
 find_package(spdlog CONFIG REQUIRED)
 
 # Use SLSCore
@@ -28,3 +30,8 @@ target_link_libraries(srt_client
 	-lsrt
 	${CMAKE_THREAD_LIBS_INIT}
 )
+
+
+set(CPACK_PROJECT_NAME ${PROJECT_NAME})
+set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
+include(CPack)

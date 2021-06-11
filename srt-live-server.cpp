@@ -26,6 +26,7 @@
 #include <string.h>
 #include <signal.h>
 #include <unistd.h>
+#include "spdlog/spdlog.h"
 
 using namespace std;
 
@@ -39,14 +40,14 @@ using namespace std;
 static bool b_exit = 0;
 static void ctrl_c_handler(int s)
 {
-    printf("\ncaught signal %d, exit.\n", s);
+    spdlog::warn("caught signal {:d}, exit.", s);
     b_exit = true;
 }
 
 static bool b_reload = 0;
 static void reload_handler(int s)
 {
-    printf("\ncaught signal %d, reload.\n", s);
+    spdlog::warn("caught signal {:d}, reload.", s);
     b_reload = true;
 }
 
@@ -79,6 +80,8 @@ int main(int argc, char *argv[])
     struct sigaction sigHupHandler;
     sls_opt_t sls_opt;
 
+    initialize_logger();
+
     CSLSManager *sls_manager = NULL;
 std:
     list<CSLSManager *> reload_manager_list;
@@ -102,7 +105,6 @@ std:
         ret = sls_parse_argv(argc, argv, &sls_opt, conf_cmd_opt, cmd_size);
         if (ret != SLS_OK)
         {
-            CSLSLog::destory_instance();
             return SLS_ERROR;
         }
     }
@@ -145,22 +147,22 @@ std:
     ret = sls_conf_open(sls_opt.conf_file_name);
     if (ret != SLS_OK)
     {
-        sls_log(SLS_LOG_INFO, "sls_conf_open failed, EXIT!");
+        spdlog::critical("sls_conf_open failed, EXIT!");
         goto EXIT_PROC;
     }
 
     if (0 != sls_write_pid(getpid()))
     {
-        sls_log(SLS_LOG_INFO, "sls_write_pid failed, EXIT!");
+        spdlog::critical("sls_write_pid failed, EXIT!");
         goto EXIT_PROC;
     }
     //sls manager
-    sls_log(SLS_LOG_INFO, "\nsrt live server is running...");
+    spdlog::info("srt live server is running...");
 
     sls_manager = new CSLSManager;
     if (SLS_OK != sls_manager->start())
     {
-        sls_log(SLS_LOG_INFO, "sls_manager->start failed, EXIT!");
+        spdlog::critical("sls_manager->start failed, EXIT!");
         goto EXIT_PROC;
     }
 
@@ -221,7 +223,7 @@ std:
             }
             if (SLS_OK == manager->check_invalid())
             {
-                sls_log(SLS_LOG_INFO, "check reloaded manager, delete manager=%p ...", manager);
+                spdlog::info("check reloaded manager, delete manager={p} ...", fmt::ptr(manager));
                 manager->stop();
                 delete manager;
                 reload_manager_list.erase(it_erase);
@@ -232,39 +234,39 @@ std:
         {
             //reload
             b_reload = false;
-            sls_log(SLS_LOG_INFO, "reload srt live server...");
+            spdlog::info("reload srt live server...");
             ret = sls_manager->reload();
             if (ret != SLS_OK)
             {
-                sls_log(SLS_LOG_INFO, "reload failed, sls_manager->reload failed.");
+                spdlog::error("reload failed, sls_manager->reload failed.");
                 continue;
             }
             reload_manager_list.push_back(sls_manager);
             sls_manager = NULL;
-            sls_log(SLS_LOG_INFO, "reload, push old sls_manager to list.");
+            spdlog::info("reload, push old sls_manager to list.");
 
             sls_conf_close();
             ret = sls_conf_open(sls_opt.conf_file_name);
             if (ret != SLS_OK)
             {
-                sls_log(SLS_LOG_INFO, "reload failed, read config file failed.");
+                spdlog::error("reload failed, read config file failed.");
                 break;
             }
-            sls_log(SLS_LOG_INFO, "reload config file ok.");
+            spdlog::info("reload config file ok.");
             sls_manager = new CSLSManager;
             if (SLS_OK != sls_manager->start())
             {
-                sls_log(SLS_LOG_INFO, "reload, failed, sls_manager->start, exit.");
+                spdlog::error("reload, failed, sls_manager->start, exit.");
                 break;
             }
             if (strlen(conf_srt->stat_post_url) > 0)
                 http_stat_client->open(conf_srt->stat_post_url, stat_method, conf_srt->stat_post_interval);
-            sls_log(SLS_LOG_INFO, "reload successfully.");
+            spdlog::info("reload successfully.");
         }
     }
 
 EXIT_PROC:
-    sls_log(SLS_LOG_INFO, "exit, stop srt live server...");
+    spdlog::info("exit, stop srt live server...");
 
     //stop srt
     if (NULL != sls_manager)
@@ -272,11 +274,11 @@ EXIT_PROC:
         sls_manager->stop();
         delete sls_manager;
         sls_manager = NULL;
-        sls_log(SLS_LOG_INFO, "exit, release sls_manager ok.");
+        spdlog::info("exit, release sls_manager ok.");
     }
 
     //release all reload manager
-    sls_log(SLS_LOG_INFO, "exit, release reload_manager_list begin，count=%d.", reload_manager_list.size());
+    spdlog::info("exit, release reload_manager_list begin，count={:d}.", reload_manager_list.size());
     std::list<CSLSManager *>::iterator it;
     for (it = reload_manager_list.begin(); it != reload_manager_list.end(); it++)
     {
@@ -288,10 +290,10 @@ EXIT_PROC:
         manager->stop();
         delete manager;
     }
-    sls_log(SLS_LOG_INFO, "exit, release reload_manager_list ok.");
+    spdlog::info("exit, release reload_manager_list ok.");
     reload_manager_list.clear();
 
-    sls_log(SLS_LOG_INFO, "exit, release http_stat_client.");
+    spdlog::info("exit, release http_stat_client.");
     //release http_stat_client
     if (NULL != http_stat_client)
     {
@@ -300,17 +302,19 @@ EXIT_PROC:
         http_stat_client = NULL;
     }
 
-    sls_log(SLS_LOG_INFO, "exit, uninit srt .");
+    spdlog::info("exit, uninit srt .");
     //uninit srt
     CSLSSrt::libsrt_uninit();
 
-    sls_log(SLS_LOG_INFO, "exit, close conf.");
+    spdlog::info("exit, close conf.");
     sls_conf_close();
-    CSLSLog::destory_instance();
 
     sls_remove_pid();
 
-    sls_log(SLS_LOG_INFO, "exit, bye bye!");
+    spdlog::info("exit, bye bye!");
+
+    // Drop all active loggers
+    spdlog::drop_all();
 
     return 0;
 }

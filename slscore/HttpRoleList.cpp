@@ -25,6 +25,7 @@
 
 #include <errno.h>
 #include <string.h>
+#include "spdlog/spdlog.h"
 
 #include "SLSLog.hpp"
 #include "SLSLock.hpp"
@@ -71,7 +72,7 @@ int CHttpRoleList::size()
 void CHttpRoleList::erase()
 {
     CSLSLock lock(&m_mutex);
-    sls_log(SLS_LOG_TRACE, "[%p]CHttpRoleList::erase, list.count=%d", this, m_list_role.size());
+    spdlog::trace("[{}] CHttpRoleList::erase, list.count={:d}", fmt::ptr(this), m_list_role.size());
     for (std::list<CHttpClient *>::iterator it = m_list_role.begin(); it != m_list_role.end();)
     {
         CHttpClient *role = *it;

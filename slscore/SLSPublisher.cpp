@@ -24,6 +24,7 @@
 
 #include <errno.h>
 #include <string.h>
+#include "spdlog/spdlog.h"
 
 #include "SLSPublisher.hpp"
 #include "SLSPlayer.hpp"
@@ -72,15 +73,15 @@ int CSLSPublisher::uninit()
     if (m_map_data)
     {
         ret = m_map_data->remove(m_map_data_key);
-        sls_log(SLS_LOG_INFO, "[%p]CSLSPublisher::uninit, removed publisher from m_map_data, ret=%d.",
-                this, ret);
+        spdlog::info("[{}] CSLSPublisher::uninit, removed publisher from m_map_data, ret={:d}.",
+                     fmt::ptr(this), ret);
     }
 
     if (m_map_publisher)
     {
         ret = m_map_publisher->remove(this);
-        sls_log(SLS_LOG_INFO, "[%p]CSLSPublisher::uninit, removed publisher from m_map_publisher, ret=%d.",
-                this, ret);
+        spdlog::info("[{}] CSLSPublisher::uninit, removed publisher from m_map_publisher, ret={:d}.",
+                     fmt::ptr(this), ret);
     }
     return CSLSRole::uninit();
 }

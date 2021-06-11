@@ -23,6 +23,7 @@
 
 #include <errno.h>
 #include <string.h>
+#include "spdlog/spdlog.h"
 
 #include "TCPRole.hpp"
 #include "SLSLog.hpp"
@@ -41,7 +42,7 @@ CTCPRole::CTCPRole()
     m_valid = false;
 
     strcpy(m_remote_host, "");
-    sprintf(m_role_name, "tcp_role");
+    snprintf(m_role_name, sizeof(m_role_name), "tcp_role");
 }
 CTCPRole::~CTCPRole()
 {
@@ -51,7 +52,7 @@ CTCPRole::~CTCPRole()
 int CTCPRole::handler(DATA_PARAM *p)
 {
     int ret = 0;
-    //sls_log(SLS_LOG_INFO, "CTCPRole::handler()");
+    //spdlog::info("CTCPRole::handler()");
     return ret;
 }
 
@@ -61,8 +62,8 @@ int CTCPRole::write(const char *buf, int size)
     len = send(m_fd, buf, size, 0);
     if (0 >= len)
     {
-        sls_log(SLS_LOG_INFO, "[%p]CTCPRole::read, len=%d, errno=%d, err='%s'",
-                this, len, errno, strerror(errno));
+        spdlog::info("[{}] CTCPRole::read, len={:d}, errno={:d}, err='{}'",
+                     fmt::ptr(this), len, errno, strerror(errno));
     }
     return len;
 }
@@ -73,12 +74,12 @@ int CTCPRole::read(char *buf, int size)
     len = recv(m_fd, buf, size, 0);
     if (len <= 0)
     {
-        sls_log(SLS_LOG_TRACE, "[%p]CTCPRole::read, len=%d, errno=%d, err='%s'.",
-                this, len, errno, strerror(errno));
+        spdlog::trace("[{}] CTCPRole::read, len={:d}, errno={:d}, err='{}'.",
+                      fmt::ptr(this), len, errno, strerror(errno));
         if (errno != EAGAIN)
         {
-            sls_log(SLS_LOG_INFO, "[%p]CTCPRole::read, invalid tcp.",
-                    this);
+            spdlog::error("[{}] CTCPRole::read, invalid tcp.",
+                          fmt::ptr(this));
             m_valid = false;
         }
     }
@@ -89,12 +90,12 @@ int CTCPRole::open(char *host, int port)
 {
     if (SLS_OK != setup())
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CTCPRole::open setup failure, host='%s', port==%d.", this, host, port);
+        spdlog::error("[{}] CTCPRole::open setup failure, host='{}', port=={:d}.", fmt::ptr(this), host, port);
         return SLS_ERROR;
     }
     if (SLS_OK != connect(host, port))
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CTCPRole::open setup connect failure, host='%s', port==%d.", this, host, port);
+        spdlog::error("[{}] CTCPRole::open setup connect failure, host='{}', port=={:d}.", fmt::ptr(this), host, port);
         return SLS_ERROR;
     }
     m_valid = true;
@@ -105,7 +106,7 @@ int CTCPRole::connect(char *host, int port)
 {
     if (m_fd <= 0)
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CTCPRole::connect, m_fd=%d, cant't setup, host='%s', port==%d.", this, m_fd, host, port);
+        spdlog::error("[{}] CTCPRole::connect, m_fd={:d}, cant't setup, host='{}', port=={:d}.", fmt::ptr(this), m_fd, host, port);
         return SLS_ERROR;
     }
     int ret = SLS_ERROR;
@@ -114,7 +115,7 @@ int CTCPRole::connect(char *host, int port)
     ret = set_nonblock();
     if (ret == SLS_ERROR)
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CTCPRole::connect, set_nonblock failure, m_fd=%d.", this, m_fd);
+        spdlog::error("[{}] CTCPRole::connect, set_nonblock failure, m_fd={:d}.", fmt::ptr(this), m_fd);
         return SLS_ERROR;
     }
 
@@ -130,14 +131,14 @@ int CTCPRole::connect(char *host, int port)
     {
         if (errno != EINPROGRESS)
         {
-            sls_log(SLS_LOG_ERROR, "[%p]CTCPRole::connect, failure, m_fd=%d, host=%s, port==%d, errno=%d.", this, m_fd, host, port, errno);
+            spdlog::error("[{}] CTCPRole::connect, failure, m_fd={:d}, host={}, port=={:d}, errno={:d}.", fmt::ptr(this), m_fd, host, port, errno);
             ::close(m_fd);
             m_fd = 0;
             return SLS_ERROR;
         }
     }
 
-    sls_log(SLS_LOG_INFO, "[%p]CTCPRole::connect, ok, m_fd=%d, host=%s, port==%d.", this, m_fd, host, port);
+    spdlog::info("[{}] CTCPRole::connect, ok, m_fd={:d}, host={}, port=={:d}.", fmt::ptr(this), m_fd, host, port);
     strcpy(m_remote_host, host);
     m_remote_port = port;
     return SLS_OK;
@@ -147,12 +148,12 @@ int CTCPRole::open(int port, int backlog)
 {
     if (SLS_OK != setup())
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CTCPRole::open setup failure, port==%d.", this, port);
+        spdlog::error("[{}] CTCPRole::open setup failure, port=={:d}.", fmt::ptr(this), port);
         return SLS_ERROR;
     }
     if (SLS_OK != listen(port, backlog))
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CTCPRole::open listen failure, port==%d.", this, port);
+        spdlog::error("[{}] CTCPRole::open listen failure, port=={:d}.", fmt::ptr(this), port);
         return SLS_ERROR;
     }
     m_valid = true;
@@ -163,17 +164,17 @@ int CTCPRole::setup()
 {
     if (m_fd > 0)
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CTCPRole::setup, m_fd=%d, cant't setup.", this, m_fd);
+        spdlog::error("[{}] CTCPRole::setup, m_fd={:d}, cant't setup.", fmt::ptr(this), m_fd);
         return SLS_ERROR;
     }
 
     m_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (m_fd == 0)
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CTCPRole::setup, create sock failure.", this);
+        spdlog::error("[{}] CTCPRole::setup, create sock failure.", fmt::ptr(this));
         return SLS_ERROR;
     }
-    sls_log(SLS_LOG_INFO, "[%p]CTCPRole::setup, create sock ok, m_fd=%d.", this, m_fd);
+    spdlog::info("[{}] CTCPRole::setup, create sock ok, m_fd={:d}.", fmt::ptr(this), m_fd);
 
     int yes = 1;
     int ret = setsockopt(m_fd,
@@ -181,10 +182,10 @@ int CTCPRole::setup()
                          (void *)&yes, sizeof(yes));
     if (ret != 0)
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CTCPRole::setup, setsockopt reused failure, m_fd=%d.", this, m_fd);
+        spdlog::error("[{}] CTCPRole::setup, setsockopt reused failure, m_fd={:d}.", fmt::ptr(this), m_fd);
         return SLS_ERROR;
     }
-    sls_log(SLS_LOG_INFO, "[%p]CTCPRole::setup, setsockopt reused ok, m_fd=%d.", this, m_fd);
+    spdlog::info("[{}] CTCPRole::setup, setsockopt reused ok, m_fd={:d}.", fmt::ptr(this), m_fd);
 
     return SLS_OK;
 }
@@ -193,23 +194,23 @@ int CTCPRole::set_nonblock()
 {
     if (m_fd <= 0)
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CTCPRole::set_nonblock, m_fd=%d, cant't setup.", this, m_fd);
+        spdlog::error("[{}] CTCPRole::set_nonblock, m_fd={:d}, cant't setup.", fmt::ptr(this), m_fd);
         return SLS_ERROR;
     }
     int opts;
     opts = fcntl(m_fd, F_GETFL);
     if (opts < 0)
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CTCPRole::set_nonblock, fcntl failure, m_fd=%d.", this, m_fd);
+        spdlog::error("[{}] CTCPRole::set_nonblock, fcntl failure, m_fd={:d}.", fmt::ptr(this), m_fd);
         return SLS_ERROR;
     }
     opts = opts | O_NONBLOCK;
     if (fcntl(m_fd, F_SETFL, opts) < 0)
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CTCPRole::set_nonblock, fcntl set O_NONBLOCK failure, m_fd=%d.", this, m_fd);
+        spdlog::error("[{}] CTCPRole::set_nonblock, fcntl set O_NONBLOCK failure, m_fd={:d}.", fmt::ptr(this), m_fd);
         return SLS_ERROR;
     }
-    sls_log(SLS_LOG_INFO, "[%p]CTCPRole::set_nonblock, set O_NONBLOCK ok, m_fd=%d.", this, m_fd);
+    spdlog::info("[{}] CTCPRole::set_nonblock, set O_NONBLOCK ok, m_fd={:d}.", fmt::ptr(this), m_fd);
     return SLS_OK;
 }
 
@@ -217,7 +218,7 @@ int CTCPRole::listen(int port, int backlog)
 {
     if (m_fd <= 0)
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CTCPRole::listen, m_fd=%d, cant't setup.", this, m_fd);
+        spdlog::error("[{}] CTCPRole::listen, m_fd={:d}, cant't setup.", fmt::ptr(this), m_fd);
         return SLS_ERROR;
     }
     struct sockaddr_in serverAdd;
@@ -232,21 +233,21 @@ int CTCPRole::listen(int port, int backlog)
     int ret = bind(m_fd, (struct sockaddr *)&serverAdd, sizeof(serverAdd));
     if (ret < 0)
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CTCPRole::listen, bind failure, m_fd=%d, port=%d.", this, m_fd, port);
+        spdlog::error("[{}] CTCPRole::listen, bind failure, m_fd={:d}, port={:d}.", fmt::ptr(this), m_fd, port);
         close();
         return SLS_ERROR;
     }
-    sls_log(SLS_LOG_INFO, "[%p]CTCPRole::listen, bind ok, m_fd=%d, port=%d.", this, m_fd, port);
+    spdlog::info("[{}] CTCPRole::listen, bind ok, m_fd={:d}, port={:d}.", fmt::ptr(this), m_fd, port);
     m_port = port;
 
     ret = ::listen(m_fd, backlog);
     if (ret < 0)
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CTCPRole::listen, listen failure, m_fd=%d, port=%d.", this, m_fd, port);
+        spdlog::error("[{}] CTCPRole::listen, listen failure, m_fd={:d}, port={:d}.", fmt::ptr(this), m_fd, port);
         close();
         return SLS_ERROR;
     }
-    sls_log(SLS_LOG_INFO, "[%p]CTCPRole::listen, listen ok, m_fd=%d, port=%d.", this, m_fd, port);
+    spdlog::info("[{}] CTCPRole::listen, listen ok, m_fd={:d}, port={:d}.", fmt::ptr(this), m_fd, port);
     return SLS_OK;
 }
 
@@ -256,7 +257,7 @@ int CTCPRole::close()
     {
         return SLS_ERROR;
     }
-    sls_log(SLS_LOG_INFO, "[%p]CTCPRole::close ok, m_fd=%d.", this, m_fd);
+    spdlog::info("[{}] CTCPRole::close ok, m_fd={:d}.", fmt::ptr(this), m_fd);
     ::close(m_fd);
     m_fd = 0;
     m_valid = false;

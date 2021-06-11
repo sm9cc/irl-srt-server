@@ -26,6 +26,7 @@
 #include <string.h>
 #include <signal.h>
 #include <unistd.h>
+#include "spdlog/spdlog.h"
 
 using namespace std;
 
@@ -81,7 +82,7 @@ int main(int argc, char *argv[])
 	//parse cmd line
 	if (argc < 3)
 	{
-		sls_log(SLS_LOG_INFO, "srt live client, no enough parameters, EXIT!");
+		spdlog::info("srt live client, no enough parameters, EXIT!");
 		return SLS_OK;
 	}
 
@@ -123,7 +124,7 @@ int main(int argc, char *argv[])
 		}
 		else
 		{
-			sls_log(SLS_LOG_INFO, "srt live client, wrong parameter '%s', EXIT!", argv[i]);
+			spdlog::info("srt live client, wrong parameter '{}', EXIT!", argv[i]);
 			return SLS_OK;
 		}
 	}
@@ -132,7 +133,7 @@ int main(int argc, char *argv[])
 	{
 		if (SLS_OK != sls_client.push(sls_opt.srt_url, sls_opt.ts_file_name, sls_opt.loop))
 		{
-			sls_log(SLS_LOG_INFO, "sls_client.push failed, EXIT!");
+			spdlog::info("sls_client.push failed, EXIT!");
 			return SLS_ERROR;
 		}
 	}
@@ -140,7 +141,7 @@ int main(int argc, char *argv[])
 	{
 		if (SLS_OK != sls_client.play(sls_opt.srt_url, sls_opt.out_file_name))
 		{
-			sls_log(SLS_LOG_INFO, "sls_client.play failed, EXIT!");
+			spdlog::info("sls_client.play failed, EXIT!");
 			return SLS_ERROR;
 		}
 		for (i = 1; i < sls_opt.worker_count; i++)
@@ -149,16 +150,16 @@ int main(int argc, char *argv[])
 			fpid = fork();
 			if (fpid < 0)
 			{
-				printf("srt live client, error in fork!");
+				spdlog::error("srt live client, error in fork!");
 			}
 			else if (fpid == 0)
 			{
-				printf("srt live client, i am the child process, my process id is %d/n", getpid());
+				spdlog::info("srt live client, i am the child process, my process id is {:d}", getpid());
 				break;
 			}
 			else
 			{
-				printf("srt live client, i am the parent process, my process id is %d/n", getpid());
+				spdlog::info("srt live client, i am the parent process, my process id is {:d}", getpid());
 			}
 		}
 	}
@@ -169,12 +170,12 @@ int main(int argc, char *argv[])
 	sigIntHandler.sa_flags = 0;
 	sigaction(SIGINT, &sigIntHandler, 0);
 
-	sls_log(SLS_LOG_INFO, "\nsrt live client is running...");
+	spdlog::info("srt live client is running...");
 	while (!b_exit)
 	{
 		//printf log info
 		int64_t kb = sls_client.get_bitrate();
-		printf("\rsrt live client, cur bitrate=%lld(kb)", kb);
+		("\rsrt live client, cur bitrate=%lld(kb)", kb);
 
 		int ret = sls_client.handler();
 		if (ret > 0)
@@ -191,9 +192,9 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	sls_log(SLS_LOG_INFO, "exit, stop srt live client...");
+	spdlog::info("exit, stop srt live client...");
 	sls_client.close();
-	sls_log(SLS_LOG_INFO, "exit, bye bye!");
+	spdlog::info("exit, bye bye!");
 
 	return 0;
 }

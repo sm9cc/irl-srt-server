@@ -26,98 +26,60 @@
 #include <string.h>
 #include <stddef.h>
 #include <strings.h>
+#include "spdlog/spdlog.h"
+#include "spdlog/sinks/basic_file_sink.h"
 
 #include "SLSLog.hpp"
 #include "SLSLock.hpp"
 
-CSLSLog *CSLSLog::m_pInstance = NULL;
+#include <mutex>
 
-CSLSLog::CSLSLog()
+std::mutex LOGGER_MUTEX;
+
+int initialize_logger()
 {
-    m_level = SLS_LOG_INFO;
-    m_log_file = NULL;
-    sprintf(log_filename, "");
-}
-CSLSLog::~CSLSLog()
-{
-}
-int CSLSLog::create_instance()
-{
-    if (!m_pInstance)
-    {
-        m_pInstance = new CSLSLog();
-        m_pInstance->m_level = SLS_LOG_ERROR; //default
-        return 0;
-    }
-    return -1;
-}
-int CSLSLog::destory_instance()
-{
-    SAFE_DELETE(m_pInstance);
+    std::vector<spdlog::sink_ptr> sinks;
+
+    auto console_sink = std::make_shared<spdlog::sinks::ansicolor_stdout_sink_mt>();
+    sinks.push_back(console_sink);
+
+    auto combined_logger = std::make_shared<spdlog::logger>(APP_NAME, begin(sinks), end(sinks));
+    combined_logger->set_level(DEFAULT_LOG_LEVEL);
+
+    spdlog::set_default_logger(combined_logger);
+
     return 0;
 }
 
-void CSLSLog::log(int level, const char *fmt, ...)
+int sls_set_log_level(char *log_level)
 {
-    if (!m_pInstance)
-        m_pInstance = new CSLSLog();
-    if (level > m_pInstance->m_level)
-        return;
-
-    va_list vl;
-    va_start(vl, fmt);
-    m_pInstance->print_log(level, fmt, vl);
-    va_end(vl);
-}
-
-void CSLSLog::print_log(int level, const char *fmt, va_list vl)
-{
-    CSLSLock lock(&m_mutex);
-    char buf[4096] = {0};
-    char buf_info[4096] = {0};
-    char cur_time[STR_DATE_TIME_LEN] = {0};
-    int64_t cur_time_msec = sls_gettime_ms();
-    int64_t cur_time_sec = cur_time_msec / 1000;
-    cur_time_msec = cur_time_msec - cur_time_sec * 1000;
-    sls_gettime_fmt(cur_time, cur_time_sec, "%Y-%m-%d %H:%M:%S");
-    vsnprintf(buf, 4095, fmt, vl);
-    //sprintf(buf_info, "%s %s: %s\n" , cur_time, LOG_LEVEL_NAME[level], buf);
-    snprintf(buf_info, sizeof(buf_info), "%s:%03d %s %s: %s\n", cur_time, (int)cur_time_msec, APP_NAME, LOG_LEVEL_NAME[level], buf);
-    printf("%s", buf_info);
-
-    if (m_log_file)
-    {
-        fwrite(buf_info, strlen(buf_info), 1, m_log_file);
-    }
-}
-
-void CSLSLog::set_log_level(char *level)
-{
-    if (!m_pInstance)
-        m_pInstance = new CSLSLog();
-
-    level = sls_strupper(level); //to upper
+    log_level = sls_strupper(log_level); //to upper
     int n = sizeof(LOG_LEVEL_NAME) / sizeof(char *);
     for (int i = 0; i < n; i++)
     {
-        if (strcmp(level, LOG_LEVEL_NAME[i]) == 0)
+        if (strcmp(log_level, LOG_LEVEL_NAME[i]) == 0)
         {
-            m_pInstance->m_level = i;
-            printf("set log level='%s'.\n", level, LOG_LEVEL_NAME[i]);
-            return;
+            spdlog::get(APP_NAME)->set_level((spdlog::level::level_enum)i);
+            spdlog::info("set log level='{}'.", LOG_LEVEL_NAME[i]);
+            return 0;
         }
     }
-    printf("!!!wrong log level '%s', set default '%s'.\n", level, LOG_LEVEL_NAME[m_pInstance->m_level]);
+    spdlog::warn("!!!wrong log level '{0}', set default '{1}'.", log_level, LOG_LEVEL_NAME[DEFAULT_LOG_LEVEL]);
+    return 1;
 }
 
-void CSLSLog::set_log_file(char *file_name)
+int sls_set_log_file(char *log_file)
 {
-    if (!m_pInstance)
-        m_pInstance = new CSLSLog();
-
-    if (strlen(m_pInstance->log_filename) == 0)
+    if (log_file && strlen(log_file) > 0)
     {
-        sprintf(m_pInstance->log_filename, "%s", file_name);
-        m_pInstance->m_log_file = fopen(m_pInstance->log_filename, "a");
+        auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(log_file);
+        LOGGER_MUTEX.lock();
+        spdlog::get(APP_NAME)->sinks().push_back(file_sink);
+        LOGGER_MUTEX.unlock();
+        return 0;
+    }
+    else
+    {
+        return 1;
     }
 }

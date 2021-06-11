@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
+#include "spdlog/spdlog.h"
 
 #include "conf.hpp"
 #include "common.hpp"
@@ -222,7 +223,7 @@ int sls_conf_parse_block(ifstream &ifs, int &line, sls_conf_base_t *b, bool &chi
     while (getline(ifs, str_line))
     {
         line++;
-        sls_log(SLS_LOG_TRACE, "line:%d='%s'", line, str_line.c_str());
+        spdlog::trace("line:{:d}='{}'", line, str_line.c_str());
         //remove #
         index = str_line.find('#');
         if (index != -1)
@@ -234,7 +235,7 @@ int sls_conf_parse_block(ifstream &ifs, int &line, sls_conf_base_t *b, bool &chi
         str_line = trim(str_line);
         if (str_line.length() == 0)
         {
-            sls_log(SLS_LOG_TRACE, "line:%d='%s', is comment.", line, str_line.c_str());
+            spdlog::trace("line:{:d}='{}', is comment.", line, str_line.c_str());
             continue;
         }
 
@@ -245,7 +246,7 @@ int sls_conf_parse_block(ifstream &ifs, int &line, sls_conf_base_t *b, bool &chi
         {
             if (!b)
             {
-                sls_log(SLS_LOG_ERROR, "line:%d='%s', not found block.", line, str_line.c_str());
+                spdlog::error("line:{:d}='{}', not found block.", line, str_line.c_str());
                 ret = SLS_ERROR;
                 break;
             }
@@ -259,7 +260,7 @@ int sls_conf_parse_block(ifstream &ifs, int &line, sls_conf_base_t *b, bool &chi
             int index = str_line.find(' ');
             if (index == -1)
             {
-                sls_log(SLS_LOG_ERROR, "line:%d='%s', no space separator.", line, str_line.c_str());
+                spdlog::error("line:{:d}='{}', no space separator.", line, str_line.c_str());
                 ret = SLS_ERROR;
                 break;
             }
@@ -270,18 +271,18 @@ int sls_conf_parse_block(ifstream &ifs, int &line, sls_conf_base_t *b, bool &chi
             sls_conf_cmd_t *it = sls_conf_find(n.c_str(), p_runtime->conf_cmd, p_runtime->conf_cmd_size);
             if (!it)
             {
-                sls_log(SLS_LOG_ERROR, "line:%d='%s', wrong name='%s'.", line, str_line.c_str(), n.c_str());
+                spdlog::error("line:{:d}='{}', wrong name='{}'.", line, str_line.c_str(), n.c_str());
                 ret = SLS_ERROR;
                 break;
             }
             const char *r = it->set(v.c_str(), it, b);
             if (r != SLS_CONF_OK)
             {
-                sls_log(SLS_LOG_ERROR, "line:%d, set failed, %s, name='%s', value='%s'.", line, r, n.c_str(), v.c_str());
+                spdlog::error("line:{:d}, set failed, {}, name='{}', value='{}'.", line, r, n.c_str(), v.c_str());
                 ret = SLS_ERROR;
                 break;
             }
-            sls_log(SLS_LOG_TRACE, "line:%d, set name='%s', value='%s'.", line, n.c_str(), v.c_str());
+            spdlog::trace("line:{:d}, set name='{}', value='{}'.", line, n.c_str(), v.c_str());
         }
         else if (line_end_flag == "{")
         {
@@ -294,7 +295,7 @@ int sls_conf_parse_block(ifstream &ifs, int &line, sls_conf_base_t *b, bool &chi
             {
                 if (str_line_last.length() == 0)
                 {
-                    sls_log(SLS_LOG_ERROR, "line:%d, no name found.", line);
+                    spdlog::error("line:{:d}, no name found.", line);
                     ret = SLS_ERROR;
                     break;
                 }
@@ -305,7 +306,7 @@ int sls_conf_parse_block(ifstream &ifs, int &line, sls_conf_base_t *b, bool &chi
             block = sls_conf_create_block_by_name(n, p_runtime);
             if (!block)
             {
-                sls_log(SLS_LOG_ERROR, "line:%d, name='%s' not found.", line, n.c_str());
+                spdlog::error("line:{:d}, name='{}' not found.", line, n.c_str());
                 ret = SLS_ERROR;
                 break;
             }
@@ -319,7 +320,7 @@ int sls_conf_parse_block(ifstream &ifs, int &line, sls_conf_base_t *b, bool &chi
             ret = sls_conf_parse_block(ifs, line, b, child, p_runtime, brackets_layers);
             if (ret != SLS_OK)
             {
-                sls_log(SLS_LOG_ERROR, "line:%d, parse block=‘%s’ failed.", line, block->name);
+                spdlog::error("line:{:d}, parse block='{}' failed.", line, block->name);
                 ret = SLS_ERROR;
                 break;
             }
@@ -328,7 +329,7 @@ int sls_conf_parse_block(ifstream &ifs, int &line, sls_conf_base_t *b, bool &chi
         {
             if (str_line != line_end_flag)
             {
-                sls_log(SLS_LOG_ERROR, "line:%d=‘%s’, end indicator ‘}’ with more info.", str_line.c_str(), line);
+                spdlog::error("line:{:d}='{}', end indicator '}}' with more info.", line, str_line.c_str());
                 ret = SLS_ERROR;
                 break;
             }
@@ -339,7 +340,7 @@ int sls_conf_parse_block(ifstream &ifs, int &line, sls_conf_base_t *b, bool &chi
         }
         else
         {
-            sls_log(SLS_LOG_ERROR, "line:%d='%s', invalid end flag, except ';', '{', '}',", str_line.c_str(), line);
+            spdlog::error("line:{:d}='{}', invalid end flag, except ';', '{{', '}}',", line, str_line.c_str());
             ret = SLS_ERROR;
             break;
         }
@@ -358,10 +359,10 @@ int sls_conf_open(const char *conf_file)
 
     sls_runtime_conf_t *p_runtime = NULL;
 
-    sls_log(SLS_LOG_INFO, "sls_conf_open, parsing conf file='%s'.", conf_file);
+    spdlog::info("sls_conf_open, parsing conf file='{}'.", conf_file);
     if (!ifs.is_open())
     {
-        sls_log(SLS_LOG_FATAL, "open conf file='%s' failed, please check if the file exist.", conf_file);
+        spdlog::critical("open conf file='{}' failed, please check if the file exist.", conf_file);
         return SLS_ERROR;
     }
 
@@ -370,11 +371,11 @@ int sls_conf_open(const char *conf_file)
     {
         if (0 == brackets_layers)
         {
-            sls_log(SLS_LOG_FATAL, "parse conf file='%s' failed.", conf_file);
+            spdlog::critical("parse conf file='{}' failed.", conf_file);
         }
         else
         {
-            sls_log(SLS_LOG_FATAL, "parse conf file='%s' failed, please check count of '{' and '}'.", conf_file);
+            spdlog::critical("parse conf file='{}' failed, please check count of '{{' and '}}'.", conf_file);
         }
     }
     return ret;
@@ -397,7 +398,7 @@ void sls_conf_release(sls_conf_base_t *c)
     }
     if (c->child == NULL && c->sibling == NULL)
     {
-        sls_log(SLS_LOG_DEBUG, "sls_conf_release, delete '%s'.", c->name);
+        spdlog::debug("sls_conf_release, delete '{}'.", c->name);
         delete c;
         return;
     }
@@ -431,10 +432,10 @@ int sls_parse_argv(int argc, char *argv[], sls_opt_t *sls_opt, sls_conf_cmd_t *c
         sls_remove_marks(temp);
         if (strcmp(temp, "-h") == 0)
         {
-            printf("option help info:\n");
+            spdlog::info("option help info:\n");
             for (i = 0; i < len; i++)
             {
-                printf("-%s, %s, range: %.0f-%.0f.\n",
+                spdlog::info("-{}, {}, range: {:.0f}-{:.0f}.\n",
                        conf_cmd_opt[i].name,
                        conf_cmd_opt[i].mark,
                        conf_cmd_opt[i].min,
@@ -443,7 +444,7 @@ int sls_parse_argv(int argc, char *argv[], sls_opt_t *sls_opt, sls_conf_cmd_t *c
         }
         else
         {
-            printf("wrong parameter, '%s'.\n", argv[1]);
+            spdlog::critical("wrong parameter, '{}'.\n", argv[1]);
         }
         return SLS_ERROR;
     }
@@ -453,14 +454,14 @@ int sls_parse_argv(int argc, char *argv[], sls_opt_t *sls_opt, sls_conf_cmd_t *c
         len = strlen(temp);
         if (len == 0)
         {
-            printf("wrong parameter, is ''.");
+            spdlog::critical("wrong parameter, is ''.");
             ret = SLS_ERROR;
             return ret;
         }
         sls_remove_marks(temp);
         if (temp[0] != '-')
         {
-            printf("wrong parameter '%s', the first character must be '-'.", opt_name);
+            spdlog::critical("wrong parameter '{}', the first character must be '-'.", opt_name);
             ret = SLS_ERROR;
             return ret;
         }
@@ -469,7 +470,7 @@ int sls_parse_argv(int argc, char *argv[], sls_opt_t *sls_opt, sls_conf_cmd_t *c
         sls_conf_cmd_t *it = sls_conf_find(opt_name, conf_cmd_opt, cmd_size);
         if (!it)
         {
-            printf("wrong parameter '%s'.", argv[i]);
+            spdlog::critical("wrong parameter '{}'.", argv[i]);
             ret = SLS_ERROR;
             return ret;
         }
@@ -479,7 +480,7 @@ int sls_parse_argv(int argc, char *argv[], sls_opt_t *sls_opt, sls_conf_cmd_t *c
         const char *r = it->set(opt_value, it, sls_opt);
         if (r != SLS_CONF_OK)
         {
-            printf("parameter set failed, %s, name='%s', value='%s'.", r, opt_name, opt_value);
+            spdlog::critical("parameter set failed, {}, name='{}', value='{}'.", r, opt_name, opt_value);
             ret = SLS_ERROR;
             return ret;
         }

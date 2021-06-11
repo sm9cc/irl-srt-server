@@ -24,6 +24,7 @@
 
 #include <errno.h>
 #include <string.h>
+#include "spdlog/spdlog.h"
 
 #include "common.hpp"
 #include "SLSRelayManager.hpp"
@@ -85,7 +86,7 @@ int CSLSRelayManager::connect(const char *url)
 	int ret = SLS_ERROR;
 	if (url == NULL || strlen(url) == 0)
 	{
-		sls_log(SLS_LOG_INFO, "[%p]CSLSManager::connect, failed, url=%s.", url ? url : "null");
+		spdlog::error("[{}] CSLSManager::connect, failed, url={}.", fmt::ptr(this), url ? url : "null");
 		return ret;
 	}
 
@@ -138,13 +139,13 @@ int CSLSRelayManager::connect_hash()
 	int ret = connect(szURL);
 	if (SLS_OK != ret)
 	{
-		sls_log(SLS_LOG_INFO, "[%p]CSLSRelayManager::connect_hash, faild, connect szURL=%s, m_stream_name=%s.",
-				this, szURL, m_stream_name);
+		spdlog::error("[{}] CSLSRelayManager::connect_hash, failed, connect szURL={}, m_stream_name={}.",
+					  fmt::ptr(this), szURL, m_stream_name);
 	}
 	else
 	{
-		sls_log(SLS_LOG_INFO, "[%p]CSLSRelayManager::connect_hash, ok, connect szURL=%s, m_stream_name=%s.",
-				this, szURL, m_stream_name);
+		spdlog::info("[{}] CSLSRelayManager::connect_hash, ok, connect szURL={}, m_stream_name={}.",
+					 fmt::ptr(this), szURL, m_stream_name);
 	}
 	return ret;
 }

@@ -25,6 +25,7 @@
 #include <errno.h>
 #include <string.h>
 #include <vector>
+#include "spdlog/spdlog.h"
 
 #include "SLSListener.hpp"
 #include "SLSLog.hpp"
@@ -157,19 +158,19 @@ int CSLSListener::init_conf_app()
 
     if (NULL == m_map_puller)
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CSLSListener::init_conf_app failed, m_map_puller is null.", this);
+        spdlog::error("[{}] CSLSListener::init_conf_app failed, m_map_puller is null.", fmt::ptr(this));
         return SLS_ERROR;
     }
 
     if (NULL == m_map_pusher)
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CSLSListener::init_conf_app failed, m_map_pusher is null.", this);
+        spdlog::error("[{}] CSLSListener::init_conf_app failed, m_map_pusher is null.", fmt::ptr(this));
         return SLS_ERROR;
     }
 
     if (!m_conf)
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CSLSListener::init_conf_app failed, conf is null.", this);
+        spdlog::error("[{}] CSLSListener::init_conf_app failed, conf is null.", fmt::ptr(this));
         return SLS_ERROR;
     }
     conf_server = (sls_conf_server_t *)m_conf;
@@ -177,26 +178,26 @@ int CSLSListener::init_conf_app()
     m_back_log = conf_server->backlog;
     m_idle_streams_timeout_role = conf_server->idle_streams_timeout;
     strcpy(m_http_url_role, conf_server->on_event_url);
-    sls_log(SLS_LOG_INFO, "[%p]CSLSListener::init_conf_app, m_back_log=%d, m_idle_streams_timeout=%d.",
-            this, m_back_log, m_idle_streams_timeout_role);
+    spdlog::info("[{}] CSLSListener::init_conf_app, m_back_log={:d}, m_idle_streams_timeout={:d}.",
+                 fmt::ptr(this), m_back_log, m_idle_streams_timeout_role);
 
     //domain
     domain_players = sls_conf_string_split(string(conf_server->domain_player), string(" "));
     if (domain_players.size() == 0)
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CSLSListener::init_conf_app, wrong domain_player='%s'.", this, conf_server->domain_player);
+        spdlog::error("[{}] CSLSListener::init_conf_app, wrong domain_player='{}'.", fmt::ptr(this), conf_server->domain_player);
         return SLS_ERROR;
     }
     strUpliveDomain = conf_server->domain_publisher;
     if (strUpliveDomain.length() == 0)
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CSLSListener::init_conf_app, wrong domain_publisher='%s'.", this, conf_server->domain_publisher);
+        spdlog::error("[{}] CSLSListener::init_conf_app, wrong domain_publisher='{}'.", fmt::ptr(this), conf_server->domain_publisher);
         return SLS_ERROR;
     }
     sls_conf_app_t *conf_app = (sls_conf_app_t *)conf_server->child;
     if (!conf_app)
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CSLSListener::init_conf_app, no app conf info.", this);
+        spdlog::error("[{}] CSLSListener::init_conf_app, no app conf info.", fmt::ptr(this));
         return SLS_ERROR;
     }
 
@@ -207,20 +208,20 @@ int CSLSListener::init_conf_app()
         strUplive = ca->app_publisher;
         if (strUplive.length() == 0)
         {
-            sls_log(SLS_LOG_ERROR, "[%p]CSLSListener::init_conf_app, wrong app_publisher='%s', domain_publisher='%s'.",
-                    this, strUplive.c_str(), strUpliveDomain.c_str());
+            spdlog::error("[{}] CSLSListener::init_conf_app, wrong app_publisher='{}', domain_publisher='{}'.",
+                          fmt::ptr(this), strUplive.c_str(), strUpliveDomain.c_str());
             return SLS_ERROR;
         }
         strUplive = strUpliveDomain + "/" + strUplive;
         m_map_publisher->set_conf(strUplive, ca);
-        sls_log(SLS_LOG_INFO, "[%p]CSLSListener::init_conf_app, add app push '%s'.",
-                this, strUplive.c_str());
+        spdlog::info("[{}] CSLSListener::init_conf_app, add app push '{}'.",
+                     fmt::ptr(this), strUplive.c_str());
 
         strLive = ca->app_player;
         if (strLive.length() == 0)
         {
-            sls_log(SLS_LOG_ERROR, "[%p]CSLSListener::init_conf_app, wrong app_player='%s', domain_publisher='%s'.",
-                    this, strLive.c_str(), strUpliveDomain.c_str());
+            spdlog::error("[{}] CSLSListener::init_conf_app, wrong app_player='{}', domain_publisher='{}'.",
+                          fmt::ptr(this), strLive.c_str(), strUpliveDomain.c_str());
             return SLS_ERROR;
         }
 
@@ -230,15 +231,15 @@ int CSLSListener::init_conf_app()
             strTemp = strLiveDomain + "/" + strLive;
             if (strUplive == strTemp)
             {
-                sls_log(SLS_LOG_ERROR, "[%p]CSLSListener::init_conf_app faild, domain/uplive='%s' and domain/live='%s' must not be equal.",
-                        this, strUplive.c_str(), strTemp.c_str());
+                spdlog::error("[{}] CSLSListener::init_conf_app faild, domain/uplive='{}' and domain/live='{}' must not be equal.",
+                              fmt::ptr(this), strUplive.c_str(), strTemp.c_str());
                 return SLS_ERROR;
             }
             //m_map_live_2_uplive[strTemp]  = strUplive;
             m_map_publisher->set_live_2_uplive(strTemp, strUplive);
 
-            sls_log(SLS_LOG_INFO, "[%p]CSLSListener::init_conf_app, add app live='%s', app push='%s'.",
-                    this, strTemp.c_str(), strUplive.c_str());
+            spdlog::info("[{}] CSLSListener::init_conf_app, add app live='{}', app push='{}'.",
+                         fmt::ptr(this), strTemp.c_str(), strUplive.c_str());
         }
 
         if (NULL != ca->child)
@@ -250,22 +251,22 @@ int CSLSListener::init_conf_app()
                 {
                     if (SLS_OK != m_map_puller->add_relay_conf(strUplive.c_str(), cr))
                     {
-                        sls_log(SLS_LOG_WARNING, "[%p]CSLSListener::init_conf_app, m_map_puller.add_app_conf faile. relay type='%s', app push='%s'.",
-                                this, cr->type, strUplive.c_str());
+                        spdlog::warn("[{}] CSLSListener::init_conf_app, m_map_puller.add_app_conf faile. relay type='{}', app push='{}'.",
+                                     fmt::ptr(this), cr->type, strUplive.c_str());
                     }
                 }
                 else if (strcmp(cr->type, "push") == 0)
                 {
                     if (SLS_OK != m_map_pusher->add_relay_conf(strUplive.c_str(), cr))
                     {
-                        sls_log(SLS_LOG_WARNING, "[%p]CSLSListener::init_conf_app, m_map_pusher.add_app_conf faile. relay type='%s', app push='%s'.",
-                                this, cr->type, strUplive.c_str());
+                        spdlog::warn("[{}] CSLSListener::init_conf_app, m_map_pusher.add_app_conf faile. relay type='{}', app push='{}'.",
+                                     fmt::ptr(this), cr->type, strUplive.c_str());
                     }
                 }
                 else
                 {
-                    sls_log(SLS_LOG_ERROR, "[%p]CSLSListener::init_conf_app, wrong relay type='%s', app push='%s'.",
-                            this, cr->type, strUplive.c_str());
+                    spdlog::error("[{}] CSLSListener::init_conf_app, wrong relay type='{}', app push='{}'.",
+                                  fmt::ptr(this), cr->type, strUplive.c_str());
                     return SLS_ERROR;
                 }
                 cr = (sls_conf_relay_t *)cr->sibling;
@@ -287,15 +288,15 @@ int CSLSListener::start()
 
     if (NULL == m_conf)
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CSLSListener::start failed, conf is null.", this);
+        spdlog::error("[{}] CSLSListener::start failed, conf is null.", fmt::ptr(this));
         return SLS_ERROR;
     }
-    sls_log(SLS_LOG_INFO, "[%p]CSLSListener::start...", this);
+    spdlog::info("[{}] CSLSListener::start...", fmt::ptr(this));
 
     ret = init_conf_app();
     if (SLS_OK != ret)
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CSLSListener::start, init_conf_app failed.", this);
+        spdlog::error("[{}] CSLSListener::start, init_conf_app failed.", fmt::ptr(this));
         return SLS_ERROR;
     }
 
@@ -313,26 +314,26 @@ int CSLSListener::start()
     ret = m_srt->libsrt_setup(m_port);
     if (SLS_OK != ret)
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CSLSListener::start, libsrt_setup failure.", this);
+        spdlog::error("[{}] CSLSListener::start, libsrt_setup failure.", fmt::ptr(this));
         return ret;
     }
-    sls_log(SLS_LOG_INFO, "[%p]CSLSListener::start, libsrt_setup ok.", this);
+    spdlog::info("[{}] CSLSListener::start, libsrt_setup ok.", fmt::ptr(this));
 
     ret = m_srt->libsrt_listen(m_back_log);
     if (SLS_OK != ret)
     {
-        sls_log(SLS_LOG_INFO, "[%p]CSLSListener::start, libsrt_listen failure.", this);
+        spdlog::info("[{}] CSLSListener::start, libsrt_listen failure.", fmt::ptr(this));
         return ret;
     }
 
-    sls_log(SLS_LOG_INFO, "[%p]CSLSListener::start, m_list_role=%p.", this, m_list_role);
+    spdlog::info("[{}] CSLSListener::start, m_list_role={}.", fmt::ptr(this), fmt::ptr(m_list_role));
     if (NULL == m_list_role)
     {
-        sls_log(SLS_LOG_INFO, "[%p]CSLSListener::start, m_roleList is null.", this);
+        spdlog::info("[{}] CSLSListener::start, m_roleList is null.", fmt::ptr(this));
         return ret;
     }
 
-    sls_log(SLS_LOG_INFO, "[%p]CSLSListener::start, push to m_list_role=%p.", this, m_list_role);
+    spdlog::info("[{}] CSLSListener::start, push to m_list_role={}.", fmt::ptr(this), fmt::ptr(m_list_role));
     m_list_role->push(this);
 
     return ret;
@@ -341,7 +342,7 @@ int CSLSListener::start()
 int CSLSListener::stop()
 {
     int ret = SLS_OK;
-    sls_log(SLS_LOG_INFO, "[%p]CSLSListener::stop.", this);
+    spdlog::info("[{}] CSLSListener::stop.", fmt::ptr(this));
 
     return ret;
 }
@@ -367,7 +368,7 @@ int CSLSListener::handler()
     fd_client = m_srt->libsrt_accept();
     if (ret < 0)
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CSLSListener::handler, srt_accept failed, fd=%d.", this, get_fd());
+        spdlog::error("[{}] CSLSListener::handler, srt_accept failed, fd={:d}.", fmt::ptr(this), get_fd());
         CSLSSrt::libsrt_neterrno();
         return client_count;
     }
@@ -379,17 +380,17 @@ int CSLSListener::handler()
     ret = srt->libsrt_getpeeraddr(peer_name, peer_port);
     if (ret != 0)
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CSLSListener::handler, libsrt_getpeeraddr failed, fd=%d.", this, srt->libsrt_get_fd());
+        spdlog::error("[{}] CSLSListener::handler, libsrt_getpeeraddr failed, fd={:d}.", fmt::ptr(this), srt->libsrt_get_fd());
         srt->libsrt_close();
         delete srt;
         return client_count;
     }
-    sls_log(SLS_LOG_INFO, "[%p]CSLSListener::handler, new client[%s:%d], fd=%d.", this, peer_name, peer_port, fd_client);
+    spdlog::info("[{}] CSLSListener::handler, new client[{}:{:d}], fd={:d}.", fmt::ptr(this), peer_name, peer_port, fd_client);
 
     if (0 != srt->libsrt_getsockopt(SRTO_STREAMID, "SRTO_STREAMID", &sid, &sid_size))
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CSLSListener::handler, [%s:%d], fd=%d, get streamid info failed.",
-                this, peer_name, peer_port, srt->libsrt_get_fd());
+        spdlog::error("[{}] CSLSListener::handler, [{}:{:d}], fd={:d}, get streamid info failed.",
+                      fmt::ptr(this), peer_name, peer_port, srt->libsrt_get_fd());
         srt->libsrt_close();
         delete srt;
         return client_count;
@@ -397,13 +398,13 @@ int CSLSListener::handler()
 
     if (0 != srt->libsrt_split_sid(sid, host_name, app_name, stream_name))
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CSLSListener::handler, [%s:%d], parse sid='%s' failed.", this, peer_name, peer_port, sid);
+        spdlog::error("[{}] CSLSListener::handler, [{}:{:d}], parse sid='{}' failed.", fmt::ptr(this), peer_name, peer_port, sid);
         srt->libsrt_close();
         delete srt;
         return client_count;
     }
-    sls_log(SLS_LOG_INFO, "[%p]CSLSListener::handler, [%s:%d], sid '%s/%s/%s'",
-            this, peer_name, peer_port, host_name, app_name, stream_name);
+    spdlog::info("[{}] CSLSListener::handler, [{}:{:d}], sid '{}/{}/{}'",
+                 fmt::ptr(this), peer_name, peer_port, host_name, app_name, stream_name);
 
     // app exist?
     snprintf(key_app, sizeof(key_app), "%s/%s", host_name, app_name);
@@ -426,8 +427,8 @@ int CSLSListener::handler()
             //3.1 check pullers
             if (NULL == m_map_puller)
             {
-                sls_log(SLS_LOG_INFO, "[%p]CSLSListener::handler, refused, new role[%s:%d], stream='%s', publisher is NULL and m_map_puller is NULL.",
-                        this, peer_name, peer_port, key_stream_name);
+                spdlog::info("[{}] CSLSListener::handler, refused, new role[{}:{:d}], stream='{}', publisher is NULL and m_map_puller is NULL.",
+                             fmt::ptr(this), peer_name, peer_port, key_stream_name);
                 srt->libsrt_close();
                 delete srt;
                 return client_count;
@@ -435,8 +436,8 @@ int CSLSListener::handler()
             CSLSRelayManager *puller_manager = m_map_puller->add_relay_manager(app_uplive.c_str(), stream_name);
             if (NULL == puller_manager)
             {
-                sls_log(SLS_LOG_INFO, "[%p]CSLSListener::handler, m_map_puller->add_relay_manager failed, new role[%s:%d], stream='%s', publisher is NULL, no puller_manager.",
-                        this, peer_name, peer_port, key_stream_name);
+                spdlog::info("[{}] CSLSListener::handler, m_map_puller->add_relay_manager failed, new role[{}:{:d}], stream='{}', publisher is NULL, no puller_manager.",
+                             fmt::ptr(this), peer_name, peer_port, key_stream_name);
                 srt->libsrt_close();
                 delete srt;
                 return client_count;
@@ -449,36 +450,36 @@ int CSLSListener::handler()
 
             if (SLS_OK != puller_manager->start())
             {
-                sls_log(SLS_LOG_INFO, "[%p]CSLSListener::handler, puller_manager->start failed, new client[%s:%d], stream='%s'.",
-                        this, peer_name, peer_port, key_stream_name);
+                spdlog::info("[{}] CSLSListener::handler, puller_manager->start failed, new client[{}:{:d}], stream='{}'.",
+                             fmt::ptr(this), peer_name, peer_port, key_stream_name);
                 srt->libsrt_close();
                 delete srt;
                 return client_count;
             }
-            sls_log(SLS_LOG_INFO, "[%p]CSLSListener::handler, puller_manager->start ok, new client[%s:%d], stream=%s.",
-                    this, peer_name, peer_port, key_stream_name);
+            spdlog::info("[{}] CSLSListener::handler, puller_manager->start ok, new client[{}:{:d}], stream={}.",
+                         fmt::ptr(this), peer_name, peer_port, key_stream_name);
 
             pub = m_map_publisher->get_publisher(key_stream_name);
             if (NULL == pub)
             {
-                sls_log(SLS_LOG_INFO, "[%p]CSLSListener::handler, m_map_publisher->get_publisher failed, new client[%s:%d], stream=%s.",
-                        this, peer_name, peer_port, key_stream_name);
+                spdlog::info("[{}] CSLSListener::handler, m_map_publisher->get_publisher failed, new client[{}:{:d}], stream={}.",
+                             fmt::ptr(this), peer_name, peer_port, key_stream_name);
                 srt->libsrt_close();
                 delete srt;
                 return client_count;
             }
             else
             {
-                sls_log(SLS_LOG_INFO, "[%p]CSLSListener::handler, m_map_publisher->get_publisher ok, pub=%p, new client[%s:%d], stream=%s.",
-                        this, pub, peer_name, peer_port, key_stream_name);
+                spdlog::info("[{}] CSLSListener::handler, m_map_publisher->get_publisher ok, pub={}, new client[{}:{:d}], stream={}.",
+                             fmt::ptr(this), fmt::ptr(pub), peer_name, peer_port, key_stream_name);
             }
         }
 
         //3.2 handle new play
         if (!m_map_data->is_exist(key_stream_name))
         {
-            sls_log(SLS_LOG_ERROR, "[%p]CSLSListener::handler, refused, new role[%s:%d], stream=%s,but publisher data doesn't exist in m_map_data.",
-                    this, peer_name, peer_port, key_stream_name);
+            spdlog::error("[{}] CSLSListener::handler, refused, new role[{}:{:d}], stream={},but publisher data doesn't exist in m_map_data.",
+                          fmt::ptr(this), peer_name, peer_port, key_stream_name);
             srt->libsrt_close();
             delete srt;
             return client_count;
@@ -486,8 +487,8 @@ int CSLSListener::handler()
 
         //new player
         if (srt->libsrt_socket_nonblock(0) < 0)
-            sls_log(SLS_LOG_WARNING, "[%p]CSLSListener::handler, new player[%s:%d], libsrt_socket_nonblock failed.",
-                    this, peer_name, peer_port);
+            spdlog::warn("[{}] CSLSListener::handler, new player[{}:{:d}], libsrt_socket_nonblock failed.",
+                         fmt::ptr(this), peer_name, peer_port);
 
         CSLSPlayer *player = new CSLSPlayer;
         player->init();
@@ -496,15 +497,15 @@ int CSLSListener::handler()
         player->set_map_data(key_stream_name, m_map_data);
         //stat info
         snprintf(tmp, sizeof(tmp), SLS_PLAYER_STAT_INFO_BASE,
-                m_port, player->get_role_name(), app_uplive.c_str(), stream_name, sid, peer_name, peer_port, cur_time);
+                 m_port, player->get_role_name(), app_uplive.c_str(), stream_name, sid, peer_name, peer_port, cur_time);
         std::string stat_info = std::string(tmp);
         player->set_stat_info_base(stat_info);
         player->set_http_url(m_http_url_role);
         player->on_connect();
 
         m_list_role->push(player);
-        sls_log(SLS_LOG_INFO, "[%p]CSLSListener::handler, new player[%p]=[%s:%d], key_stream_name=%s, %s=%p, m_list_role->size=%d.",
-                this, player, peer_name, peer_port, key_stream_name, pub->get_role_name(), pub, m_list_role->size());
+        spdlog::info("[{}] CSLSListener::handler, new player[{}] =[{}:{:d}], key_stream_name={}, {}={}, m_list_role->size={:d}.",
+                     fmt::ptr(this), fmt::ptr(player), peer_name, peer_port, key_stream_name, pub->get_role_name(), fmt::ptr(pub), m_list_role->size());
         return client_count;
     }
 
@@ -514,8 +515,8 @@ int CSLSListener::handler()
     ca = (sls_conf_app_t *)m_map_publisher->get_ca(app_uplive);
     if (NULL == ca)
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CSLSListener::handler, refused, new role[%s:%d], stream='%s',but no sls_conf_app_t info.",
-                this, peer_name, peer_port, key_stream_name);
+        spdlog::error("[{}] CSLSListener::handler, refused, new role[{}:{:d}], stream='{}',but no sls_conf_app_t info.",
+                      fmt::ptr(this), peer_name, peer_port, key_stream_name);
         srt->libsrt_close();
         delete srt;
         return client_count;
@@ -524,8 +525,8 @@ int CSLSListener::handler()
     CSLSRole *publisher = m_map_publisher->get_publisher(key_stream_name);
     if (NULL != publisher)
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CSLSListener::handler, refused, new role[%s:%d], stream='%s',but publisher=%p is not NULL.",
-                this, peer_name, peer_port, key_stream_name, publisher);
+        spdlog::error("[{}] CSLSListener::handler, refused, new role[{}:{:d}], stream='{}',but publisher={} is not NULL.",
+                      fmt::ptr(this), peer_name, peer_port, key_stream_name, fmt::ptr(publisher));
         srt->libsrt_close();
         delete srt;
         return client_count;
@@ -538,23 +539,23 @@ int CSLSListener::handler()
     pub->set_idle_streams_timeout(m_idle_streams_timeout_role);
     //stat info
     snprintf(tmp, sizeof(tmp), SLS_PUBLISHER_STAT_INFO_BASE,
-            m_port, pub->get_role_name(), app_uplive.c_str(), stream_name, sid, peer_name, peer_port, cur_time);
+             m_port, pub->get_role_name(), app_uplive.c_str(), stream_name, sid, peer_name, peer_port, cur_time);
     std::string stat_info = std::string(tmp);
     pub->set_stat_info_base(stat_info);
     pub->set_http_url(m_http_url_role);
     //set hls record path
     snprintf(tmp, sizeof(tmp), "%s/%d/%s",
-            m_record_hls_path_prefix, m_port, key_stream_name);
+             m_record_hls_path_prefix, m_port, key_stream_name);
     pub->set_record_hls_path(tmp);
 
-    sls_log(SLS_LOG_INFO, "[%p]CSLSListener::handler, new pub=%p, key_stream_name=%s.",
-            this, pub, key_stream_name);
+    spdlog::info("[{}] CSLSListener::handler, new pub={}, key_stream_name={}.",
+                 fmt::ptr(this), fmt::ptr(pub), key_stream_name);
 
     //init data array
     if (SLS_OK != m_map_data->add(key_stream_name))
     {
-        sls_log(SLS_LOG_WARNING, "[%p]CSLSListener::handler, m_map_data->add failed, new pub[%s:%d], stream=%s.",
-                this, peer_name, peer_port, key_stream_name);
+        spdlog::warn("[{}] CSLSListener::handler, m_map_data->add failed, new pub[{}:{:d}], stream={}.",
+                     fmt::ptr(this), peer_name, peer_port, key_stream_name);
         pub->uninit();
         delete pub;
         pub = NULL;
@@ -563,8 +564,8 @@ int CSLSListener::handler()
 
     if (SLS_OK != m_map_publisher->set_push_2_pushlisher(key_stream_name, pub))
     {
-        sls_log(SLS_LOG_WARNING, "[%p]CSLSListener::handler, m_map_publisher->set_push_2_pushlisher failed, key_stream_name=%s.",
-                this, key_stream_name);
+        spdlog::warn("[{}] CSLSListener::handler, m_map_publisher->set_push_2_pushlisher failed, key_stream_name={}.",
+                     fmt::ptr(this), key_stream_name);
         pub->uninit();
         delete pub;
         pub = NULL;
@@ -574,8 +575,8 @@ int CSLSListener::handler()
     pub->set_map_data(key_stream_name, m_map_data);
     pub->on_connect();
     m_list_role->push(pub);
-    sls_log(SLS_LOG_INFO, "[%p]CSLSListener::handler, new publisher[%s:%d], key_stream_name=%s.",
-            this, peer_name, peer_port, key_stream_name);
+    spdlog::info("[{}] CSLSListener::handler, new publisher[{}:{:d}], key_stream_name={}.",
+                 fmt::ptr(this), peer_name, peer_port, key_stream_name);
 
     //5. check pusher
     if (NULL == m_map_pusher)
@@ -585,8 +586,8 @@ int CSLSListener::handler()
     CSLSRelayManager *pusher_manager = m_map_pusher->add_relay_manager(app_uplive.c_str(), stream_name);
     if (NULL == pusher_manager)
     {
-        sls_log(SLS_LOG_INFO, "[%p]CSLSListener::handler, m_map_pusher->add_relay_manager failed, new role[%s:%d], key_stream_name=%s.",
-                this, peer_name, peer_port, key_stream_name);
+        spdlog::info("[{}] CSLSListener::handler, m_map_pusher->add_relay_manager failed, new role[{}:{:d}], key_stream_name={}.",
+                     fmt::ptr(this), peer_name, peer_port, key_stream_name);
         return client_count;
     }
     pusher_manager->set_map_data(m_map_data);
@@ -596,8 +597,8 @@ int CSLSListener::handler()
 
     if (SLS_OK != pusher_manager->start())
     {
-        sls_log(SLS_LOG_INFO, "[%p]CSLSListener::handler, pusher_manager->start failed, new role[%s:%d], key_stream_name=%s.",
-                this, peer_name, peer_port, key_stream_name);
+        spdlog::info("[{}] CSLSListener::handler, pusher_manager->start failed, new role[{}:{:d}], key_stream_name={}.",
+                     fmt::ptr(this), peer_name, peer_port, key_stream_name);
     }
     return client_count;
 }

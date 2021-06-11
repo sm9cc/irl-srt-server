@@ -24,6 +24,7 @@
 
 #include <errno.h>
 #include <string.h>
+#include "spdlog/spdlog.h"
 
 #include "SLSGroup.hpp"
 #include "SLSLog.hpp"
@@ -51,7 +52,7 @@ CSLSGroup::~CSLSGroup()
 
 int CSLSGroup::start()
 {
-    sls_log(SLS_LOG_INFO, "[%p]CSLSGroup::start, worker_number=%d.", this, m_worker_number);
+    spdlog::info("[{}] CSLSGroup::start, worker_number={:d}.", fmt::ptr(this), m_worker_number);
     //do something here
     return CSLSEpollThread::start();
 }
@@ -59,7 +60,7 @@ int CSLSGroup::start()
 int CSLSGroup::stop()
 {
     int ret = 0;
-    sls_log(SLS_LOG_INFO, "[%p]CSLSGroup::stop, worker_number=%d.", this, m_worker_number);
+    spdlog::info("[{}] CSLSGroup::stop, worker_number={:d}.", fmt::ptr(this), m_worker_number);
     ret = CSLSEpollThread::stop();
 
     std::list<CSLSRole *>::iterator it_erase;
@@ -74,7 +75,7 @@ int CSLSGroup::stop()
         it++;
     }
     m_list_wait_http_role.clear();
-    sls_log(SLS_LOG_INFO, "[%p]CSLSGroup::stop, m_list_wait_http_role.clear, worker_number=%d.", this, m_worker_number);
+    spdlog::info("[{}] CSLSGroup::stop, m_list_wait_http_role.clear, worker_number={:d}.", fmt::ptr(this), m_worker_number);
     return ret;
 }
 
@@ -108,13 +109,13 @@ void CSLSGroup::check_new_role()
     if (0 == role->add_to_epoll(m_eid))
     {
         m_map_role[fd] = role;
-        sls_log(SLS_LOG_INFO, "[%p]CSLSGroup::check_new_role, worker_number=%d, %s=%p, add_to_epoll fd=%d, role_map.size=%d.",
-                this, m_worker_number, role->get_role_name(), role, fd, m_map_role.size());
+        spdlog::info("[{}] CSLSGroup::check_new_role, worker_number={:d}, {}={}, add_to_epoll fd={:d}, role_map.size={:d}.",
+                     fmt::ptr(this), m_worker_number, role->get_role_name(), fmt::ptr(role), fd, m_map_role.size());
     }
     else
     {
-        sls_log(SLS_LOG_INFO, "[%p]CSLSGroup::check_new_role, worker_number=%d, %s=%p, add_to_epoll failed, fd=%d.",
-                this, m_worker_number, role->get_role_name(), role, fd);
+        spdlog::error("[{}] CSLSGroup::check_new_role, worker_number={:d}, {}={}, add_to_epoll failed, fd={:d}.",
+                     fmt::ptr(this), m_worker_number, role->get_role_name(), fmt::ptr(role), fd);
         delete role;
     }
 }
@@ -130,8 +131,8 @@ int CSLSGroup::handler()
 
     if (m_reload && (m_map_role.size() == 0))
     {
-        sls_log(SLS_LOG_INFO, "[%p]CSLSGroup::handle, worker_number=%d stop, m_reload is true, m_map_role.size()=0.",
-                this, m_worker_number);
+        spdlog::info("[{}] CSLSGroup::handle, worker_number={:d} stop, m_reload is true, m_map_role.size()=0.",
+                     fmt::ptr(this), m_worker_number);
         m_exit = true;
         return SLS_OK;
     }
@@ -152,24 +153,24 @@ int CSLSGroup::handler()
         return handler_count;
     }
 
-    sls_log(SLS_LOG_TRACE, "[%p]CSLSGroup::handle, worker_number=%d, writable sock count=%d, readable sock count=%d.",
-            this, m_worker_number, write_len, read_len);
+    spdlog::trace("[{}] CSLSGroup::handle, worker_number={:d}, writable sock count={:d}, readable sock count={:d}.",
+                  fmt::ptr(this), m_worker_number, write_len, read_len);
 
     for (i = 0; i < write_len; i++)
     {
         std::map<int, CSLSRole *>::iterator it = m_map_role.find(m_write_socks[i]);
         if (it == m_map_role.end())
         {
-            sls_log(SLS_LOG_WARNING, "[%p]CSLSGroup::handle, worker_number=%d, no role map writable sock=%d,why?",
-                    this, m_worker_number, m_write_socks[i]);
+            spdlog::warn("[{}] CSLSGroup::handle, worker_number={:d}, no role map writable sock={:d}, why?",
+                         fmt::ptr(this), m_worker_number, m_write_socks[i]);
             continue;
         }
 
         CSLSRole *role = it->second;
         if (!role)
         {
-            sls_log(SLS_LOG_WARNING, "[%p]CSLSGroup::handle, worker_number=%d, role is null, writable sock=%d,why?",
-                    this, m_worker_number, m_write_socks[i]);
+            spdlog::warn("[{}] CSLSGroup::handle, worker_number={:d}, role is null, writable sock={:d}, why?",
+                         fmt::ptr(this), m_worker_number, m_write_socks[i]);
             continue;
         }
 
@@ -177,8 +178,8 @@ int CSLSGroup::handler()
         if (ret < 0)
         {
             //handle exception
-            sls_log(SLS_LOG_TRACE, "[%p]CSLSGroup::handle, worker_number=%d, write sock=%d is invalid, %s=%p, write_len=%d, role_map.size=%d.",
-                    this, m_worker_number, m_write_socks[i], role->get_role_name(), role, write_len, m_map_role.size());
+            spdlog::trace("[{}] CSLSGroup::handle, worker_number={:d}, write sock={:d} is invalid, {}={}, write_len={:d}, role_map.size={:d}.",
+                          fmt::ptr(this), m_worker_number, m_write_socks[i], role->get_role_name(), fmt::ptr(role), write_len, m_map_role.size());
             role->invalid_srt();
         }
         else
@@ -192,16 +193,16 @@ int CSLSGroup::handler()
         std::map<int, CSLSRole *>::iterator it = m_map_role.find(m_read_socks[i]);
         if (it == m_map_role.end())
         {
-            sls_log(SLS_LOG_WARNING, "[%p]CSLSGroup::handle, worker_number=%d, no role map readable sock=%d,why?",
-                    this, m_worker_number, m_read_socks[i]);
+            spdlog::warn("[{}] CSLSGroup::handle, worker_number={:d}, no role map readable sock={:d}, why?",
+                         fmt::ptr(this), m_worker_number, m_read_socks[i]);
             continue;
         }
 
         CSLSRole *role = it->second;
         if (!role)
         {
-            sls_log(SLS_LOG_WARNING, "[%p]CSLSGroup::handle, worker_number=%d, role is null, readable sock=%d,why?",
-                    this, m_worker_number, m_read_socks[i]);
+            spdlog::warn("[{}] CSLSGroup::handle, worker_number={:d}, role is null, readable sock={:d}, why?",
+                         fmt::ptr(this), m_worker_number, m_read_socks[i]);
             continue;
         }
 
@@ -209,8 +210,8 @@ int CSLSGroup::handler()
         if (ret < 0)
         {
             //handle exception
-            sls_log(SLS_LOG_TRACE, "[%p]CSLSGroup::handle, worker_number=%d, readable sock=%d is invalid, %s=%p, readable len=%d, role_map.size=%d.",
-                    this, m_worker_number, m_read_socks[i], role->get_role_name(), role, read_len, m_map_role.size());
+            spdlog::trace("[{}] CSLSGroup::handle, worker_number={:d}, readable sock={:d} is invalid, {}={}, readable len={:d}, role_map.size={:d}.",
+                          fmt::ptr(this), m_worker_number, m_read_socks[i], role->get_role_name(), fmt::ptr(role), read_len, m_map_role.size());
             role->invalid_srt();
         }
         else
@@ -252,8 +253,8 @@ void CSLSGroup::check_wait_http_role()
         }
         if (SLS_ERROR == role->check_http_client())
         {
-            sls_log(SLS_LOG_INFO, "[%p]CSLSGroup::check_wait_http_role, worker_number=%d, delete %s=%p.",
-                    this, m_worker_number, role->get_role_name(), role);
+            spdlog::info("[{}] CSLSGroup::check_wait_http_role, worker_number={d}, delete {}={}.",
+                         fmt::ptr(this), m_worker_number, role->get_role_name(), fmt::ptr(role));
             role->uninit();
             delete role;
             m_list_wait_http_role.erase(it_erase);
@@ -277,8 +278,8 @@ void CSLSGroup::check_reconnect_relay()
         CSLSRelayManager *relay_manager = *it;
         if (NULL == relay_manager)
         {
-            sls_log(SLS_LOG_INFO, "[%p]CSLSGroup::check_reconnect_relay, worker_number=%d, remove invalid relay_manager.",
-                    this, m_worker_number);
+            spdlog::info("[{}] CSLSGroup::check_reconnect_relay, worker_number={:d}, remove invalid relay_manager.",
+                         fmt::ptr(this), m_worker_number);
             it_erase = it;
             it++;
             m_list_reconnect_relay_manager.erase(it_erase);
@@ -331,29 +332,29 @@ void CSLSGroup::check_invalid_sock()
         int state = role->get_state(cur_time_ms);
         if (SLS_RS_INVALID == state || SLS_RS_UNINIT == state)
         {
-            sls_log(SLS_LOG_INFO, "[%p]CSLSGroup::check_invalid_sock, worker_number=%d, %s=%p, invalid sock=%d, state=%d, role_map.size=%d.",
-                    this, m_worker_number, role->get_role_name(), role, role->get_fd(), state, m_map_role.size());
+            spdlog::info("[{}] CSLSGroup::check_invalid_sock, worker_number={:d}, {}={}, invalid sock={:d}, state={:d}, role_map.size={:d}.",
+                         fmt::ptr(this), m_worker_number, role->get_role_name(), fmt::ptr(role), role->get_fd(), state, m_map_role.size());
             //check relay
             if (role->is_reconnect())
             {
                 CSLSRelay *relay = (CSLSRelay *)role;
                 CSLSRelayManager *relay_manager = (CSLSRelayManager *)relay->get_relay_manager();
                 m_list_reconnect_relay_manager.push_back(relay_manager);
-                sls_log(SLS_LOG_INFO, "[%p]CSLSGroup::check_invalid_sock, worker_number=%d, %s=%p, need reconnect.",
-                        this, m_worker_number, role->get_role_name(), role);
+                spdlog::info("[{}] CSLSGroup::check_invalid_sock, worker_number={:d}, {}={}, need reconnect.",
+                             fmt::ptr(this), m_worker_number, role->get_role_name(), fmt::ptr(role));
             }
 
             role->uninit();
             if (SLS_OK == role->check_http_client())
             {
                 m_list_wait_http_role.push_back(role);
-                sls_log(SLS_LOG_INFO, "[%p]CSLSGroup::check_invalid_sock, worker_number=%d, %s=%p, put into m_list_wait_http_role.",
-                        this, m_worker_number, role->get_role_name(), role);
+                spdlog::info("[{}] CSLSGroup::check_invalid_sock, worker_number={:d}, {}={}, put into m_list_wait_http_role.",
+                             fmt::ptr(this), m_worker_number, role->get_role_name(), fmt::ptr(role));
             }
             else
             {
-                sls_log(SLS_LOG_INFO, "[%p]CSLSGroup::check_invalid_sock, worker_number=%d, %s=%p, delete.",
-                        this, m_worker_number, role->get_role_name(), role);
+                spdlog::info("[{}] CSLSGroup::check_invalid_sock, worker_number={:d}, {}={}, delete.",
+                             fmt::ptr(this), m_worker_number, role->get_role_name(), fmt::ptr(role));
                 delete role;
             }
             m_map_role.erase(it_erase);
@@ -364,16 +365,16 @@ void CSLSGroup::check_invalid_sock()
 
 void CSLSGroup::clear()
 {
-    sls_log(SLS_LOG_INFO, "[%p]CSLSGroup::clear, worker_number=%d, role_map.size=%d.",
-            this, m_worker_number, m_map_role.size());
+    spdlog::info("[{}] CSLSGroup::clear, worker_number={:d}, role_map.size={:d}.",
+                 fmt::ptr(this), m_worker_number, m_map_role.size());
     std::map<int, CSLSRole *>::iterator it;
     for (it = m_map_role.begin(); it != m_map_role.end(); it++)
     {
         CSLSRole *role = it->second;
         if (role)
         {
-            sls_log(SLS_LOG_INFO, "[%p]CSLSGroup::clear, worker_number=%d, delete %s=%p.",
-                    this, m_worker_number, role->get_role_name(), role);
+            spdlog::info("[{}] CSLSGroup::clear, worker_number={:d}, delete {}={}.",
+                         fmt::ptr(this), m_worker_number, role->get_role_name(), fmt::ptr(role));
             role->uninit();
             delete role;
         }

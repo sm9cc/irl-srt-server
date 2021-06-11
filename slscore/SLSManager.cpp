@@ -24,6 +24,7 @@
 
 #include <errno.h>
 #include <string.h>
+#include "spdlog/spdlog.h"
 
 #include "common.hpp"
 #include "SLSManager.hpp"
@@ -68,7 +69,7 @@ int CSLSManager::start()
 
     if (!conf_srt)
     {
-        sls_log(SLS_LOG_INFO, "[%p]CSLSManager::start, no srt info, please check the conf file.", this);
+        spdlog::error("[{}] CSLSManager::start, no srt info, please check the conf file.", fmt::ptr(this));
         return SLS_ERROR;
     }
     //set log level
@@ -85,7 +86,7 @@ int CSLSManager::start()
     sls_conf_server_t *conf_server = (sls_conf_server_t *)conf_srt->child;
     if (!conf_server)
     {
-        sls_log(SLS_LOG_INFO, "[%p]CSLSManager::start, no server info, please check the conf file.", this);
+        spdlog::error("[{}] CSLSManager::start, no server info, please check the conf file.", fmt::ptr(this));
         return SLS_ERROR;
     }
     m_server_count = sls_conf_get_conf_count(conf_server);
@@ -97,7 +98,7 @@ int CSLSManager::start()
 
     //role list
     m_list_role = new CSLSRoleList;
-    sls_log(SLS_LOG_INFO, "[%p]CSLSManager::start, new m_list_role=%p.", this, m_list_role);
+    spdlog::info("[{}] CSLSManager::start, new m_list_role={}.", fmt::ptr(this), fmt::ptr(m_list_role));
 
     //create listeners according config, delete by groups
     for (i = 0; i < m_server_count; i++)
@@ -112,18 +113,18 @@ int CSLSManager::start()
         p->set_map_pusher(&m_map_pusher[i]);
         if (p->init() != SLS_OK)
         {
-            sls_log(SLS_LOG_INFO, "[%p]CSLSManager::start, p->init failed.", this);
+            spdlog::error("[{}] CSLSManager::start, p->init failed.", fmt::ptr(this));
             return SLS_ERROR;
         }
         if (p->start() != SLS_OK)
         {
-            sls_log(SLS_LOG_INFO, "[%p]CSLSManager::start, p->start failed.", this);
+            spdlog::error("[{}] CSLSManager::start, p->start failed.", fmt::ptr(this));
             return SLS_ERROR;
         }
         m_servers.push_back(p);
         conf = (sls_conf_server_t *)conf->sibling;
     }
-    sls_log(SLS_LOG_INFO, "[%p]CSLSManager::start, init listeners, count=%d.", this, m_server_count);
+    spdlog::info("[{}] CSLSManager::start, init listeners, count={:d}.", fmt::ptr(this), m_server_count);
 
     //create groups
 
@@ -137,7 +138,7 @@ int CSLSManager::start()
         p->set_stat_post_interval(conf_srt->stat_post_interval);
         if (SLS_OK != p->init_epoll())
         {
-            sls_log(SLS_LOG_INFO, "[%p]CSLSManager::start, p->init_epoll failed.", this);
+            spdlog::error("[{}] CSLSManager::start, p->init_epoll failed.", fmt::ptr(this));
             return SLS_ERROR;
         }
         m_workers.push_back(p);
@@ -154,14 +155,14 @@ int CSLSManager::start()
             p->set_stat_post_interval(conf_srt->stat_post_interval);
             if (SLS_OK != p->init_epoll())
             {
-                sls_log(SLS_LOG_INFO, "[%p]CSLSManager::start, p->init_epoll failed.", this);
+                spdlog::error("[{}] CSLSManager::start, p->init_epoll failed.", fmt::ptr(this));
                 return SLS_ERROR;
             }
             p->start();
             m_workers.push_back(p);
         }
     }
-    sls_log(SLS_LOG_INFO, "[%p]CSLSManager::start, init worker, count=%d.", this, m_worker_threads);
+    spdlog::info("[{}] CSLSManager::start, init worker, count={:d}.", fmt::ptr(this), m_worker_threads);
 
     return ret;
 }
@@ -187,7 +188,7 @@ int CSLSManager::stop()
     int ret = 0;
     int i = 0;
     //
-    sls_log(SLS_LOG_INFO, "[%p]CSLSManager::stop.", this);
+    spdlog::info("[{}] CSLSManager::stop.", fmt::ptr(this));
 
     //stop all listeners
     std::list<CSLSListener *>::iterator it;
@@ -242,7 +243,7 @@ int CSLSManager::stop()
     //release rolelist
     if (m_list_role)
     {
-        sls_log(SLS_LOG_INFO, "[%p]CSLSManager::stop, release rolelist, size=%d.", this, m_list_role->size());
+        spdlog::info("[{}] CSLSManager::stop, release rolelist, size={:d}.", fmt::ptr(this), m_list_role->size());
         m_list_role->erase();
         delete m_list_role;
         m_list_role = NULL;
@@ -252,7 +253,7 @@ int CSLSManager::stop()
 
 int CSLSManager::reload()
 {
-    sls_log(SLS_LOG_INFO, "[%p]CSLSManager::reload begin.", this);
+    spdlog::info("[{}] CSLSManager::reload begin.", fmt::ptr(this));
 
     //stop all listeners
     std::list<CSLSListener *>::iterator it;
@@ -297,8 +298,8 @@ int CSLSManager::check_invalid()
         }
         if (worker->is_exit())
         {
-            sls_log(SLS_LOG_INFO, "[%p]CSLSManager::check_invalid, delete worker=%p.",
-                    this, worker);
+            spdlog::info("[{}] CSLSManager::check_invalid, delete worker={}.",
+                         fmt::ptr(this), fmt::ptr(worker));
             worker->stop();
             worker->uninit_epoll();
             delete worker;

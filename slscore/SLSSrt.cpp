@@ -27,6 +27,7 @@
 #include <map>
 #include <string>
 #include <memory.h>
+#include "spdlog/spdlog.h"
 
 #include "SLSSrt.hpp"
 #include "SLSLog.hpp"
@@ -118,21 +119,21 @@ SRTS_NONEXIST:
     set_error_map(SRT_ETIMEOUT);
     set_error_map(SRT_EPEERERR);
 
-    printf("--------srt error--------\n");
+    spdlog::error("--------srt error--------");
     std::map<int, std::string>::iterator it;
     for (it = map_error.begin(); it != map_error.end(); ++it)
     {
-        sprintf(szBuf, "%d: %s\n", it->first, it->second.c_str());
-        puts(szBuf);
+        snprintf(szBuf, sizeof(szBuf), "%d: %s", it->first, it->second.c_str());
+        spdlog::error(szBuf);
     }
-    printf("----------end------------\n");
+    spdlog::error("----------end------------");
     map_error.clear();
 }
 
 int CSLSSrt::libsrt_neterrno()
 {
     int err = srt_getlasterror(NULL);
-    sls_log(SLS_LOG_ERROR, "CSLSSrt::libsrt_neterrno, err=%d, %s.", err, srt_getlasterror_str());
+    spdlog::error("CSLSSrt::libsrt_neterrno, err={:d}, {}.", err, srt_getlasterror_str());
     return err;
 }
 
@@ -165,9 +166,8 @@ int CSLSSrt::libsrt_setup(int port)
     ret = getaddrinfo(s->hostname[0] ? s->hostname : NULL, portstr, &hints, &ai);
     if (ret)
     {
-        sls_log(SLS_LOG_ERROR,
-                "[%p]CSLSSrt::libsrt_setup, Failed to resolve hostname %s: %s.",
-                this, s->hostname, gai_strerror(ret));
+        spdlog::error("[{}] CSLSSrt::libsrt_setup, Failed to resolve hostname {}: {}.",
+                      fmt::ptr(this), s->hostname, gai_strerror(ret));
         return ret;
     }
 
@@ -204,7 +204,7 @@ int CSLSSrt::libsrt_setup(int port)
     if (s->reuse)
     {
         if (srt_setsockopt(fd, SOL_SOCKET, SRTO_REUSEADDR, &s->reuse, sizeof(s->reuse)))
-            sls_log(SLS_LOG_WARNING, "[%p]CSLSSrt::libsrt_setup, setsockopt(SRTO_REUSEADDR) failed.", this);
+            spdlog::warn("[{}] CSLSSrt::libsrt_setup, setsockopt(SRTO_REUSEADDR) failed.", fmt::ptr(this));
     }
 
     ret = srt_bind(fd, ai->ai_addr, ai->ai_addrlen);
@@ -218,7 +218,7 @@ int CSLSSrt::libsrt_setup(int port)
     s->fd = fd;
 
     freeaddrinfo(ai);
-    sls_log(SLS_LOG_INFO, "[%p]CSLSSrt::libsrt_setup, fd=%d.", this, fd);
+    spdlog::info("[{}] CSLSSrt::libsrt_setup, fd={:d}.", fmt::ptr(this), fd);
 
     return SLS_OK;
 }
@@ -230,7 +230,7 @@ int CSLSSrt::libsrt_listen(int backlog)
     if (ret)
         return libsrt_neterrno();
 
-    sls_log(SLS_LOG_INFO, "[%p]CSLSSrt::libsrt_listen, ok, fd=%d, at port=%d.", this, m_sc.fd, m_sc.port);
+    spdlog::info("[{}] CSLSSrt::libsrt_listen, ok, fd={:d}, at port={:d}.", fmt::ptr(this), m_sc.fd, m_sc.port);
     return SLS_OK;
 }
 
@@ -245,14 +245,14 @@ int CSLSSrt::libsrt_accept()
     if (new_sock == SRT_INVALID_SOCK)
     {
         int err_no = libsrt_neterrno();
-        sls_log(SLS_LOG_INFO, "[%p]CSLSSrt::libsrt_accept failed, sock=%d, error_no=%d,.",
-                this, m_sc.fd, err_no);
+        spdlog::info("[{}] CSLSSrt::libsrt_accept failed, sock={:d}, error_no={:d}.",
+                     fmt::ptr(this), m_sc.fd, err_no);
         return SLS_ERROR;
     }
     addrtmp = (struct sockaddr_in *)&scl;
     inet_ntop(AF_INET, &addrtmp->sin_addr, ip, sizeof(ip));
-    sls_log(SLS_LOG_INFO, "[%p]CSLSSrt::libsrt_accept ok, new sock=%d, %s:%d.",
-            this, new_sock, ip, ntohs(addrtmp->sin_port));
+    spdlog::info("[{}] CSLSSrt::libsrt_accept ok, new sock={:d}, {}:{:d}.",
+                 fmt::ptr(this), new_sock, ip, ntohs(addrtmp->sin_port));
 
     return new_sock;
 }
@@ -261,7 +261,7 @@ int CSLSSrt::libsrt_close()
 {
     if (m_sc.fd)
     {
-        sls_log(SLS_LOG_INFO, "[%p]CSLSSrt::libsrt_close, fd=%d.", this, m_sc.fd);
+        spdlog::info("[{}] CSLSSrt::libsrt_close, fd={:d}.", fmt::ptr(this), m_sc.fd);
         srt_close(m_sc.fd);
         m_sc.fd = 0;
     }
@@ -290,7 +290,7 @@ int CSLSSrt::libsrt_getsockopt(SRT_SOCKOPT optname, const char *optnamestr, void
 {
     if (srt_getsockopt(m_sc.fd, 0, optname, optval, optlen) < 0)
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CSLSSrt::libsrt_getsockopt, failed to get option %s on socket: %s.", this, optnamestr, srt_getlasterror_str());
+        spdlog::error("[{}] CSLSSrt::libsrt_getsockopt, failed to get option {} on socket: {}", fmt::ptr(this), optnamestr, srt_getlasterror_str());
         return SLSERROR(EIO);
     }
     return 0;
@@ -300,7 +300,7 @@ int CSLSSrt::libsrt_setsockopt(SRT_SOCKOPT optname, const char *optnamestr, cons
 {
     if (srt_setsockopt(m_sc.fd, 0, optname, optval, optlen) < 0)
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CSLSSrt::libsrt_setsockopt, failed to set option %s on socket: %s\n", this, optnamestr, srt_getlasterror_str());
+        spdlog::error("[{}] CSLSSrt::libsrt_setsockopt, failed to set option {} on socket: {}", fmt::ptr(this), optnamestr, srt_getlasterror_str());
         return SLSERROR(EIO);
     }
     return 0;
@@ -329,7 +329,7 @@ int CSLSSrt::libsrt_split_sid(char *sid, char *host, char *app, char *name)
     }
     else
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CSLSSrt::libsrt_split_sid, sid='%s' is not as host/app/name.", this, sid);
+        spdlog::error("[{}] CSLSSrt::libsrt_split_sid, sid='{}' is not as host/app/name.", fmt::ptr(this), sid);
         return -1;
     }
     //app
@@ -341,7 +341,7 @@ int CSLSSrt::libsrt_split_sid(char *sid, char *host, char *app, char *name)
     }
     else
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CSLSSrt::libsrt_split_sid, sid='%s' is not as host/app/name.", this, sid);
+        spdlog::error("[{}] CSLSSrt::libsrt_split_sid, sid='{}' is not as host/app/name.", fmt::ptr(this), sid);
         return -1;
     }
 
@@ -357,8 +357,8 @@ int CSLSSrt::libsrt_read(char *buf, int size)
     if (ret < 0)
     {
         int err_no = libsrt_neterrno();
-        sls_log(SLS_LOG_WARNING, "[%p]CSLSSrt::libsrt_read failed, sock=%d, ret=%d, err_no=%d.",
-                this, m_sc.fd, ret, err_no);
+        spdlog::warn("[{}] CSLSSrt::libsrt_read failed, sock={:d}, ret={:d}, err_no={:d}.",
+                fmt::ptr(this), m_sc.fd, ret, err_no);
     }
     return ret;
 }
@@ -370,8 +370,8 @@ int CSLSSrt::libsrt_write(const char *buf, int size)
     if (ret < 0)
     { //SRTS_BROKEN
         int err_no = libsrt_neterrno();
-        sls_log(SLS_LOG_WARNING, "[%p]CSLSSrt::libsrt_write failed, sock=%d, ret=%d, errno=%d.",
-                this, m_sc.fd, ret, err_no);
+        spdlog::warn("[{}] CSLSSrt::libsrt_write failed, sock={:d}, ret={:d}, errno={:d}.",
+                fmt::ptr(this), m_sc.fd, ret, err_no);
     }
     return ret;
 }
@@ -384,7 +384,7 @@ int CSLSSrt::libsrt_add_to_epoll(int eid, bool write)
 
     if (!eid)
     {
-        sls_log(SLS_LOG_ERROR, "CSLSSrt::libsrt_add_to_epoll failed, m_eid=%d.", eid);
+        spdlog::error("[{}] CSLSSrt::libsrt_add_to_epoll failed, m_eid={:d}.", fmt::ptr(this), eid);
         return SLS_ERROR;
     }
 
@@ -392,8 +392,8 @@ int CSLSSrt::libsrt_add_to_epoll(int eid, bool write)
     ret = srt_epoll_add_usock(eid, fd, &modes);
     if (ret < 0)
     {
-        sls_log(SLS_LOG_ERROR, "CSLSSrt::libsrt_add_to_epoll, srt_epoll_add_usock failed, m_eid=%d, fd=%d, modes=%d.",
-                eid, fd, modes);
+        spdlog::error("[{}] CSLSSrt::libsrt_add_to_epoll, srt_epoll_add_usock failed, m_eid={:d}, fd={:d}, modes={:d}.",
+                fmt::ptr(this), eid, fd, modes);
         return libsrt_neterrno();
     }
     return ret;
@@ -407,15 +407,15 @@ int CSLSSrt::libsrt_remove_from_epoll()
 
     if (!eid)
     {
-        sls_log(SLS_LOG_ERROR, "CSLSSrt::remove_from_epoll failed, m_eid=%d.", eid);
+        spdlog::error("[{}] CSLSSrt::remove_from_epoll failed, m_eid={:d}.", fmt::ptr(this), eid);
         return SLS_ERROR;
     }
 
     ret = srt_epoll_remove_usock(eid, fd);
     if (ret < 0)
     {
-        sls_log(SLS_LOG_ERROR, "CSLSSrt::remove_from_epoll, srt_epoll_remove_usock failed, m_eid=%d, fd=%d.",
-                eid, fd);
+        spdlog::error("[{}] CSLSSrt::remove_from_epoll, srt_epoll_remove_usock failed, m_eid={:d}, fd={:d}.",
+                fmt::ptr(this), eid, fd);
         return libsrt_neterrno();
     }
     return ret;

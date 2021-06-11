@@ -29,6 +29,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <srt/srt.h>
+#include "spdlog/spdlog.h"
 
 #include "SLSClient.hpp"
 #include "SLSLog.hpp"
@@ -67,7 +68,7 @@ int CSLSClient::init_epoll()
 	m_eid = CSLSSrt::libsrt_epoll_create();
 	if (m_eid < 0)
 	{
-		sls_log(SLS_LOG_INFO, "[%p]CSLSClient::work, srt_epoll_create failed.", this);
+		spdlog::info("[{}] CSLSClient::work, srt_epoll_create failed.", fmt::ptr(this));
 		return CSLSSrt::libsrt_neterrno();
 	}
 	//compatible with srt v1.4.0 when container is empty.
@@ -81,7 +82,7 @@ int CSLSClient::uninit_epoll()
 	if (m_eid >= 0)
 	{
 		CSLSSrt::libsrt_epoll_release(m_eid);
-		sls_log(SLS_LOG_INFO, "[%p]CSLSEpollThread::work, srt_epoll_release ok.", this);
+		spdlog::info("[{}] CSLSEpollThread::work, srt_epoll_release ok.", fmt::ptr(this));
 	}
 	return ret;
 }
@@ -99,11 +100,11 @@ int CSLSClient::play(const char *url, const char *out_file_name)
 
 int CSLSClient::open_url(const char *url)
 {
-	//
+
 	if (url == NULL || strlen(url) == 0)
 	{
-		sls_log(SLS_LOG_INFO, "[%p]CSLSClient::play, url='%s', must like 'srt://hostname:port?streamid=your_stream_id' or 'srt://hostname:port/app/stream_name'.",
-				this, url ? url : "null");
+		spdlog::info("[{}] CSLSClient::play, url='{}', must like 'srt://hostname:port?streamid=your_stream_id' or 'srt://hostname:port/app/stream_name'.",
+					 fmt::ptr(this), url ? url : "null");
 		return SLS_ERROR;
 	}
 
@@ -117,13 +118,13 @@ int CSLSClient::open_url(const char *url)
 	ret = init_epoll();
 	if (SLS_OK != ret)
 	{
-		sls_log(SLS_LOG_INFO, "[%p]CSLSClient::play, init_epoll failed.", this);
+		spdlog::info("[{}] CSLSClient::play, init_epoll failed.", fmt::ptr(this));
 		return CSLSSrt::libsrt_neterrno();
 	}
 	ret = add_to_epoll(m_eid);
 	if (SLS_OK != ret)
 	{
-		sls_log(SLS_LOG_INFO, "[%p]CSLSClient::play, add_to_epoll failed.", this);
+		spdlog::warn("[{}}]CSLSClient::play, add_to_epoll failed.", fmt::ptr(this));
 		return CSLSSrt::libsrt_neterrno();
 	}
 	return ret;
@@ -133,8 +134,8 @@ int CSLSClient::push(const char *url, const char *ts_file_name, bool loop)
 {
 	if (NULL == ts_file_name || strlen(ts_file_name) == 0)
 	{
-		sls_log(SLS_LOG_INFO, "[%p]CSLSClient::push, failed, wrong ts_file_name='%s'.",
-				this, ts_file_name);
+		spdlog::error("[{}] CSLSClient::push, failed, wrong ts_file_name='{}'.",
+					  fmt::ptr(this), ts_file_name);
 		return SLS_ERROR;
 	}
 	if (NULL == m_ts_file_time_reader)
@@ -144,8 +145,8 @@ int CSLSClient::push(const char *url, const char *ts_file_name, bool loop)
 	int ret = m_ts_file_time_reader->open(ts_file_name, loop);
 	if (SLS_OK != ret)
 	{
-		sls_log(SLS_LOG_INFO, "[%p]CSLSClient::push, m_ts_file_time_reader->open failed, ts_file_name='%s'.",
-				this, ts_file_name);
+		spdlog::error("[{}] CSLSClient::push, m_ts_file_time_reader->open failed, ts_file_name='{}'.",
+					  fmt::ptr(this), ts_file_name);
 		return SLS_ERROR;
 	}
 
@@ -164,7 +165,7 @@ int CSLSClient::close()
 	}
 	if (0 != m_eid)
 	{
-		sls_log(SLS_LOG_INFO, "[%p]CSLSClient::close, ok, url='%s'.", this, m_url);
+		spdlog::info("[{}] CSLSClient::close, ok, url='{}'.", fmt::ptr(this), m_url);
 		remove_from_epoll();
 		uninit_epoll();
 		m_eid = 0;
@@ -197,12 +198,12 @@ int CSLSClient::write_data_handler()
 
 	if (NULL == m_srt)
 	{
-		sls_log(SLS_LOG_ERROR, "[%p]CSLSClient::write_data_handler, failed, m_srt is null.", this);
+		spdlog::error("[{}] CSLSClient::write_data_handler, failed, m_srt is null.", fmt::ptr(this));
 		return SLS_ERROR;
 	}
 	if (0 == m_eid)
 	{
-		sls_log(SLS_LOG_ERROR, "[%p]CSLSClient::write_data_handler, failed, m_eid = 0.", this);
+		spdlog::error("[{}] CSLSClient::write_data_handler, failed, m_eid = 0.", fmt::ptr(this));
 		return SLS_ERROR;
 	}
 	//check epoll
@@ -225,10 +226,11 @@ int CSLSClient::write_data_handler()
 	int n = m_srt->libsrt_write((char *)szData, TS_UDP_LEN);
 	if (n <= 0)
 	{
-		sls_log(SLS_LOG_TRACE, "[%p]CSLSClient::write_data_handler, libsrt_read failure, n=%d.", this, n, TS_UDP_LEN);
+		spdlog::trace("[{}] CSLSClient::write_data_handler, libsrt_read failure, n={:d} expect {:d}.", fmt::ptr(this), n, TS_UDP_LEN);
 		int state = get_state();
 		if (SLS_RS_INVALID == state || SLS_RS_UNINIT == state)
 		{
+			spdlog::error("[{}] CSLSClient::write_data_handler, state_failure={:d}", fmt::ptr(this), state);
 			return SLS_ERROR;
 		}
 	}
@@ -264,12 +266,12 @@ int CSLSClient::read_data_handler()
 		//play
 		if (NULL == m_srt)
 		{
-			sls_log(SLS_LOG_ERROR, "[%p]CSLSClient::read_data_handler, failed, m_srt is null.", this);
+			spdlog::error("[{}] CSLSClient::read_data_handler, failed, m_srt is null.", fmt::ptr(this));
 			return SLS_ERROR;
 		}
 		if (0 == m_eid)
 		{
-			sls_log(SLS_LOG_ERROR, "[%p]CSLSClient::read_data_handler, failed, m_eid = 0.", this);
+			spdlog::error("[{}] CSLSClient::read_data_handler, failed, m_eid = 0.", fmt::ptr(this));
 			return SLS_ERROR;
 		}
 		read_len = 1;
@@ -288,7 +290,7 @@ int CSLSClient::read_data_handler()
 		int n = m_srt->libsrt_read(szData, TS_UDP_LEN);
 		if (n <= 0)
 		{
-			sls_log(SLS_LOG_ERROR, "[%p]CSLSClient::read_data_handler, libsrt_read failure, n=%d.", this, n, TS_UDP_LEN);
+			spdlog::error("[{}] CSLSClient::read_data_handler, libsrt_read failure, n={:d} expect {:d}.", fmt::ptr(this), n, TS_UDP_LEN);
 			return SLS_OK;
 		}
 
@@ -302,7 +304,7 @@ int CSLSClient::read_data_handler()
 				m_out_file = ::open(m_out_file_name, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IXOTH);
 				if (0 == m_out_file)
 				{
-					sls_log(SLS_LOG_ERROR, "[%p]CSLSClient::read_data_handler, open file='%s' failed, '%s'.\n", m_out_file_name, strerror(errno));
+					spdlog::error("[{}] CSLSClient::read_data_handler, open file='{}' failed, '{}'.", fmt::ptr(this), m_out_file_name, strerror(errno));
 					return SLS_ERROR;
 				}
 			}
@@ -323,7 +325,7 @@ int CSLSClient::read_data_handler()
 
 		if (n != TS_UDP_LEN)
 		{
-			sls_log(SLS_LOG_INFO, "[%p]CSLSClient::read_data_handler, libsrt_read n=%d, expect %d.", this, n, TS_UDP_LEN);
+			spdlog::error("[{}] CSLSClient::read_data_handler, libsrt_read n={:d}, expect {:d}.", fmt::ptr(this), n, TS_UDP_LEN);
 		}
 		return n;
 	}

@@ -25,6 +25,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>
+#include "spdlog/spdlog.h"
 
 #include "SLSMapData.hpp"
 #include "SLSLog.hpp"
@@ -55,8 +56,8 @@ int CSLSMapData::add(char *key)
         CSLSRecycleArray *array_data = item->second;
         if (array_data)
         {
-            sls_log(SLS_LOG_INFO, "[%p]CSLSMapData::add, failed, key=%s, array_data=%p, exist.",
-                    this, key, array_data);
+            spdlog::info("[{}] CSLSMapData::add, failed, key={}, array_data={}, exist.",
+                         fmt::ptr(this), key, fmt::ptr(array_data));
             return ret;
         }
         //m_map_array.erase(item);
@@ -65,8 +66,8 @@ int CSLSMapData::add(char *key)
     CSLSRecycleArray *data_array = new CSLSRecycleArray;
     //m_map_array.insert(make_pair(strKey, data_array));
     m_map_array[strKey] = data_array;
-    sls_log(SLS_LOG_INFO, "[%p]CSLSMapData::add ok, key='%s'.",
-            this, key);
+    spdlog::info("[{}] CSLSMapData::add ok, key='{}'.",
+                 fmt::ptr(this), key);
     return ret;
 }
 
@@ -82,8 +83,8 @@ int CSLSMapData::remove(char *key)
     if (item != m_map_array.end())
     {
         CSLSRecycleArray *array_data = item->second;
-        sls_log(SLS_LOG_INFO, "[%p]CSLSMapData::remove, key='%s' delete array_data=%p.",
-                this, key, array_data);
+        spdlog::info("[{}] CSLSMapData::remove, key='{}' delete array_data={}.",
+                     fmt::ptr(this), key, fmt::ptr(array_data));
         if (array_data)
         {
             delete array_data;
@@ -107,20 +108,20 @@ bool CSLSMapData::is_exist(char *key)
         CSLSRecycleArray *array_data = item->second;
         if (array_data)
         {
-            sls_log(SLS_LOG_TRACE, "[%p]CSLSMapData::is_exist, key=%s, exist.",
-                    this, key);
+            spdlog::trace("[{}] CSLSMapData::is_exist, key={}, exist.",
+                          fmt::ptr(this), key);
             return true;
         }
         else
         {
-            sls_log(SLS_LOG_TRACE, "[%p]CSLSMapData::is_exist, is_exist, key=%s, data_array is null.",
-                    this, key);
+            spdlog::trace("[{}] CSLSMapData::is_exist, is_exist, key={}, data_array is null.",
+                          fmt::ptr(this), key);
         }
     }
     else
     {
-        sls_log(SLS_LOG_TRACE, "[%p]CSLSMapData::add, is_exist, key=%s, not exist.",
-                this, key);
+        spdlog::trace("[{}] CSLSMapData::add, is_exist, key={}, not exist.",
+                      fmt::ptr(this), key);
     }
     return false;
 }
@@ -136,22 +137,22 @@ int CSLSMapData::put(char *key, char *data, int len, int64_t *last_read_time)
     item = m_map_array.find(strKey);
     if (item == m_map_array.end())
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CSLSMapData::put, key=%s, not found data array.",
-                this, key);
+        spdlog::error("[{}] CSLSMapData::put, key={}, not found data array.",
+                      fmt::ptr(this), key);
         return SLS_ERROR;
     }
     CSLSRecycleArray *array_data = item->second;
     if (NULL == array_data)
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CSLSMapData::get, key=%s, array_data is NULL.",
-                this, key);
+        spdlog::error("[{}] CSLSMapData::get, key={}, array_data is NULL.",
+                      fmt::ptr(this), key);
     }
 
     ret = array_data->put(data, len);
     if (ret != len)
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CSLSMapData::put, key=%s, array_data->put failed, len=%d, but ret=%d.",
-                this, key, len, ret);
+        spdlog::error("[{}] CSLSMapData::put, key={}, array_data->put failed, len={:d}, but ret={:d}.",
+                      fmt::ptr(this), key, len, ret);
     }
     if (NULL != last_read_time)
     {
@@ -176,8 +177,8 @@ int CSLSMapData::put(char *key, char *data, int len, int64_t *last_read_time)
 
     if (SLS_OK == check_ts_info(data, len, ti))
     {
-        sls_log(SLS_LOG_INFO, "[%p]CSLSMapData::put, check_spspps ok, key=%s.",
-                this, key);
+        spdlog::info("[{}] CSLSMapData::put, check_spspps ok, key={}.",
+                     fmt::ptr(this), key);
     }
 
     return ret;
@@ -194,15 +195,15 @@ int CSLSMapData::get(char *key, char *data, int len, SLSRecycleArrayID *read_id,
     item = m_map_array.find(strKey);
     if (item == m_map_array.end())
     {
-        sls_log(SLS_LOG_TRACE, "[%p]CSLSMapData::get, key=%s, not found data array,",
-                this, key);
+        spdlog::warn("[{}] CSLSMapData::get, key={}, not found data array,",
+                     fmt::ptr(this), key);
         return SLS_ERROR;
     }
     CSLSRecycleArray *array_data = item->second;
     if (NULL == array_data)
     {
-        sls_log(SLS_LOG_WARNING, "[%p]CSLSMapData::get, key=%s, array_data is NULL.",
-                this, key);
+        spdlog::warn("[{}] CSLSMapData::get, key={}, array_data is NULL.",
+                     fmt::ptr(this), key);
         return SLS_ERROR;
     }
 
@@ -212,8 +213,8 @@ int CSLSMapData::get(char *key, char *data, int len, SLSRecycleArrayID *read_id,
     {
         //get sps and pps
         ret = get_ts_info(key, data, len);
-        sls_log(SLS_LOG_INFO, "[%p]CSLSMapData::get, get sps pps ok, key=%s, len=%d.",
-                this, key, ret);
+        spdlog::info("[{}] CSLSMapData::get, get sps pps ok, key={}, len={:d}.",
+                     fmt::ptr(this), key, ret);
     }
     return ret;
 }

@@ -25,6 +25,7 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/stat.h>
+#include "spdlog/spdlog.h"
 
 #include "SLSRole.hpp"
 #include "SLSLog.hpp"
@@ -66,17 +67,17 @@ CSLSRole::CSLSRole()
     m_need_reconnect = false;
     m_http_client = NULL;
 
-    sprintf(m_record_hls, "off"); //default off
+    snprintf(m_record_hls, sizeof(m_record_hls), "off"); //default off
     m_record_hls_ts_fd = 0;
     memset(m_record_hls_ts_filename, 0, URL_MAX_LEN);
     m_record_hls_vod_fd = 0;
     memset(m_record_hls_vod_filename, 0, FILENAME_MAX);
-    sprintf(m_record_hls_path, "./vod"); //default current path
+    snprintf(m_record_hls_path, sizeof(m_record_hls_path), "./vod"); //default current path
     m_record_hls_begin_tm_ms = 0;
     m_record_hls_segment_duration = 10; //default 10s
     m_record_hls_target_duration = m_record_hls_segment_duration;
 
-    sprintf(m_role_name, "role");
+    snprintf(m_role_name, sizeof(m_role_name), "role");
 }
 
 CSLSRole::~CSLSRole()
@@ -121,7 +122,7 @@ int CSLSRole::invalid_srt()
 {
     if (m_srt)
     {
-        sls_log(SLS_LOG_INFO, "[%p]CSLSRole::invalid_srt, close sock=%d, m_state=%d.", this, get_fd(), m_state);
+        spdlog::info("[{}] CSLSRole::invalid_srt, close sock={:d}, m_state={:d}.", fmt::ptr(this), get_fd(), m_state);
         m_srt->libsrt_close();
         delete m_srt;
         m_srt = NULL;
@@ -138,8 +139,8 @@ int CSLSRole::get_state(int64_t cur_time_ms)
 
     if (check_idle_streams_duration(cur_time_ms))
     {
-        sls_log(SLS_LOG_INFO, "[%p]CSLSRole::get_state, check_idle_streams_duration is true, cur m_state=%d, m_idle_streams_timeout=%ds, call invalid_srt.",
-                this, m_state, m_idle_streams_timeout);
+        spdlog::info("[{}] CSLSRole::get_state, check_idle_streams_duration is true, cur m_state={:d}, m_idle_streams_timeout={:d}s, call invalid_srt.",
+                     fmt::ptr(this), m_state, m_idle_streams_timeout);
         m_state = SLS_RS_INVALID;
         invalid_srt();
         return m_state;
@@ -148,8 +149,8 @@ int CSLSRole::get_state(int64_t cur_time_ms)
     int ret = get_sock_state();
     if (SLS_ERROR == ret || SRTS_BROKEN == ret || SRTS_CLOSED == ret || SRTS_NONEXIST == ret)
     {
-        sls_log(SLS_LOG_INFO, "[%p]CSLSRole::get_state, get_sock_state, ret=%d, call invalid_srt.",
-                this, ret);
+        spdlog::info("[{}] CSLSRole::get_state, get_sock_state, ret={:d}, call invalid_srt.",
+                     fmt::ptr(this), ret);
         if (SRTS_BROKEN == ret || SRTS_CLOSED == ret || SRTS_NONEXIST == ret)
         {
             CSLSSrt::libsrt_neterrno();
@@ -164,7 +165,7 @@ int CSLSRole::get_state(int64_t cur_time_ms)
 int CSLSRole::handler()
 {
     int ret = 0;
-    //sls_log(SLS_LOG_INFO, "CSLSRole::handler()");
+    //spdlog::info("CSLSRole::handler()");
     return ret;
 }
 
@@ -186,7 +187,7 @@ int CSLSRole::set_srt(CSLSSrt *srt)
 {
     if (m_srt)
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CSLSRole::setSrt, m_srt=%p is not null.", this, m_srt);
+        spdlog::error("[{}] CSLSRole::setSrt, m_srt={} is not null.", fmt::ptr(this), fmt::ptr(m_srt));
         return SLS_ERROR;
     }
     m_srt = srt;
@@ -207,8 +208,8 @@ int CSLSRole::add_to_epoll(int eid)
     {
         m_srt->libsrt_set_eid(eid);
         ret = m_srt->libsrt_add_to_epoll(eid, m_is_write);
-        sls_log(SLS_LOG_INFO, "[%p]CSLSRole::add_to_epoll, %s, sock=%d, m_is_write=%d, ret=%d.",
-                this, m_role_name, get_fd(), m_is_write, ret);
+        spdlog::info("[{}] CSLSRole::add_to_epoll, {}, sock={:d}, m_is_write={:d}, ret={:d}.",
+                     fmt::ptr(this), m_role_name, get_fd(), m_is_write, ret);
     }
     return ret;
 }
@@ -219,8 +220,8 @@ int CSLSRole::remove_from_epoll()
     if (m_srt)
     {
         ret = m_srt->libsrt_remove_from_epoll();
-        sls_log(SLS_LOG_INFO, "[%p]CSLSRole::remove_from_epoll, %s, sock=%d, ret=%d.",
-                this, m_role_name, get_fd(), ret);
+        spdlog::info("[{}] CSLSRole::remove_from_epoll, {}, sock={:d}, ret={:d}.",
+                     fmt::ptr(this), m_role_name, get_fd(), ret);
     }
     return ret;
 }
@@ -271,7 +272,7 @@ void CSLSRole::set_map_data(char *map_key, CSLSMapData *map_data)
     }
     else
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CSLSRole::set_map_data, failed, map_key is null.", this);
+        spdlog::error("[{}] CSLSRole::set_map_data, failed, map_key is null.", fmt::ptr(this));
     }
 }
 
@@ -320,7 +321,7 @@ void CSLSRole::close_hls_file()
 
     if (m_record_hls_ts_fd)
     {
-        sls_log(SLS_LOG_INFO, "[%p]CSLSRole::close_hls_file, close ts file='%s', fd=%d.", this, m_record_hls_ts_filename, m_record_hls_ts_fd);
+        spdlog::info("[{}] CSLSRole::close_hls_file, close ts file='{}', fd={:d}.", fmt::ptr(this), m_record_hls_ts_filename, m_record_hls_ts_fd);
         ::close(m_record_hls_ts_fd);
         m_record_hls_ts_fd = 0;
     }
@@ -329,7 +330,7 @@ void CSLSRole::close_hls_file()
         ::close(m_record_hls_vod_fd);
         int vod_fd = 0;
         vod_fd = ::open(m_record_hls_vod_filename, O_RDONLY, S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IXOTH);
-        sls_log(SLS_LOG_INFO, "[%p]CSLSRole::close_hls_file, prepare open '%s', fd=%d.", this, m_record_hls_vod_filename, vod_fd);
+        spdlog::info("[{}] CSLSRole::close_hls_file, prepare open '{}', fd={:d}.", fmt::ptr(this), m_record_hls_vod_filename, vod_fd);
         snprintf(m_record_hls_vod_filename, sizeof(m_record_hls_vod_filename), "%s/vod.m3u8", m_record_hls_path);
         struct stat stat_file;
         if (0 == stat(m_record_hls_vod_filename, &stat_file))
@@ -342,17 +343,17 @@ void CSLSRole::close_hls_file()
         }
         //write header
         char m3u8_info[URL_MAX_LEN] = {0};
-        sprintf(m3u8_info, "#EXTM3U\n\
+        snprintf(m3u8_info, sizeof(m3u8_info), "#EXTM3U\n\
 #EXT-X-VERSION:3\n\
 #EXT-X-TARGETDURATION:%d\n",
-                (int)(m_record_hls_target_duration + 1));
+                 (int)(m_record_hls_target_duration + 1));
         ::write(m_record_hls_vod_fd, m3u8_info, strlen(m3u8_info));
         const int buf_len = 4096;
         char buf[buf_len] = {0};
         while (true)
         {
             int len = ::read(vod_fd, buf, buf_len);
-            sls_log(SLS_LOG_INFO, "[%p]CSLSRole::close_hls_file, read data len=%d, fd=%d.", this, len, vod_fd);
+            spdlog::info("[{}] CSLSRole::close_hls_file, read data len={:d}, fd={:d}.", fmt::ptr(this), len, vod_fd);
             if (len == buf_len)
             {
                 ::write(m_record_hls_vod_fd, buf, len);
@@ -366,7 +367,7 @@ void CSLSRole::close_hls_file()
         }
         ::close(vod_fd);
 
-        sprintf(m3u8_info, "#EXT-X-ENDLIST");
+        snprintf(m3u8_info, sizeof(m3u8_info), "#EXT-X-ENDLIST");
         ::write(m_record_hls_vod_fd, m3u8_info, strlen(m3u8_info));
         ::close(m_record_hls_vod_fd);
         m_record_hls_vod_fd = 0;
@@ -388,23 +389,23 @@ void CSLSRole::check_hls_file()
     //check path
     if (sls_mkdir_p(m_record_hls_path) != -1)
     {
-        sls_log(SLS_LOG_INFO, "[%p]CSLSRole::check_hls_file, mkdir '%s' ok.\n", this, m_record_hls_path);
+        spdlog::info("[{}] CSLSRole::check_hls_file, mkdir '{}' ok.", fmt::ptr(this), m_record_hls_path);
     }
     else
     {
         if (errno != EEXIST)
         {
-            sls_log(SLS_LOG_INFO, "[%p]CSLSRole::check_hls_file, mkdir '%s' failed.\n", this, m_record_hls_path);
+            spdlog::error("[{}] CSLSRole::check_hls_file, mkdir '{}' failed.", fmt::ptr(this), m_record_hls_path);
             return;
         }
-        sls_log(SLS_LOG_INFO, "[%p]CSLSRole::check_hls_file, '%s' exist.\n", this, m_record_hls_path);
+        spdlog::info("[{}] CSLSRole::check_hls_file, '{}' exist.", fmt::ptr(this), m_record_hls_path);
     }
 
     //update ts file
     if (m_record_hls_ts_fd)
     {
         m_record_hls_target_duration = m_record_hls_target_duration < d ? d : m_record_hls_target_duration;
-        sls_log(SLS_LOG_INFO, "[%p]CSLSRole::check_hls_file, close ts file='%s', fd=%d.", this, m_record_hls_ts_filename, m_record_hls_ts_fd);
+        spdlog::info("[{}] CSLSRole::check_hls_file, close ts file='{}', fd={:d}.", fmt::ptr(this), m_record_hls_ts_filename, m_record_hls_ts_fd);
         ::close(m_record_hls_ts_fd);
         m_record_hls_ts_fd = 0;
 
@@ -423,7 +424,7 @@ void CSLSRole::check_hls_file()
             {
                 m_record_hls_vod_fd = ::open(m_record_hls_vod_filename, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IXOTH);
             }
-            sls_log(SLS_LOG_INFO, "[%p]CSLSRole::check_hls_file, create vod file='%s', fd=%d.", this, m_record_hls_vod_filename, m_record_hls_vod_fd);
+            spdlog::info("[{}] CSLSRole::check_hls_file, create vod file='{}', fd={:d}.", fmt::ptr(this), m_record_hls_vod_filename, m_record_hls_vod_fd);
         }
         if (0 != m_record_hls_vod_fd)
         {
@@ -434,7 +435,7 @@ void CSLSRole::check_hls_file()
     snprintf(m_record_hls_ts_filename, sizeof(m_record_hls_ts_filename), "%lld.ts", cur_tm_ms / 1000);
     snprintf(full_ts_name, sizeof(full_ts_name), "%s/%s", m_record_hls_path, m_record_hls_ts_filename);
     m_record_hls_ts_fd = ::open(full_ts_name, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IXOTH);
-    sls_log(SLS_LOG_INFO, "[%p]CSLSRole::check_hls_file, create ts file='%s', fd=%d.", this, full_ts_name, m_record_hls_ts_fd);
+    spdlog::info("[{}] CSLSRole::check_hls_file, create ts file='{}', fd={:d}.", fmt::ptr(this), full_ts_name, m_record_hls_ts_fd);
     if (m_record_hls_ts_fd)
     {
         //write sps pps
@@ -465,7 +466,7 @@ void CSLSRole::record_data2hls(char *data, int len)
     if (strlen(out_file_name) == 0) {
     char cur_tm[256];
     sls_gettime_default_string(cur_tm);
-    sprintf(out_file_name, "./obs_%s.ts", cur_tm);
+    snprintf(out_file_name, sizeof(out_file_name), "./obs_%s.ts", cur_tm);
     }
     static int fd_out = open(out_file_name, O_WRONLY|O_CREAT, S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IXOTH);
 
@@ -486,14 +487,14 @@ int CSLSRole::handler_read_data(int64_t *last_read_time)
 
     if (NULL == m_srt)
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CSLSRole::handler_read_data, m_srt is null.", this);
+        spdlog::error("[{}] CSLSRole::handler_read_data, m_srt is null.", fmt::ptr(this));
         return SLS_ERROR;
     }
     //read data
     int n = m_srt->libsrt_read(szData, TS_UDP_LEN);
     if (n <= 0)
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CSLSRole::handler_read_data, libsrt_read failure, n=%d.", this, n, TS_UDP_LEN);
+        spdlog::error("[{}] CSLSRole::handler_read_data, libsrt_read failure, n={:d}, expected={:d}.", fmt::ptr(this), n, TS_UDP_LEN);
         return SLS_ERROR;
     }
 
@@ -510,17 +511,18 @@ int CSLSRole::handler_read_data(int64_t *last_read_time)
 
     if (n != TS_UDP_LEN)
     {
-        sls_log(SLS_LOG_TRACE, "[%p]CSLSRole::handler_read_data, libsrt_read n=%d, expect %d.", this, n, TS_UDP_LEN);
+        spdlog::error("[{}] CSLSRole::handler_read_data, libsrt_read n={:d}, expect {:d}.", fmt::ptr(this), n, TS_UDP_LEN);
+        // XXX: Does it cause undefined behaviour?
         //return SLS_ERROR;
     }
 
     if (NULL == m_map_data)
     {
-        sls_log(SLS_LOG_ERROR, "[%p]CSLSRole::handler_read_data, no data handled, m_map_data is NULL.", this);
+        spdlog::error("[{}] CSLSRole::handler_read_data, no data handled, m_map_data is NULL.", fmt::ptr(this));
         return SLS_ERROR;
     }
 
-    sls_log(SLS_LOG_TRACE, "[%p]CSLSRole::handler_read_data, ok, libsrt_read n=%d.", this, n);
+    spdlog::trace("[{}] CSLSRole::handler_read_data, ok, libsrt_read n={:d}.", fmt::ptr(this), n);
     int ret = m_map_data->put(m_map_data_key, szData, n, last_read_time);
 
     //record data
@@ -545,14 +547,14 @@ int CSLSRole::handler_write_data()
     //read data from publisher's data array
     if (NULL == m_map_data)
     {
-        sls_log(SLS_LOG_INFO, "[%p]CSLSRole::handler_write_data, no data, m_map_data is NULL.",
-                this);
+        spdlog::error("[{}] CSLSRole::handler_write_data, no data, m_map_data is NULL.",
+                      fmt::ptr(this));
         return SLS_ERROR;
     }
     if (strlen(m_map_data_key) == 0)
     {
-        sls_log(SLS_LOG_INFO, "[%p]CSLSRole::handler_write_data, no data, m_map_data_key is ''.",
-                this);
+        spdlog::error("[{}] CSLSRole::handler_write_data, no data, m_map_data_key is ''.",
+                      fmt::ptr(this));
         return SLS_ERROR;
     }
 
@@ -586,7 +588,7 @@ int CSLSRole::handler_write_data()
         ret = write(m_data + m_data_pos, TS_UDP_LEN);
         if (ret < TS_UDP_LEN)
         {
-            sls_log(SLS_LOG_INFO, "[%p]CSLSRole::handler_write_data, write data failed, ret=%d, not %d.", this, len, ret, TS_UDP_LEN);
+            spdlog::error("[{}] CSLSRole::handler_write_data, write data failed, len={:d}, ret={:d}, not {:d}.", fmt::ptr(this), len, ret, TS_UDP_LEN);
             break;
         }
         m_data_pos += TS_UDP_LEN;
@@ -596,16 +598,16 @@ int CSLSRole::handler_write_data()
 
     if (m_data_pos < m_data_len)
     {
-        sls_log(SLS_LOG_TRACE, "[%p]CSLSRole::handler_write_data, write data, len=%d, remainder=%d.", this, len, m_data_len - m_data_pos);
+        spdlog::trace("[{}] CSLSRole::handler_write_data, write data, len={:d}, remainder={:d}.", fmt::ptr(this), len, m_data_len - m_data_pos);
         return SLS_OK;
     }
     if (m_data_pos > m_data_len)
     {
-        sls_log(SLS_LOG_INFO, "[%p]CSLSRole::handler_write_data, write data, data error, m_data_pos=%d > m_data_len=%d.", this, len, m_data_pos, m_data_len);
+        spdlog::error("[{}] CSLSRole::handler_write_data, write data, data error, len={:d}, m_data_pos={:d} > m_data_len={:d}.", fmt::ptr(this), len, m_data_pos, m_data_len);
     }
     else
     {
-        //sls_log(SLS_LOG_TRACE, "[%p]CSLSRole::handler_write_data, write data, m_data_len=%d.", this, m_data_len);
+        //spdlog::trace("[{}] CSLSRole::handler_write_data, write data, m_data_len={:d}.", fmt::ptr(this), m_data_len);
     }
     m_data_pos = m_data_len = 0;
 
@@ -620,7 +622,7 @@ void CSLSRole::set_stat_info_base(std::string &v)
 std::string CSLSRole::get_stat_info()
 {
     char tmp[STR_MAX_LEN] = {0};
-    sprintf(tmp, "\"%d\"}", m_kbitrate);
+    snprintf(tmp, sizeof(tmp), "\"%d\"}", m_kbitrate);
     return m_stat_info_base + std::string(tmp);
 }
 
@@ -665,7 +667,7 @@ int CSLSRole::on_connect()
         get_peer_info(m_peer_ip, m_peer_port);
     }
     snprintf(on_event_url, sizeof(on_event_url), "%s?on_event=on_connect&role_name=%s&srt_url=%s&remote_ip=%s&remote_port=%d",
-            m_http_url, m_role_name, get_streamid(), m_peer_ip, m_peer_port);
+             m_http_url, m_role_name, get_streamid(), m_peer_ip, m_peer_port);
 
     return m_http_client->open(on_event_url);
 }
@@ -691,7 +693,7 @@ int CSLSRole::on_close()
         get_peer_info(m_peer_ip, m_peer_port);
     }
     snprintf(on_event_url, sizeof(on_event_url), "%s?on_event=on_close&role_name=%s&srt_url=%s&remote_ip=%s&remote_port=%d",
-            m_http_url, m_role_name, get_streamid(), m_peer_ip, m_peer_port);
+             m_http_url, m_role_name, get_streamid(), m_peer_ip, m_peer_port);
 
     int ret = m_http_client->open(on_event_url);
     return ret;
@@ -723,8 +725,8 @@ int CSLSRole::check_http_passed()
     int ret = strcmp(re->m_response_code.c_str(), HTTP_RESPONSE_CODE_200);
     if (0 == ret)
     {
-        sls_log(SLS_LOG_INFO, "[%p]CSLSRole::check_http_client_response, http finished, %s, http_url='%s', response_code=%s, response='%s'.",
-                this, m_role_name, m_http_url, re->m_response_code.c_str(), re->m_response_content.c_str());
+        spdlog::info("[{}] CSLSRole::check_http_client_response, http finished, {}, http_url='{}', response_code={}, response='{}'.",
+                     fmt::ptr(this), m_role_name, m_http_url, re->m_response_code.c_str(), re->m_response_content.c_str());
         m_http_client->close();
         delete m_http_client;
         m_http_client = NULL;
@@ -733,8 +735,8 @@ int CSLSRole::check_http_passed()
     }
     else
     {
-        sls_log(SLS_LOG_INFO, "[%p]CSLSPlayer::check_http_client_response, http refused, invalid %s http_url='%s', response_code=%s, response='%s'.",
-                this, m_role_name, m_http_url, re->m_response_code.c_str(), re->m_response_content.c_str());
+        spdlog::error("[{}] CSLSPlayer::check_http_client_response, http refused, invalid {} http_url='{}', response_code={}, response='{}'.",
+                      fmt::ptr(this), m_role_name, m_http_url, re->m_response_code.c_str(), re->m_response_content.c_str());
         m_http_client->close();
         delete m_http_client;
         m_http_client = NULL;

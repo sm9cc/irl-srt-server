@@ -24,6 +24,7 @@
 
 #include <errno.h>
 #include <string.h>
+#include "spdlog/spdlog.h"
 
 #include "SLSMapPublisher.hpp"
 #include "SLSLog.hpp"
@@ -62,15 +63,15 @@ int CSLSMapPublisher::set_push_2_pushlisher(std::string app_streamname, CSLSRole
         CSLSRole *cur_role = it->second;
         if (NULL != cur_role)
         {
-            sls_log(SLS_LOG_INFO, "[%p]CSLSMapPublisher::set_push_2_pushlisher, failed, cur_role=%p, exist, app_streamname=%s, m_map_push_2_pushlisher.size()=%d.",
-                    this, cur_role, app_streamname.c_str(), m_map_push_2_pushlisher.size());
+            spdlog::error("[{}] CSLSMapPublisher::set_push_2_pushlisher, failed, cur_role={}, exist, app_streamname={}, m_map_push_2_pushlisher.size()={:d}.",
+                          fmt::ptr(this), fmt::ptr(cur_role), app_streamname.c_str(), m_map_push_2_pushlisher.size());
             return SLS_ERROR;
         }
     }
 
     m_map_push_2_pushlisher[app_streamname] = role;
-    sls_log(SLS_LOG_INFO, "[%p]CSLSMapPublisher::set_push_2_pushlisher, ok, %s=%p, app_streamname=%s, m_map_push_2_pushlisher.size()=%d.",
-            this, role->get_role_name(), role, app_streamname.c_str(), m_map_push_2_pushlisher.size());
+    spdlog::info("[{}] CSLSMapPublisher::set_push_2_pushlisher, ok, {}={}, app_streamname={}, m_map_push_2_pushlisher.size()={:d}.",
+                 fmt::ptr(this), role->get_role_name(), fmt::ptr(role), app_streamname.c_str(), m_map_push_2_pushlisher.size());
     return SLS_OK;
 }
 
@@ -130,8 +131,8 @@ int CSLSMapPublisher::remove(CSLSRole *role)
         CSLSRole *pub = it->second;
         if (role == pub)
         {
-            sls_log(SLS_LOG_INFO, "[%p]CSLSMapPublisher::remove, %s=%p, live_key=%s.",
-                    this, pub->get_role_name(), pub, live_stream_name.c_str());
+            spdlog::info("[{}] CSLSMapPublisher::remove, {}={}, live_key={}.",
+                         fmt::ptr(this), pub->get_role_name(), fmt::ptr(pub), live_stream_name.c_str());
             it_erase = it;
             it++;
             m_map_push_2_pushlisher.erase(it_erase);
@@ -149,8 +150,7 @@ int CSLSMapPublisher::remove(CSLSRole *role)
 void CSLSMapPublisher::clear()
 {
     CSLSLock lock(&m_rwclock, true);
-    sls_log(SLS_LOG_INFO, "[%p]CSLSMapPublisher::clear.",
-            this);
+    spdlog::info("[{}] CSLSMapPublisher::clear.", fmt::ptr(this));
     m_map_push_2_pushlisher.clear();
     m_map_live_2_uplive.clear();
     m_map_uplive_2_conf.clear();

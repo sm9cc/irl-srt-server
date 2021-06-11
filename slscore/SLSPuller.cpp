@@ -24,6 +24,7 @@
 
 #include <errno.h>
 #include <string.h>
+#include "spdlog/spdlog.h"
 
 #include "SLSPuller.hpp"
 #include "SLSLog.hpp"
@@ -58,14 +59,14 @@ int CSLSPuller::uninit()
 	if (NULL != m_map_publisher)
 	{
 		ret = m_map_publisher->remove(this);
-		sls_log(SLS_LOG_INFO, "[%p]CSLSPuller::uninit, removed relay from m_map_publisher, ret=%d.",
-				this, ret);
+		spdlog::info("[{}] CSLSPuller::uninit, removed relay from m_map_publisher, ret={:d}.",
+					 fmt::ptr(this), ret);
 	}
 	if (m_map_data)
 	{
 		ret = m_map_data->remove(m_map_data_key);
-		sls_log(SLS_LOG_INFO, "[%p]CSLSPuller::uninit, removed relay from m_map_data, ret=%d.",
-				this, ret);
+		spdlog::info("[{}] CSLSPuller::uninit, removed relay from m_map_data, ret={:d}.",
+					 fmt::ptr(this), ret);
 	}
 	return CSLSRelay::uninit();
 }
@@ -89,8 +90,8 @@ int CSLSPuller::handler()
 		int64_t cur_time = sls_gettime_ms();
 		if (cur_time - last_read_time >= (m_idle_streams_timeout * 1000))
 		{
-			sls_log(SLS_LOG_INFO, "[%p]CSLSPuller::handler, no any reader for m_idle_streams_timeout=%ds, last_read_time=%lld, close puller.",
-					this, m_idle_streams_timeout, last_read_time);
+			spdlog::info("[{}] CSLSPuller::handler, no any reader for m_idle_streams_timeout={:d}s, last_read_time={:d}, close puller.",
+						 fmt::ptr(this), m_idle_streams_timeout, last_read_time);
 			m_state = SLS_RS_INVALID;
 			invalid_srt();
 			return SLS_ERROR;

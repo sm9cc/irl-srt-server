@@ -23,6 +23,7 @@
  */
 
 #include <stdio.h>
+#include "spdlog/spdlog.h"
 
 #include "SLSRecycleArray.hpp"
 #include "SLSLog.hpp"
@@ -71,15 +72,15 @@ int CSLSRecycleArray::put(char *data, int len)
 {
     if (!data || len <= 0)
     {
-        sls_log(SLS_LOG_INFO, "[%p]CSLSRecycleArray::put, failed, data=%p, len=%d.",
-                this, data, len);
+        spdlog::error("[{}] CSLSRecycleArray::put, failed, data={:p}, len={:d}.",
+                      fmt::ptr(this), data, len);
         return SLS_ERROR;
     }
 
     if (len > m_nDataSize)
     {
-        sls_log(SLS_LOG_INFO, "[%p]CSLSRecycleArray::put, failed, len=%d is bigger than m_nDataSize=%d.",
-                this, data, len, m_nDataSize);
+        spdlog::error("[{}] CSLSRecycleArray::put, failed, len={:d} is bigger than m_nDataSize={:d}.",
+                      fmt::ptr(this), data, len, m_nDataSize);
         return SLS_ERROR;
     }
 
@@ -104,8 +105,8 @@ int CSLSRecycleArray::put(char *data, int len)
     }
     //no consider int wrapround;
     m_nDataCount += len;
-    sls_log(SLS_LOG_TRACE, "[%p]CSLSRecycleArray::put, len=%d, m_nWritePos=%d, m_nDataCount=%d, m_nDataSize=%d.",
-            this, len, m_nWritePos, m_nDataCount, m_nDataSize);
+    spdlog::trace("[{}] CSLSRecycleArray::put, len={:d}, m_nWritePos={:d}, m_nDataCount={:d}, m_nDataSize={:d}.",
+                  fmt::ptr(this), len, m_nWritePos, m_nDataCount, m_nDataSize);
     return len;
 }
 
@@ -113,13 +114,13 @@ int CSLSRecycleArray::get(char *data, int size, SLSRecycleArrayID *read_id, int 
 {
     if (NULL == m_arrayData)
     {
-        sls_log(SLS_LOG_INFO, "[%p]CSLSRecycleArray::get, failed, m_arrayData is NULL.", this);
+        spdlog::error("[{}] CSLSRecycleArray::get, failed, m_arrayData is NULL.", fmt::ptr(this));
         return SLS_ERROR;
     }
 
     if (NULL == read_id)
     {
-        sls_log(SLS_LOG_INFO, "[%p]CSLSRecycleArray::get, failed, read_id is NULL.", this);
+        spdlog::error("[{}] CSLSRecycleArray::get, failed, read_id is NULL.", fmt::ptr(this));
         return SLS_ERROR;
     }
 
@@ -128,18 +129,18 @@ int CSLSRecycleArray::get(char *data, int size, SLSRecycleArrayID *read_id, int 
         read_id->nReadPos = m_nWritePos;
         read_id->nDataCount = m_nDataCount;
         read_id->bFirst = false;
-        sls_log(SLS_LOG_TRACE, "[%p]CSLSRecycleArray::get, the first time.");
+        spdlog::trace("[{}] CSLSRecycleArray::get, the first time.", fmt::ptr(this));
         return SLS_OK;
     }
 
     CSLSLock lock(&m_rwclock, false);
     if (read_id->nReadPos == m_nWritePos && m_nDataCount == read_id->nDataCount)
     {
-        sls_log(SLS_LOG_TRACE, "[%p]CSLSRecycleArray::get, no new data.", this);
+        spdlog::trace("[{}] CSLSRecycleArray::get, no new data.", fmt::ptr(this));
         return SLS_OK;
     }
-    sls_log(SLS_LOG_TRACE, "[%p]CSLSRecycleArray::get, read_id->nReadPos=%d, m_nWritePos=%d, m_nDataCount=%d, m_nDataSize=%d.",
-            this, read_id->nReadPos, m_nWritePos, m_nDataCount, m_nDataSize);
+    spdlog::trace("[{}] CSLSRecycleArray::get, read_id->nReadPos={:d}, m_nWritePos={:d}, m_nDataCount={:d}, m_nDataSize={:d}.",
+                  fmt::ptr(this), read_id->nReadPos, m_nWritePos, m_nDataCount, m_nDataSize);
 
     //update the last read time
     m_last_read_time = sls_gettime_ms();
@@ -195,13 +196,13 @@ int CSLSRecycleArray::get(char *data, int size, SLSRecycleArrayID *read_id, int 
 
     if (read_id->nReadPos > m_nDataSize)
     {
-        sls_log(SLS_LOG_WARNING, "[%p]CSLSRecycleArray::get, read_id->nReadPos=%d, but m_nDataSize=%d.",
-                this, read_id->nReadPos, m_nDataSize);
+        spdlog::warn("[{}] CSLSRecycleArray::get, read_id->nReadPos={:d}, but m_nDataSize={:d}.",
+                     fmt::ptr(this), read_id->nReadPos, m_nDataSize);
         read_id->nReadPos = 0;
     }
     read_id->nDataCount = m_nDataCount;
-    sls_log(SLS_LOG_TRACE, "[%p]CSLSRecycleArray::get, copy_data_lens=%d.",
-            this, copy_data_len);
+    spdlog::trace("[{}] CSLSRecycleArray::get, copy_data_lens={:d}.",
+                  fmt::ptr(this), copy_data_len);
     return copy_data_len;
 }
 

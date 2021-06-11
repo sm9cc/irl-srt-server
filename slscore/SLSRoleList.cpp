@@ -24,6 +24,7 @@
 
 #include <errno.h>
 #include <string.h>
+#include "spdlog/spdlog.h"
 
 #include "SLSRoleList.hpp"
 #include "SLSLog.hpp"
@@ -65,7 +66,7 @@ CSLSRole *CSLSRoleList::pop()
 void CSLSRoleList::erase()
 {
     CSLSLock lock(&m_mutex);
-    sls_log(SLS_LOG_TRACE, "[%p]CSLSRoleList::erase, list.count=%d", this, m_list_role.size());
+    spdlog::trace("[{}] CSLSRoleList::erase, list.count={:d}", fmt::ptr(this), m_list_role.size());
     std::list<CSLSRole *>::iterator it_erase;
     for (std::list<CSLSRole *>::iterator it = m_list_role.begin(); it != m_list_role.end();)
     {
