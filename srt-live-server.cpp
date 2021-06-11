@@ -145,13 +145,13 @@ std:
     ret = sls_conf_open(sls_opt.conf_file_name);
     if (ret != SLS_OK)
     {
-        spdlog::critical("sls_conf_open failed, exiting.");
+        spdlog::critical("Could not read configuration file, exiting.");
         goto EXIT_PROC;
     }
 
     if (0 != sls_write_pid(getpid()))
     {
-        spdlog::critical("sls_write_pid failed, exiting.");
+        spdlog::critical("Could not write PID file, exiting.");
         goto EXIT_PROC;
     }
 
@@ -161,7 +161,7 @@ std:
     sls_manager = new CSLSManager;
     if (SLS_OK != sls_manager->start())
     {
-        spdlog::critical("sls_manager->start failed, exiiting.");
+        spdlog::critical("sls_manager->start failed, exiting.");
         goto EXIT_PROC;
     }
 
