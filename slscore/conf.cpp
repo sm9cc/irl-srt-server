@@ -250,6 +250,15 @@ int sls_conf_parse_block(ifstream &ifs, int &line, sls_conf_base_t *b, bool &chi
                 ret = SLS_ERROR;
                 break;
             }
+
+            // fix1: don't parse the value if main configuration block is not initialized
+            if (!p_runtime)
+            {
+                spdlog::error("line:{:d}='{}', values outside of the configuration block", line, str_line);
+                ret = SLS_ERROR;
+                break;
+            }
+
             //key value
             str_line = str_line.substr(0, str_line.length() - 1);
 
