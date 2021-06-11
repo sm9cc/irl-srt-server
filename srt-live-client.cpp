@@ -46,18 +46,16 @@ static void ctrl_c_handler(int s)
 /**
  * usage information
  */
-#define SLS_MAJOR_VERSION "1"
-#define SLS_MIN_VERSION "1"
-#define SLS_TEST_VERSION "x"
+#define BANNER_WIDTH 40
+#define VERSION_STRING "v" SLS_VERSION
 static void usage()
 {
-	printf("-------------------------------------------------\n");
-	printf("           srt-live-client \n");
-	printf("                    v%s.%s.%s \n", SLS_MAJOR_VERSION, SLS_MIN_VERSION, SLS_TEST_VERSION);
-	printf("-------------------------------------------------\n");
-	printf("    -r srt_url [-o out_file_name] [-c worker_count] \n");
-	printf("    -r srt_url -i ts_file_name \n");
-	printf("    \n");
+	spdlog::info("{:-<{}}", "", BANNER_WIDTH);
+	spdlog::info("{: ^{}}", "srt-live-client", BANNER_WIDTH);
+	spdlog::info("{: ^{}}", VERSION_STRING, BANNER_WIDTH);
+	spdlog::info("{:-<{}}", "", BANNER_WIDTH);
+	spdlog::info("-r srt_url [-o out_file_name] [-c worker_count]");
+	spdlog::info("-r srt_url -i ts_file_name");
 }
 
 struct sls_opt_client_t
