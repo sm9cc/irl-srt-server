@@ -386,14 +386,15 @@ int sls_write_pid(int pid)
     std::error_code ec;
     std::filesystem::create_directories(pidfile_dir_string, ec);
 
-    if (ec.value() != 0) {
+    if (ec.value() != 0)
+    {
         spdlog::error("Could not create PID directory [errno={:d} msg='{}']", ec.value(), ec.message());
         return -1;
     }
 
     struct stat stat_file;
     int fd = 0;
-    fd = open(pid_file_name, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IXOTH);
+    fd = open(pid_file_name, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
 
     if (0 == fd)
     {
@@ -410,13 +411,25 @@ int sls_write_pid(int pid)
 
 int sls_remove_pid()
 {
-    struct stat stat_file;
-    if (0 == stat(pid_file_name, &stat_file))
+    std::error_code ec;
+
+    if (!std::filesystem::remove(pid_file_name, ec))
     {
-        FILE *fd = fopen(pid_file_name, "w");
-        fclose(fd);
+        if (ec.value() != 0)
+        {
+            spdlog::warn("Could not remove PID file [errno={:d} msg='{}']", ec.value(), ec.message());
+        }
+        else
+        {
+            spdlog::warn("Could not remove non-existent PID file");
+        }
+        return -1;
     }
-    return 0;
+    else
+    {
+        spdlog::info("Removed PID file");
+        return 0;
+    }
 }
 
 int sls_send_cmd(const char *cmd)
