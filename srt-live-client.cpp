@@ -196,5 +196,8 @@ int main(int argc, char *argv[])
 	sls_client.close();
 	spdlog::info("exit, bye bye!");
 
+	// Drop all active loggers
+	spdlog::drop_all();
+
 	return 0;
 }
