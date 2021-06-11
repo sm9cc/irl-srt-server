@@ -42,6 +42,7 @@
 
 #include "spdlog/spdlog.h"
 
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -372,14 +373,26 @@ int sls_read_pid()
 
 int sls_write_pid(int pid)
 {
-    struct stat stat_file;
-    int fd = 0;
+    string pidfile_dir_string = std::filesystem::path(pid_file_name).parent_path().u8string();
+    char pidfile_dir[pidfile_dir_string.length() + 1];
+    strncpy(pidfile_dir, pidfile_dir_string.c_str(), sizeof(pidfile_dir));
 
-    if (sls_mkdir_p(pid_path_name) == -1 && errno != EEXIST)
+    if (strcmp(pidfile_dir, pid_file_name) == 0)
     {
-        spdlog::error("mkdir '{0}' failed.", pid_path_name);
+        spdlog::error("Could not write PID file: directory provided, expected file");
         return -1;
     }
+
+    std::error_code ec;
+    std::filesystem::create_directories(pidfile_dir_string, ec);
+
+    if (ec.value() != 0) {
+        spdlog::error("Could not create PID directory [errno={:d} msg='{}']", ec.value(), ec.message());
+        return -1;
+    }
+
+    struct stat stat_file;
+    int fd = 0;
     fd = open(pid_file_name, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IXOTH);
 
     if (0 == fd)
@@ -388,7 +401,7 @@ int sls_write_pid(int pid)
         return -1;
     }
     char buf[128] = {0};
-    sprintf(buf, "%d", pid);
+    snprintf(buf, sizeof(buf), "%d", pid);
     write(fd, buf, strlen(buf));
     close(fd);
     spdlog::info("write pid ok, file='{0}', pid={1}.", pid_file_name, buf);
