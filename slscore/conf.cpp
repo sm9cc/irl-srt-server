@@ -223,7 +223,7 @@ int sls_conf_parse_block(ifstream &ifs, int &line, sls_conf_base_t *b, bool &chi
     while (getline(ifs, str_line))
     {
         line++;
-        spdlog::trace("line:{:d}='{}'", line, str_line.c_str());
+        spdlog::trace("line:{:d}='{}'", line, str_line);
         //remove #
         index = str_line.find('#');
         if (index != -1)
@@ -235,7 +235,7 @@ int sls_conf_parse_block(ifstream &ifs, int &line, sls_conf_base_t *b, bool &chi
         str_line = trim(str_line);
         if (str_line.length() == 0)
         {
-            spdlog::trace("line:{:d}='{}', is comment.", line, str_line.c_str());
+            spdlog::trace("line:{:d}='{}', is comment.", line, str_line);
             continue;
         }
 
@@ -246,7 +246,7 @@ int sls_conf_parse_block(ifstream &ifs, int &line, sls_conf_base_t *b, bool &chi
         {
             if (!b)
             {
-                spdlog::error("line:{:d}='{}', not found block.", line, str_line.c_str());
+                spdlog::error("line:{:d}='{}', not found block.", line, str_line);
                 ret = SLS_ERROR;
                 break;
             }
@@ -260,7 +260,7 @@ int sls_conf_parse_block(ifstream &ifs, int &line, sls_conf_base_t *b, bool &chi
             int index = str_line.find(' ');
             if (index == -1)
             {
-                spdlog::error("line:{:d}='{}', no space separator.", line, str_line.c_str());
+                spdlog::error("line:{:d}='{}', no space separator.", line, str_line);
                 ret = SLS_ERROR;
                 break;
             }
@@ -271,18 +271,18 @@ int sls_conf_parse_block(ifstream &ifs, int &line, sls_conf_base_t *b, bool &chi
             sls_conf_cmd_t *it = sls_conf_find(n.c_str(), p_runtime->conf_cmd, p_runtime->conf_cmd_size);
             if (!it)
             {
-                spdlog::error("line:{:d}='{}', wrong name='{}'.", line, str_line.c_str(), n.c_str());
+                spdlog::error("line:{:d}='{}', wrong name='{}'.", line, str_line, n);
                 ret = SLS_ERROR;
                 break;
             }
             const char *r = it->set(v.c_str(), it, b);
             if (r != SLS_CONF_OK)
             {
-                spdlog::error("line:{:d}, set failed, {}, name='{}', value='{}'.", line, r, n.c_str(), v.c_str());
+                spdlog::error("line:{:d}, set failed, {}, name='{}', value='{}'.", line, r, n, v);
                 ret = SLS_ERROR;
                 break;
             }
-            spdlog::trace("line:{:d}, set name='{}', value='{}'.", line, n.c_str(), v.c_str());
+            spdlog::trace("line:{:d}, set name='{}', value='{}'.", line, n, v);
         }
         else if (line_end_flag == "{")
         {
@@ -306,7 +306,7 @@ int sls_conf_parse_block(ifstream &ifs, int &line, sls_conf_base_t *b, bool &chi
             block = sls_conf_create_block_by_name(n, p_runtime);
             if (!block)
             {
-                spdlog::error("line:{:d}, name='{}' not found.", line, n.c_str());
+                spdlog::error("line:{:d}, name='{}' not found.", line, n);
                 ret = SLS_ERROR;
                 break;
             }
@@ -329,7 +329,7 @@ int sls_conf_parse_block(ifstream &ifs, int &line, sls_conf_base_t *b, bool &chi
         {
             if (str_line != line_end_flag)
             {
-                spdlog::error("line:{:d}='{}', end indicator '}}' with more info.", line, str_line.c_str());
+                spdlog::error("line:{:d}='{}', end indicator '}}' with more info.", line, str_line);
                 ret = SLS_ERROR;
                 break;
             }
@@ -340,7 +340,7 @@ int sls_conf_parse_block(ifstream &ifs, int &line, sls_conf_base_t *b, bool &chi
         }
         else
         {
-            spdlog::error("line:{:d}='{}', invalid end flag, except ';', '{{', '}}',", line, str_line.c_str());
+            spdlog::error("line:{:d}='{}', invalid end flag, except ';', '{{', '}}',", line, str_line);
             ret = SLS_ERROR;
             break;
         }
@@ -441,7 +441,7 @@ int sls_parse_argv(int argc, char *argv[], sls_opt_t *sls_opt, sls_conf_cmd_t *c
             spdlog::info("option help info:\n");
             for (i = 0; i < len; i++)
             {
-                spdlog::info("-{}, {}, range: {:.0f}-{:.0f}.\n",
+                spdlog::info("-{}, {}, range: {:.0f}-{:.0f}.",
                              conf_cmd_opt[i].name,
                              conf_cmd_opt[i].mark,
                              conf_cmd_opt[i].min,
@@ -450,7 +450,7 @@ int sls_parse_argv(int argc, char *argv[], sls_opt_t *sls_opt, sls_conf_cmd_t *c
         }
         else
         {
-            spdlog::critical("wrong parameter, '{}'.\n", argv[1]);
+            spdlog::critical("wrong parameter, '{}'.", argv[1]);
         }
         return SLS_ERROR;
     }
