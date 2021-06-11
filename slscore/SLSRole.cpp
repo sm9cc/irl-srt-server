@@ -267,7 +267,7 @@ void CSLSRole::set_map_data(char *map_key, CSLSMapData *map_data)
 {
     if (NULL != map_key)
     {
-        strcpy(m_map_data_key, map_key);
+        strncpy(m_map_data_key, map_key, sizeof(m_map_data_key));
         m_map_data = map_data;
     }
     else
@@ -303,7 +303,7 @@ void CSLSRole::set_record_hls_path(const char *hls_path)
 {
     if (hls_path && strlen(hls_path) > 0)
     {
-        strcpy(m_record_hls_path, hls_path);
+        strncpy(m_record_hls_path, hls_path, sizeof(m_record_hls_path));
     }
 }
 
@@ -642,7 +642,7 @@ void CSLSRole::set_http_url(const char *http_url)
     {
         return;
     }
-    strcpy(m_http_url, http_url);
+    strncpy(m_http_url, http_url, sizeof(m_http_url));
     if (NULL == m_http_client)
     {
         m_http_client = new CHttpClient;

@@ -96,19 +96,19 @@ int main(int argc, char *argv[])
 		{
 			i++;
 			sls_remove_marks(argv[i]);
-			strcpy(sls_opt.srt_url, argv[i++]);
+			strncpy(sls_opt.srt_url, argv[i++], sizeof(sls_opt.srt_url));
 		}
 		else if (strcmp("-i", argv[i]) == 0)
 		{
 			i++;
 			sls_remove_marks(argv[i]);
-			strcpy(sls_opt.ts_file_name, argv[i++]);
+			strncpy(sls_opt.ts_file_name, argv[i++], sizeof(sls_opt.ts_file_name));
 		}
 		else if (strcmp("-o", argv[i]) == 0)
 		{
 			i++;
 			sls_remove_marks(argv[i]);
-			strcpy(sls_opt.out_file_name, argv[i++]);
+			strncpy(sls_opt.out_file_name, argv[i++], sizeof(sls_opt.out_file_name));
 		}
 		else if (strcmp("-c", argv[i]) == 0)
 		{

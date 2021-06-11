@@ -92,17 +92,17 @@ int64_t sls_gettime(void) //rturn micro-second
 #endif
 }
 
-void sls_gettime_default_string(char *cur_time)
+void sls_gettime_default_string(char *cur_time_buf, size_t cur_time_buf_len)
 {
-    if (NULL == cur_time)
+    if (NULL == cur_time_buf)
     {
         return;
     }
     int64_t cur_time_sec = sls_gettime() / 1000000;
-    sls_gettime_fmt(cur_time, cur_time_sec, "%Y-%m-%d %H:%M:%S");
+    sls_gettime_fmt(cur_time_buf, cur_time_buf_len, cur_time_sec, "%Y-%m-%d %H:%M:%S");
 }
 
-void sls_gettime_fmt(char *dst, int64_t cur_time_sec, char *fmt)
+void sls_gettime_fmt(char *dst, size_t dst_len, int64_t cur_time_sec, char *fmt)
 {
     time_t rawtime;
     struct tm *timeinfo;
@@ -112,7 +112,7 @@ void sls_gettime_fmt(char *dst, int64_t cur_time_sec, char *fmt)
     rawtime = (time_t)cur_time_sec;
     timeinfo = localtime(&rawtime);
     strftime(timef, sizeof(timef), fmt, timeinfo);
-    strcpy(dst, timef);
+    strncpy(dst, timef, dst_len);
     return;
 }
 

@@ -142,7 +142,7 @@ void CSLSListener::set_record_hls_path_prefix(char *path)
 {
     if (path != NULL && strlen(path) > 0)
     {
-        strcpy(m_record_hls_path_prefix, path);
+        strncpy(m_record_hls_path_prefix, path, sizeof(m_record_hls_path_prefix));
     }
 }
 
@@ -177,7 +177,7 @@ int CSLSListener::init_conf_app()
 
     m_back_log = conf_server->backlog;
     m_idle_streams_timeout_role = conf_server->idle_streams_timeout;
-    strcpy(m_http_url_role, conf_server->on_event_url);
+    strncpy(m_http_url_role, conf_server->on_event_url, sizeof(m_http_url_role));
     spdlog::info("[{}] CSLSListener::init_conf_app, m_back_log={:d}, m_idle_streams_timeout={:d}.",
                  fmt::ptr(this), m_back_log, m_idle_streams_timeout_role);
 
@@ -413,7 +413,7 @@ int CSLSListener::handler()
     sls_conf_app_t *ca = NULL;
 
     char cur_time[STR_DATE_TIME_LEN] = {0};
-    sls_gettime_default_string(cur_time);
+    sls_gettime_default_string(cur_time, sizeof(cur_time));
 
     //3.is player?
     app_uplive = m_map_publisher->get_uplive(key_app);
@@ -609,7 +609,7 @@ std::string CSLSListener::get_stat_info()
     {
         char tmp[STR_MAX_LEN] = {0};
         char cur_time[STR_DATE_TIME_LEN] = {0};
-        sls_gettime_default_string(cur_time);
+        sls_gettime_default_string(cur_time, sizeof(cur_time));
         snprintf(tmp, sizeof(tmp), SLS_SERVER_STAT_INFO_BASE, m_port, m_role_name, cur_time);
         m_stat_info = std::string(tmp);
     }

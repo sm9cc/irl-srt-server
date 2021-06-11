@@ -79,7 +79,7 @@ int CHttpClient::open(const char *url, const char *method, int interval)
 {
 	m_begin_tm_ms = sls_gettime_ms();
 	int ret = SLS_OK;
-	strcpy(m_url, url);
+	strncpy(m_url, url, sizeof(m_url));
 	if (NULL == m_url)
 	{
 		spdlog::error("[{}] CHttpClient::open, failed, m_url is NULL.", fmt::ptr(this));
@@ -92,7 +92,7 @@ int CHttpClient::open(const char *url, const char *method, int interval)
 	}
 	if (NULL != method && strlen(method) > 0)
 	{
-		strcpy(m_http_method, method);
+		strncpy(m_http_method, method, sizeof(m_http_method));
 	}
 
 	m_interval = interval;
@@ -485,7 +485,7 @@ int CHttpClient::parse_url()
 	}
 
 	char url[1024] = {0};
-	strcpy(url, m_url);
+	strncpy(url, m_url, sizeof(url));
 
 	char *p = url;
 	//protocal
@@ -509,7 +509,7 @@ int CHttpClient::parse_url()
 	if (p_tmp)
 	{
 		p_tmp[0] = 0x00;
-		strcpy(m_remote_host, p);
+		strncpy(m_remote_host, p, sizeof(m_remote_host));
 		p = p_tmp + 1;
 		p_tmp = strchr(p, '/');
 		if (p_tmp)
@@ -533,7 +533,7 @@ int CHttpClient::parse_url()
 		if (p_tmp)
 		{
 			p_tmp[0] = 0x00;
-			strcpy(m_remote_host, p);
+			strncpy(m_remote_host, p, sizeof(m_remote_host));
 			p_tmp[0] = '/';
 			p = p_tmp;
 		}
@@ -545,7 +545,7 @@ int CHttpClient::parse_url()
 		}
 	}
 	if (NULL != p)
-		strcpy(m_uri, p);
+		strncpy(m_uri, p, sizeof(m_uri));
 	return SLS_OK;
 }
 

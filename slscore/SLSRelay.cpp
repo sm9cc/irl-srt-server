@@ -216,8 +216,8 @@ int CSLSRelay::open(const char *srt_url)
     char url[1024] = {0};
     int latency = 10;
 
-    strcpy(m_url, srt_url);
-    strcpy(url, srt_url);
+    strncpy(m_url, srt_url, sizeof(m_url));
+    strncpy(url, srt_url, sizeof(url));
 
     //init listener
     if (NULL != m_srt)
@@ -298,7 +298,7 @@ int CSLSRelay::open(const char *srt_url)
     }
     m_srt = new CSLSSrt();
     m_srt->libsrt_set_fd(fd);
-    strcpy(m_server_ip, server_ip);
+    strncpy(m_server_ip, server_ip, sizeof(m_server_ip));
     m_server_port = server_port;
     return status;
 }

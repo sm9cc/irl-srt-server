@@ -137,7 +137,7 @@ int CSLSMapRelay::add_relay_conf(std::string app_uplive, sls_conf_relay_t *cr)
         return SLS_ERROR;
     }
     sri = new SLS_RELAY_INFO;
-    strcpy(sri->m_type, cr->type);
+    strncpy(sri->m_type, cr->type, sizeof(sri->m_type));
     sri->m_reconnect_interval = cr->reconnect_interval;
     sri->m_idle_streams_timeout = cr->idle_streams_timeout;
 

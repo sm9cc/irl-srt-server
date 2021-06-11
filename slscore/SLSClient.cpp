@@ -92,7 +92,7 @@ int CSLSClient::play(const char *url, const char *out_file_name)
 	m_is_write = false;
 	if (out_file_name != NULL && strlen(out_file_name) > 0)
 	{
-		strcpy(m_out_file_name, out_file_name);
+		strncpy(m_out_file_name, out_file_name, sizeof(m_out_file_name));
 	}
 
 	return open_url(url);

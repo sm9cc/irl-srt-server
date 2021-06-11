@@ -41,7 +41,7 @@ CTCPRole::CTCPRole()
     m_remote_port = 0;
     m_valid = false;
 
-    strcpy(m_remote_host, "");
+    strncpy(m_remote_host, "", sizeof(m_remote_host));
     snprintf(m_role_name, sizeof(m_role_name), "tcp_role");
 }
 CTCPRole::~CTCPRole()
@@ -139,7 +139,7 @@ int CTCPRole::connect(char *host, int port)
     }
 
     spdlog::info("[{}] CTCPRole::connect, ok, m_fd={:d}, host={}, port=={:d}.", fmt::ptr(this), m_fd, host, port);
-    strcpy(m_remote_host, host);
+    strncpy(m_remote_host, host, sizeof(m_remote_host));
     m_remote_port = port;
     return SLS_OK;
 }
