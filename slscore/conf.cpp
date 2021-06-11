@@ -383,6 +383,12 @@ int sls_conf_open(const char *conf_file)
 
 void sls_conf_release(sls_conf_base_t *c)
 {
+    if (c == nullptr)
+    {
+        spdlog::warn("sls_conf_release, config not loaded");
+        return;
+    }
+
     sls_conf_base_t *c_b;
     if (c->child != NULL)
     {
@@ -436,10 +442,10 @@ int sls_parse_argv(int argc, char *argv[], sls_opt_t *sls_opt, sls_conf_cmd_t *c
             for (i = 0; i < len; i++)
             {
                 spdlog::info("-{}, {}, range: {:.0f}-{:.0f}.\n",
-                       conf_cmd_opt[i].name,
-                       conf_cmd_opt[i].mark,
-                       conf_cmd_opt[i].min,
-                       conf_cmd_opt[i].max);
+                             conf_cmd_opt[i].name,
+                             conf_cmd_opt[i].mark,
+                             conf_cmd_opt[i].min,
+                             conf_cmd_opt[i].max);
             }
         }
         else
