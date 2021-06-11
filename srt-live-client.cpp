@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
 	//parse cmd line
 	if (argc < 3)
 	{
-		spdlog::info("srt live client, no enough parameters, EXIT!");
+		spdlog::critical("Not enough parameters provided, exiting.");
 		return SLS_OK;
 	}
 
@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
 		}
 		else
 		{
-			spdlog::info("srt live client, wrong parameter '{}', EXIT!", argv[i]);
+			spdlog::critical("Wrong parameter '{}', exiting!", argv[i]);
 			return SLS_OK;
 		}
 	}
@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
 	{
 		if (SLS_OK != sls_client.push(sls_opt.srt_url, sls_opt.ts_file_name, sls_opt.loop))
 		{
-			spdlog::info("sls_client.push failed, EXIT!");
+			spdlog::error("sls_client.push failed, exiting.");
 			return SLS_ERROR;
 		}
 	}
@@ -141,25 +141,25 @@ int main(int argc, char *argv[])
 	{
 		if (SLS_OK != sls_client.play(sls_opt.srt_url, sls_opt.out_file_name))
 		{
-			spdlog::info("sls_client.play failed, EXIT!");
+			spdlog::error("sls_client.play failed, exiting.");
 			return SLS_ERROR;
 		}
 		for (i = 1; i < sls_opt.worker_count; i++)
 		{
-			pid_t fpid; //fpid表示fork函数返回的值
+			pid_t fpid;
 			fpid = fork();
 			if (fpid < 0)
 			{
-				spdlog::error("srt live client, error in fork!");
+				spdlog::error("Error when forking! [ERRNO={:d}]", fpid);
 			}
 			else if (fpid == 0)
 			{
-				spdlog::info("srt live client, i am the child process, my process id is {:d}", getpid());
+				spdlog::info("Child process spawned [PID={:d}]", getpid());
 				break;
 			}
 			else
 			{
-				spdlog::info("srt live client, i am the parent process, my process id is {:d}", getpid());
+				spdlog::info("Parent process resumed [PID={:d}]", getpid());
 			}
 		}
 	}
@@ -170,12 +170,12 @@ int main(int argc, char *argv[])
 	sigIntHandler.sa_flags = 0;
 	sigaction(SIGINT, &sigIntHandler, 0);
 
-	spdlog::info("srt live client is running...");
+	spdlog::info("SRT Live Client is running...");
 	while (!b_exit)
 	{
 		//printf log info
-		int64_t kb = sls_client.get_bitrate();
-		("\rsrt live client, cur bitrate=%lld(kb)", kb);
+		int64_t bitrate_kbps = sls_client.get_bitrate();
+		("\rSRT Live Client, cur bitrate=%lld(kbps)", bitrate_kbps);
 
 		int ret = sls_client.handler();
 		if (ret > 0)
@@ -192,12 +192,9 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	spdlog::info("exit, stop srt live client...");
+	spdlog::info("Stopping SLS_client");
 	sls_client.close();
-	spdlog::info("exit, bye bye!");
 
-	// Drop all active loggers
-	spdlog::drop_all();
-
+	spdlog::info("Execution finished, goodbye.");
 	return 0;
 }

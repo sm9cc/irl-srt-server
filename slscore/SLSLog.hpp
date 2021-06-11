@@ -43,7 +43,7 @@ static char const *LOG_LEVEL_NAME[] = {
     "FATAL",
     "OFF"};
 
-static const char APP_NAME[] = "srt-server";
+static const char APP_NAME[] = "srt-live";
 
 int initialize_logger();
 
