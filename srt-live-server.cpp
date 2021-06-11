@@ -54,16 +54,14 @@ static void reload_handler(int s)
 /**
  * usage information
  */
-#define SLS_MAJOR_VERSION "1"
-#define SLS_MIN_VERSION "4"
-#define SLS_TEST_VERSION "x"
+#define BANNER_WIDTH 40
+#define VERSION_STRING "v" SLS_VERSION
 static void usage()
 {
-    printf("-------------------------------------------------\n");
-    printf("           srt-live-srver \n");
-    printf("                    v%s.%s.%s \n", SLS_MAJOR_VERSION, SLS_MIN_VERSION, SLS_TEST_VERSION);
-    printf("-------------------------------------------------\n");
-    printf("    \n");
+    spdlog::info("{:-<{}}", "", BANNER_WIDTH);
+    spdlog::info("{: ^{}}", "srt-live-server", BANNER_WIDTH);
+    spdlog::info("{: ^{}}", VERSION_STRING, BANNER_WIDTH);
+    spdlog::info("{:-<{}}", "", BANNER_WIDTH);
 }
 
 //add new parameter here

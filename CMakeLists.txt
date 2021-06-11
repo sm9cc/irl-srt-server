@@ -8,6 +8,8 @@ set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 include(CPack)
 
+add_compile_definitions( SLS_VERSION="${PROJECT_VERSION}" )
+
 # Use spdlog
 add_subdirectory(lib/spdlog)
 find_package(spdlog)
@@ -17,7 +19,6 @@ find_package(Threads)
 
 # Use SLSCore
 include_directories(slscore)
-link_directories(slscore)
 add_subdirectory(slscore)
 
 add_executable(srt_server srt-live-server.cpp)
