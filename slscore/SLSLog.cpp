@@ -27,6 +27,7 @@
 #include <stddef.h>
 #include <strings.h>
 #include "spdlog/spdlog.h"
+#include "spdlog/sinks/ansicolor_sink.h"
 #include "spdlog/sinks/basic_file_sink.h"
 
 #include "SLSLog.hpp"
@@ -64,7 +65,7 @@ int sls_set_log_level(char *log_level)
             return 0;
         }
     }
-    spdlog::warn("!!!wrong log level '{0}', set default '{1}'.", log_level, LOG_LEVEL_NAME[DEFAULT_LOG_LEVEL]);
+    spdlog::warn("!!!wrong log level '{}', set default '{}'.", log_level, LOG_LEVEL_NAME[DEFAULT_LOG_LEVEL]);
     return 1;
 }
 

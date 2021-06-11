@@ -62,4 +62,6 @@ set(slscore_files
     TSFileTimeReader.cpp
     TSFileTimeReader.hpp
 )
+
 add_library(slscore ${slscore_files})
+target_link_libraries(slscore spdlog)
