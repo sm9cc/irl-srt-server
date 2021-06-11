@@ -32,8 +32,6 @@
 #include "common.hpp"
 #include "SLSLock.hpp"
 
-static const spdlog::level::level_enum DEFAULT_LOG_LEVEL = spdlog::level::info;
-
 static char const *LOG_LEVEL_NAME[] = {
     "TRACE",
     "DEBUG",

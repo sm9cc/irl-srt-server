@@ -22,6 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <mutex>
 #include <stdio.h>
 #include <string.h>
 #include <stddef.h>
@@ -33,9 +34,9 @@
 #include "SLSLog.hpp"
 #include "SLSLock.hpp"
 
-#include <mutex>
 
 std::mutex LOGGER_MUTEX;
+static const spdlog::level::level_enum DEFAULT_LOG_LEVEL = spdlog::level::info;
 
 int initialize_logger()
 {
