@@ -1,3 +1,4 @@
 logs/
 build/
+fuzzing/
 .vscode/
