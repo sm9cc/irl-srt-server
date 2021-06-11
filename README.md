@@ -13,6 +13,7 @@ SLS can only run on OS based on linux, such as mac, centos or ubuntu etc.
 ## Compilation
 
 ```bash
+git submodule update --init
 mkdir build && cd build
 cmake ../
 make -j
