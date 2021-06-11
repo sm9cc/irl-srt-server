@@ -65,6 +65,11 @@ int CSLSSrt::libsrt_init()
         return SLSERROR_UNKNOWN;
     }
     m_inited = true;
+
+    uint32_t libsrt_version = srt_getversion();
+    spdlog::info("Initialized libsrt v{:d}.{:d}.{:d}",
+                 (libsrt_version >> 16) & 0xff, (libsrt_version >> 8) & 0xff, libsrt_version & 0xff);
+
     return SLS_OK;
 }
 
@@ -358,7 +363,7 @@ int CSLSSrt::libsrt_read(char *buf, int size)
     {
         int err_no = libsrt_neterrno();
         spdlog::warn("[{}] CSLSSrt::libsrt_read failed, sock={:d}, ret={:d}, err_no={:d}.",
-                fmt::ptr(this), m_sc.fd, ret, err_no);
+                     fmt::ptr(this), m_sc.fd, ret, err_no);
     }
     return ret;
 }
@@ -371,7 +376,7 @@ int CSLSSrt::libsrt_write(const char *buf, int size)
     { //SRTS_BROKEN
         int err_no = libsrt_neterrno();
         spdlog::warn("[{}] CSLSSrt::libsrt_write failed, sock={:d}, ret={:d}, errno={:d}.",
-                fmt::ptr(this), m_sc.fd, ret, err_no);
+                     fmt::ptr(this), m_sc.fd, ret, err_no);
     }
     return ret;
 }
@@ -393,7 +398,7 @@ int CSLSSrt::libsrt_add_to_epoll(int eid, bool write)
     if (ret < 0)
     {
         spdlog::error("[{}] CSLSSrt::libsrt_add_to_epoll, srt_epoll_add_usock failed, m_eid={:d}, fd={:d}, modes={:d}.",
-                fmt::ptr(this), eid, fd, modes);
+                      fmt::ptr(this), eid, fd, modes);
         return libsrt_neterrno();
     }
     return ret;
@@ -415,7 +420,7 @@ int CSLSSrt::libsrt_remove_from_epoll()
     if (ret < 0)
     {
         spdlog::error("[{}] CSLSSrt::remove_from_epoll, srt_epoll_remove_usock failed, m_eid={:d}, fd={:d}.",
-                fmt::ptr(this), eid, fd);
+                      fmt::ptr(this), eid, fd);
         return libsrt_neterrno();
     }
     return ret;
