@@ -64,4 +64,4 @@ set(slscore_files
 )
 
 add_library(slscore ${slscore_files})
-target_link_libraries(slscore spdlog)
+target_link_libraries(slscore spdlog stdc++fs)
