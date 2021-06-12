@@ -513,7 +513,7 @@ int CSLSRole::handler_read_data(int64_t *last_read_time)
     {
         spdlog::error("[{}] CSLSRole::handler_read_data, libsrt_read n={:d}, expect {:d}.", fmt::ptr(this), n, TS_UDP_LEN);
         // XXX: Does it cause undefined behaviour?
-        //return SLS_ERROR;
+        return SLS_ERROR;
     }
 
     if (NULL == m_map_data)

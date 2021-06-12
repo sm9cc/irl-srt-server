@@ -78,10 +78,10 @@ int sls_set_log_file(char *log_file)
         LOGGER_MUTEX.lock();
         spdlog::get(APP_NAME)->sinks().push_back(file_sink);
         LOGGER_MUTEX.unlock();
-        return 0;
+        return SLS_OK;
     }
     else
     {
-        return 1;
+        return SLS_ERROR;
     }
 }

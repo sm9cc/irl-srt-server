@@ -243,7 +243,7 @@ int CSLSSrt::libsrt_accept()
 {
     struct sockaddr_in scl;
     int sclen = sizeof(scl);
-    char ip[30] = {0};
+    char ip[64] = {0};
     struct sockaddr_in *addrtmp;
 
     int new_sock = srt_accept(m_sc.fd, (struct sockaddr *)&scl, &sclen); //NULL, NULL);//(sockaddr*)&scl, &sclen);

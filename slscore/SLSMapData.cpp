@@ -195,8 +195,8 @@ int CSLSMapData::get(char *key, char *data, int len, SLSRecycleArrayID *read_id,
     item = m_map_array.find(strKey);
     if (item == m_map_array.end())
     {
-        spdlog::warn("[{}] CSLSMapData::get, key={}, not found data array,",
-                     fmt::ptr(this), key);
+        spdlog::trace("[{}] CSLSMapData::get, key={}, not found data array,",
+                      fmt::ptr(this), key);
         return SLS_ERROR;
     }
     CSLSRecycleArray *array_data = item->second;
