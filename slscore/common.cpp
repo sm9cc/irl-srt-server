@@ -346,7 +346,6 @@ void sls_remove_marks(char *s)
     }
 }
 
-static char pid_path_name[] = "/tmp/sls";
 static char pid_file_name[] = "/tmp/sls/pid.txt";
 int sls_read_pid()
 {
@@ -373,6 +372,15 @@ int sls_read_pid()
 
 int sls_write_pid(int pid)
 {
+    if (std::filesystem::is_regular_file(pid_file_name))
+    {
+        spdlog::error("PID file already exists.");
+        spdlog::error("If no copy of SRT Live Server is running, delete it and try again.");
+        spdlog::error("If you are trying to run multiple instances of SRT Live Server,");
+        spdlog::error("use a separate configuration file specifying a different PID file.");
+        return SLS_ERROR;
+    }
+
     string pidfile_dir_string = std::filesystem::path(pid_file_name).parent_path().u8string();
     char pidfile_dir[pidfile_dir_string.length() + 1];
     strncpy(pidfile_dir, pidfile_dir_string.c_str(), sizeof(pidfile_dir));
@@ -380,7 +388,7 @@ int sls_write_pid(int pid)
     if (strcmp(pidfile_dir, pid_file_name) == 0)
     {
         spdlog::error("Could not write PID file: directory provided, expected file");
-        return -1;
+        return SLS_ERROR;
     }
 
     std::error_code ec;
@@ -389,7 +397,7 @@ int sls_write_pid(int pid)
     if (ec.value() != 0)
     {
         spdlog::error("Could not create PID directory [errno={:d} msg='{}']", ec.value(), ec.message());
-        return -1;
+        return SLS_ERROR;
     }
 
     struct stat stat_file;
@@ -399,7 +407,7 @@ int sls_write_pid(int pid)
     if (0 == fd)
     {
         spdlog::error("open file='{0}' failed, '{1}'.", pid_file_name, strerror(errno));
-        return -1;
+        return SLS_ERROR;
     }
     char buf[128] = {0};
     snprintf(buf, sizeof(buf), "%d", pid);
@@ -411,24 +419,34 @@ int sls_write_pid(int pid)
 
 int sls_remove_pid()
 {
-    std::error_code ec;
-
-    if (!std::filesystem::remove(pid_file_name, ec))
+    int pid_from_file = sls_read_pid();
+    if (pid_from_file == 0)
     {
-        if (ec.value() != 0)
-        {
-            spdlog::warn("Could not remove PID file [errno={:d} msg='{}']", ec.value(), ec.message());
-        }
-        else
-        {
-            spdlog::warn("Could not remove non-existent PID file");
-        }
-        return -1;
+        // Check if PIDfile exists
+        spdlog::warn("Could not remove non-existent PID file");
+        return SLS_ERROR;
+    }
+    else if (pid_from_file != getpid())
+    {
+        // Check if we own the PID file
+        spdlog::error("PID file not owned by current process [my_pid={:d} file_pid={:d}]", getpid(), pid_from_file);
+        return SLS_ERROR;
     }
     else
     {
-        spdlog::info("Removed PID file");
-        return 0;
+
+        // Try to remove PID file
+        std::error_code ec;
+        if (!std::filesystem::remove(pid_file_name, ec))
+        {
+            spdlog::warn("Could not remove PID file [errno={:d} msg='{}']", ec.value(), ec.message());
+            return SLS_ERROR;
+        }
+        else
+        {
+            spdlog::info("Removed PID file");
+            return SLS_OK;
+        }
     }
 }
 
