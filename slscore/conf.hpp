@@ -64,31 +64,65 @@ struct sls_conf_cmd_t
 
 /*
  * set conf macro
+ * conf: configuration block name
+ * type: type of configuration parameter
+ * tgt: target variable for configuration parameter, also used as name of the directive
+ * desc: description of parameter
+ * min: minimum value of parameter
+ * max: maximum value of parameter
+ * -------------------------------
+ * offsetof(sls_conf_##conf##_t, tgt) - offset of the configuration object
+ * sls_conf_set_##type - invokes function for right data type
  */
-#define SLS_SET_CONF(conf, type, n, m, min, max) \
-    {                                            \
-#n,                                      \
-            #m,                                  \
-            offsetof(sls_conf_##conf##_t, n),    \
-            sls_conf_set_##type,                 \
-            min,                                 \
-            max,                                 \
+#define SLS_SET_CONF(conf, type, tgt, desc, min, max) \
+    {                                                 \
+#tgt,                                         \
+            #desc,                                    \
+            offsetof(sls_conf_##conf##_t, tgt),       \
+            sls_conf_set_##type,                      \
+            min,                                      \
+            max,                                      \
+    }
+
+/*
+ * set conf macro (2)
+ * conf: configuration block name
+ * type: type of configuration parameter
+ * tgt_var: target variable for configuration parameter
+ * name: name of the configuration directive
+ * desc: description of parameter
+ * min: minimum value of parameter
+ * max: maximum value of parameter
+ * -------------------------------
+ * offsetof(sls_conf_##conf##_t, tgt) - offset of the configuration object
+ * sls_conf_set_##type - invokes function for right data type
+ */
+#define SLS_SET_CONF2(conf, type, tgt_var, name, desc, min, max) \
+    {                                                            \
+#name,                                                   \
+            #desc,                                               \
+            offsetof(sls_conf_##conf##_t, tgt_var),              \
+            sls_conf_set_##type,                                 \
+            min,                                                 \
+            max,                                                 \
     }
 
 const char *sls_conf_set_int(const char *v, sls_conf_cmd_t *cmd, void *conf);
 const char *sls_conf_set_string(const char *v, sls_conf_cmd_t *cmd, void *conf);
 const char *sls_conf_set_double(const char *v, sls_conf_cmd_t *cmd, void *conf);
 const char *sls_conf_set_bool(const char *v, sls_conf_cmd_t *cmd, void *conf);
+const char *sls_conf_set_ipset(const char *v, sls_conf_cmd_t *cmd, void *conf);
 
 /**
  * runtime conf
- * all conf runtime classes are linked, such as frist->next->next->next.
+ * all conf runtime classes are linked, such as first->next->next->next.
  */
 typedef struct sls_conf_base_t sls_conf_base_s;
 typedef sls_conf_base_t *(*create_conf_func)();
 struct sls_runtime_conf_t
 {
     const char *conf_name;
+    // TODO: use this
     // char *higher_conf_names; //if allow existing in one than one higher conf, split with '|'
     create_conf_func create_fn;
     sls_conf_cmd_t *conf_cmd;
@@ -108,6 +142,32 @@ struct sls_conf_base_t
     const char *name;
     sls_conf_base_t *sibling;
     sls_conf_base_t *child;
+};
+
+/**
+ * @brief Defines possible actions for a connection client
+ * 
+ */
+enum class sls_access_action : int
+{
+    ACCEPT = 0, /**< Accept the connection */
+    DENY = 1    /**< Deny the connection */
+};
+
+/**
+ * @brief Structure maps an IP address to a specific action
+ * 
+ */
+struct sls_ip_access_t
+{
+    unsigned long ip_address;
+    sls_access_action action;
+};
+
+struct sls_ip_acl_t
+{
+    vector<sls_ip_access_t> play;
+    vector<sls_ip_access_t> publish;
 };
 
 /**
@@ -184,6 +244,6 @@ int sls_parse_argv(int argc, char *argv[], sls_opt_t *sls_opt, sls_conf_cmd_t *c
 
 sls_conf_cmd_t *sls_conf_find(const char *n, sls_conf_cmd_t *cmd, int size);
 sls_conf_base_t *sls_conf_get_root_conf();
-vector<string> sls_conf_string_split(const string &str, const string &delim);
+vector<string> sls_conf_string_split(const char *str, const char *delim);
 
 #endif

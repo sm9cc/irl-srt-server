@@ -22,6 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <arpa/inet.h>
 #include <errno.h>
 #include <string.h>
 #include <vector>
@@ -182,7 +183,7 @@ int CSLSListener::init_conf_app()
                  fmt::ptr(this), m_back_log, m_idle_streams_timeout_role);
 
     //domain
-    domain_players = sls_conf_string_split(string(conf_server->domain_player), string(" "));
+    domain_players = sls_conf_string_split(conf_server->domain_player, " ");
     if (domain_players.size() == 0)
     {
         spdlog::error("[{}] CSLSListener::init_conf_app, wrong domain_player='{}'.", fmt::ptr(this), conf_server->domain_player);
@@ -225,6 +226,9 @@ int CSLSListener::init_conf_app()
             return SLS_ERROR;
         }
 
+        // Setup mapping between player endpoints and publishing endpoints
+        // Each player endpoint has a corresponding (not necessarily unique)
+        // publishing endpoint.
         for (int j = 0; j < domain_players.size(); j++)
         {
             strLiveDomain = domain_players[j];
@@ -291,7 +295,7 @@ int CSLSListener::start()
         spdlog::error("[{}] CSLSListener::start failed, conf is null.", fmt::ptr(this));
         return SLS_ERROR;
     }
-    spdlog::info("[{}] CSLSListener::start...", fmt::ptr(this));
+    spdlog::info("[{}] CSLSListener::start", fmt::ptr(this));
 
     ret = init_conf_app();
     if (SLS_OK != ret)
@@ -362,6 +366,7 @@ int CSLSListener::handler()
     char tmp[URL_MAX_LEN] = {0};
     char peer_name[IP_MAX_LEN] = {0};
     int peer_port = 0;
+    unsigned long peer_addr_raw = 0;
     int client_count = 0;
 
     //1: accept
@@ -475,10 +480,67 @@ int CSLSListener::handler()
             }
         }
 
+        // Check if IP is allowed to stream from the app
+        ca = (sls_conf_app_t *)m_map_publisher->get_ca(app_uplive);
+        if (ca == nullptr)
+        {
+            spdlog::error("[{}] CSLSListener::handler, refused, configuration does not exist [stream={}]",
+                          fmt::ptr(this), key_stream_name);
+            srt->libsrt_close();
+            delete srt;
+            return client_count;
+        }
+        else
+        {
+            // Get IP address of remote peer
+            if (srt->libsrt_getpeeraddr_raw(peer_addr_raw) == SLS_OK)
+            {
+                // If/when we match an address, set this flag to break out of the for loop
+                bool address_matched = false;
+                for (sls_ip_access_t &acl_entry : ca->ip_actions.play)
+                {
+                    if (acl_entry.ip_address == peer_addr_raw || acl_entry.ip_address == 0)
+                    {
+                        switch (acl_entry.action)
+                        {
+                        case sls_access_action::ACCEPT:
+                            address_matched = true;
+                            spdlog::info("[{}] CSLSListener::handler Accepted connection from {}:{:d} for app '{}'",
+                                         fmt::ptr(this), peer_name, peer_port, ca->app_publisher);
+                            break;
+                        case sls_access_action::DENY:
+                            spdlog::warn("[{}] CSLSListener::handler Rejected connection from {}:{:d} for app '{}'",
+                                         fmt::ptr(this), peer_name, peer_port, ca->app_publisher);
+                            srt->libsrt_close();
+                            delete srt;
+                            return client_count;
+                        default:
+                            spdlog::error("[{}] CSLSListener::handler Unknown action [sls_access_action={:d}], ignoring",
+                                          fmt::ptr(this), (int)acl_entry.action);
+                        }
+                    }
+
+                    if (address_matched)
+                        break;
+                }
+                // If we don't have any entries regarding the peer, accept by default
+                if (!address_matched)
+                {
+                    spdlog::info("[{}] CSLSListener::handler Accepted connection from {}:{:d} for app '{}' by default",
+                                 fmt::ptr(this), peer_name, peer_port, ca->app_publisher);
+                }
+            }
+            else
+            {
+                spdlog::error("[{}] CSLSListener::handler ACL check failed: could not get peer address", fmt::ptr(this));
+                spdlog::error("[{}] CSLSListener::handler Accepting connection by default", fmt::ptr(this));
+            }
+        }
+
         //3.2 handle new play
         if (!m_map_data->is_exist(key_stream_name))
         {
-            spdlog::error("[{}] CSLSListener::handler, refused, new role[{}:{:d}], stream={},but publisher data doesn't exist in m_map_data.",
+            spdlog::error("[{}] CSLSListener::handler, refused, new role[{}:{:d}], stream={}, but publisher data doesn't exist in m_map_data.",
                           fmt::ptr(this), peer_name, peer_port, key_stream_name);
             srt->libsrt_close();
             delete srt;
@@ -522,6 +584,51 @@ int CSLSListener::handler()
         return client_count;
     }
 
+    // Check if IP is allowed to publish to the app
+    if (srt->libsrt_getpeeraddr_raw(peer_addr_raw) == SLS_OK)
+    {
+        // If/when we match an address, set this flag to break out of the for loop
+        bool address_matched = false;
+        for (sls_ip_access_t &acl_entry : ca->ip_actions.publish)
+        {
+            if (acl_entry.ip_address == peer_addr_raw || acl_entry.ip_address == 0)
+            {
+                switch (acl_entry.action)
+                {
+                case sls_access_action::ACCEPT:
+                    address_matched = true;
+                    spdlog::info("[{}] CSLSListener::handler Accepted connection from {}:{:d} for app '{}'",
+                                 fmt::ptr(this), peer_name, peer_port, ca->app_publisher);
+                    break;
+                case sls_access_action::DENY:
+                    spdlog::warn("[{}] CSLSListener::handler Rejected connection from {}:{:d} for app '{}'",
+                                 fmt::ptr(this), peer_name, peer_port, ca->app_publisher);
+                    srt->libsrt_close();
+                    delete srt;
+                    return client_count;
+                default:
+                    spdlog::error("[{}] CSLSListener::handler Unknown action [sls_access_action={:d}], ignoring",
+                                  fmt::ptr(this), (int)acl_entry.action);
+                }
+            }
+
+            if (address_matched)
+                break;
+        }
+        // If we don't have any entries regarding the peer, accept by default
+        if (!address_matched)
+        {
+            spdlog::info("[{}] CSLSListener::handler Accepted connection from {}:{:d} for app '{}' by default",
+                         fmt::ptr(this), peer_name, peer_port, ca->app_publisher);
+        }
+    }
+    else
+    {
+        spdlog::error("[{}] CSLSListener::handler ACL check failed: could not get peer address", fmt::ptr(this));
+        spdlog::error("[{}] CSLSListener::handler Accepting connection by default", fmt::ptr(this));
+    }
+
+    // Check if publisher for the stream already exists
     CSLSRole *publisher = m_map_publisher->get_publisher(key_stream_name);
     if (NULL != publisher)
     {

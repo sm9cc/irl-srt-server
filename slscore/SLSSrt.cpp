@@ -50,6 +50,7 @@ CSLSSrt::CSLSSrt()
     m_sc.backlog = 1024;
     memset(m_peer_name, 0, sizeof(m_peer_name));
     m_peer_port = 0;
+    m_peer_addr_raw = 0;
 }
 CSLSSrt::~CSLSSrt()
 {
@@ -456,5 +457,35 @@ int CSLSSrt::libsrt_getpeeraddr(char *peer_name, int &port)
         port = m_peer_port;
         ret = SLS_OK;
     }
+    return ret;
+}
+
+int CSLSSrt::libsrt_getpeeraddr_raw(unsigned long &address)
+{
+    int ret = SLS_ERROR;
+    struct sockaddr_in peer_addr;
+    int peer_addr_len = sizeof(peer_addr);
+
+    if (0 == m_peer_addr_raw)
+    {
+        ret = srt_getpeername(m_sc.fd, (struct sockaddr *)&peer_addr, &peer_addr_len);
+        if (0 == ret)
+        {
+            m_peer_addr_raw = ntohl(peer_addr.sin_addr.s_addr);
+
+            address = m_peer_addr_raw;
+            ret = SLS_OK;
+        }
+        else
+        {
+            spdlog::error("[{}] SLSSrt::libsrt_getpeeraddr_raw failed: not get peer IP address [ret={:d}]", fmt::ptr(this), ret);
+        }
+    }
+    else
+    {
+        address = m_peer_addr_raw;
+        ret = SLS_OK;
+    }
+
     return ret;
 }

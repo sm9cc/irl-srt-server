@@ -161,7 +161,7 @@ int CSLSMapRelay::add_relay_conf(std::string app_uplive, sls_conf_relay_t *cr)
     }
 
     //parse upstreams
-    sri->m_upstreams = sls_conf_string_split(string(cr->upstreams), string(" "));
+    sri->m_upstreams = sls_conf_string_split(cr->upstreams, " ");
     if (sri->m_upstreams.size() == 0)
     {
         spdlog::warn("[{}] CSLSMapRelay::add_app_conf, wrong upstreams='{}'.", fmt::ptr(this), cr->upstreams);

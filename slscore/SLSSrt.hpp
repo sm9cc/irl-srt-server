@@ -118,6 +118,7 @@ public:
 
     int libsrt_getsockstate();
     int libsrt_getpeeraddr(char *peer_name, int &port);
+    int libsrt_getpeeraddr_raw(unsigned long &address);
 
     void libsrt_set_latency(int latency);
 
@@ -128,6 +129,7 @@ protected:
     SRTContext m_sc;
     char m_peer_name[256]; //peer ip addr, such as 172.12.22.14
     int m_peer_port;
+    unsigned long m_peer_addr_raw; // Peer IP addr in unsigned long format
 
 private:
     static bool m_inited;

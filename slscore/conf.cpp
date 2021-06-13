@@ -22,11 +22,13 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <arpa/inet.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
+#include <vector>
 #include "spdlog/spdlog.h"
 
 #include "conf.hpp"
@@ -77,6 +79,88 @@ const char *sls_conf_set_int(const char *v, sls_conf_cmd_t *cmd, void *conf)
     if (v1 < cmd->min || v1 > cmd->max)
         return SLS_CONF_OUT_RANGE;
     *np = v1;
+    return SLS_CONF_OK;
+}
+
+const char *sls_conf_set_ipset(const char *conf_line, sls_conf_cmd_t *cmd, void *conf)
+{
+    char *p = (char *)conf;
+    sls_ip_acl_t *ip_acl;
+    vector<sls_ip_access_t> *ip_access_list;
+
+    int len = strlen(conf_line);
+    if (len < cmd->min || len > cmd->max)
+        return SLS_CONF_OUT_RANGE;
+
+    // Split configuration line at tabs and spaces
+    vector<string> conf_line_split = sls_conf_string_split(conf_line, "\t ");
+    // Check whether we have both arguments (play|publish, address|all)
+    if (conf_line_split.size() != 2)
+    {
+        spdlog::error("Expected two arguments (play|publish, address|all), got '{}'", conf_line);
+        return SLS_CONF_WRONG_TYPE;
+    }
+
+    // Get ACL object from the memory offset
+    ip_acl = (sls_ip_acl_t *)(p + cmd->offset);
+    // Store action, IP address
+    sls_ip_access_t ip_access_obj;
+
+    // Check if we got valid ACL target
+    if (strcmp(conf_line_split[0].c_str(), "play") == 0)
+    {
+        ip_access_list = &(ip_acl->play);
+    }
+    else if (strcmp(conf_line_split[0].c_str(), "publish") == 0)
+    {
+        ip_access_list = &(ip_acl->publish);
+    }
+    else
+    {
+        spdlog::error("Unknown ACL target '{}'", conf_line_split[0].c_str());
+        return SLS_CONF_WRONG_TYPE;
+    }
+
+    // Check if provided IP is a well-known IP address/term
+    if (strcmp(conf_line_split[1].c_str(), "all") == 0)
+    {
+        ip_access_obj.ip_address = 0;
+    }
+    else
+    {
+        // Otherwise, parse the address
+        struct in_addr parsed_addr_struct;
+        // TODO: IPv6 support (https://linux.die.net/man/3/inet_pton)
+        if (inet_pton(AF_INET, conf_line_split[1].c_str(), &parsed_addr_struct) != 1)
+        {
+            spdlog::warn("Invalid IPv4 address provided [ip='{}' list='{}']", conf_line_split[1], cmd->name);
+            return SLS_CONF_WRONG_TYPE;
+        }
+        // Use ntohl, in case this is used for anything else in the future
+        ip_access_obj.ip_address = ntohl(parsed_addr_struct.s_addr);
+    }
+
+    // Get correct action
+    if (strcmp(cmd->name, "allow") == 0)
+    {
+        ip_access_obj.action = sls_access_action::ACCEPT;
+    }
+    else if (strcmp(cmd->name, "deny") == 0)
+    {
+        ip_access_obj.action = sls_access_action::DENY;
+    }
+    else
+    {
+        // If we reach this, something is wrong with the code
+        // (incorrect modification of config directives)
+        spdlog::error("Invalid command name '{}'", cmd->name);
+        return SLS_CONF_WRONG_TYPE;
+    }
+
+    // Add IP object to the list
+    ip_access_list->push_back(ip_access_obj);
+    spdlog::debug("Added IP address to the list [ip='{}' list='{}' action='{}']",
+                  conf_line_split[1], conf_line_split[0], cmd->name);
     return SLS_CONF_OK;
 }
 
@@ -146,17 +230,24 @@ int sls_conf_get_conf_count(sls_conf_base_t *c)
     return count;
 }
 
-vector<string> sls_conf_string_split(const string &str, const string &delim)
+/**
+ * @brief Split provided char array at any of the provided delimiters.
+ * 
+ * @param str String to split into tokens.
+ * @param delim Delimiters to consider when splitting.
+ * @return vector<char *> Vector of strings - individual tokens.
+ */
+vector<string> sls_conf_string_split(const char *str, const char *delim)
 {
     vector<string> res;
     if (strcmp(str, "") == 0)
         return res;
 
-    char *strs = new char[str.length() + 1];
-    strcpy(strs, str.c_str());
+    char *strs = new char[strlen(str) + 1];
+    strcpy(strs, str);
 
-    char *d = new char[delim.length() + 1];
-    strcpy(d, delim.c_str());
+    char *d = new char[strlen(delim) + 1];
+    strcpy(d, delim);
 
     char *p = strtok(strs, d);
     while (p)
@@ -171,6 +262,12 @@ vector<string> sls_conf_string_split(const string &str, const string &delim)
     return res;
 }
 
+/**
+ * @brief Trim spaces at the beginning and the end of the string
+ * 
+ * @param s String to trim.
+ * @return string& Trimmed string.
+ */
 string &trim(string &s)
 {
     if (s.empty())
@@ -252,9 +349,9 @@ int sls_conf_parse_block(ifstream &ifs, int &line, sls_conf_base_t *b, bool &chi
             }
 
             // fix1: don't parse the value if main configuration block is not initialized
-            if (!p_runtime)
+            if (brackets_layers == 0 || !p_runtime)
             {
-                spdlog::error("line:{:d}='{}', values outside of the configuration block", line, str_line);
+                spdlog::error("line:{:d}='{}', values outside of the SRT configuration block", line, str_line);
                 ret = SLS_ERROR;
                 break;
             }
@@ -447,7 +544,7 @@ int sls_parse_argv(int argc, char *argv[], sls_opt_t *sls_opt, sls_conf_cmd_t *c
         sls_remove_marks(temp);
         if (strcmp(temp, "-h") == 0)
         {
-            spdlog::info("option help info:\n");
+            spdlog::info("option help info:");
             for (i = 0; i < len; i++)
             {
                 spdlog::info("-{}, {}, range: {:.0f}-{:.0f}.",
