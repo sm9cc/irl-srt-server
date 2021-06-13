@@ -364,8 +364,15 @@ int sls_read_pid()
         return 0;
     }
     char pid[128] = {0};
-    int n = read(fd, pid, sizeof(pid));
-    ret = atoi(pid);
+    if (read(fd, pid, sizeof(pid)) < 0)
+    {
+        spdlog::error("Invalid PID file content");
+        ret = -1;
+    }
+    else
+    {
+        ret = atoi(pid);
+    }
     close(fd);
     return ret;
 }
