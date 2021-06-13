@@ -7,8 +7,8 @@ Normally, the latency of transport by SLS is less than 1 second in internet.
 
 ## Requirements
 
-Please install the SRT library first, refer to SRT(https://github.com/Haivision/srt) for system enviroment.
-SLS can only run on OS based on linux, such as mac, centos or ubuntu etc.
+Please install the SRT library first, refer to [SRT](https://github.com/Haivision/srt) for system enviroment setup.
+SLS can only run on Unix-based operating systems.
 
 ## Compilation
 
