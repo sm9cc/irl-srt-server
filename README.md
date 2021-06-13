@@ -15,7 +15,7 @@ SLS can only run on OS based on linux, such as mac, centos or ubuntu etc.
 ```bash
 git submodule update --init
 mkdir build && cd build
-cmake ../
+cmake ../ -DCMAKE_BUILD_TYPE=Release
 make -j
 ```
 
@@ -106,6 +106,17 @@ There is a test tool in SLS which can be used as a performance test - it has no 
 ## Use SLS with docker
 
 Please refer to: https://hub.docker.com/r/ravenium/srt-live-server
+
+## Development
+
+To build a debug build of the SRT Live Server, run the following commands:
+
+```bash
+git submodule update --init
+mkdir build && cd build
+cmake ../ -DCMAKE_BUILD_TYPE=Debug
+make -j
+```
 
 ## Note:
 
