@@ -36,7 +36,12 @@
 
 
 std::mutex LOGGER_MUTEX;
-static const spdlog::level::level_enum DEFAULT_LOG_LEVEL = spdlog::level::info;
+
+#ifdef NDEBUG
+    static const spdlog::level::level_enum DEFAULT_LOG_LEVEL = spdlog::level::info;
+#else
+    static const spdlog::level::level_enum DEFAULT_LOG_LEVEL = spdlog::level::debug;
+#endif
 
 int initialize_logger()
 {
