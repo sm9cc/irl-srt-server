@@ -62,13 +62,13 @@ If `error while loading shared libraries: libsrt.so.1` occurs, please add `srt` 
 #### Push stream from webcam to SRT
 
 ```bash
-./ffmpeg -f avfoundation -framerate 30 -i "0:0" -vcodec libx264  -preset ultrafast -tune zerolatency -flags2 local_header  -acodec libmp3lame -g  30 -pkt_size 1316 -flush_packets 0 -f mpegts "srt://[your.sls.ip]:8080?streamid=uplive.sls.com/live/test"
+./ffmpeg -f avfoundation -framerate 30 -i "0:0" -vcodec libx264  -preset ultrafast -tune zerolatency -flags2 local_header  -acodec libmp3lame -g  30 -pkt_size 1316 -flush_packets 0 -f mpegts "srt://[your.sls.ip]:8080?streamid=uplive.sls/live/test"
 ```
 
 #### Play a SRT stream using FFplay
 
 ```bash
-./ffplay -fflags nobuffer -i "srt://[your.sls.ip]:8080?streamid=live.sls.com/live/test"
+./ffplay -fflags nobuffer -i "srt://[your.sls.ip]:8080?streamid=live.sls/live/test"
 ```
 
 ### Test with OBS
@@ -76,13 +76,13 @@ If `error while loading shared libraries: libsrt.so.1` occurs, please add `srt` 
 OBS supports SRT protocol to publish streams from version `v25.0` onwards. To publish SRT stream from OBS to SRT Live Server you can use the following url:
 
 ```
-srt://[your.sls.ip]:8080?streamid=uplive.sls.com/live/test
+srt://[your.sls.ip]:8080?streamid=uplive.sls/live/test
 ```
 
 You can also add a SRT stream as an input source. To do this, add a `Media source` to OBS, enter `mpegts` as input format and set the following input URL:
 
 ```
-srt://[your.sls.ip]:8080?streamid=live.sls.com/live/test
+srt://[your.sls.ip]:8080?streamid=live.sls/live/test
 ```
 
 ### Test with SRT Live Client
@@ -92,13 +92,13 @@ There is a test tool in SLS which can be used as a performance test - it has no 
 #### Push a TS file via SRT
 
 ```bash
-./srt_client -r srt://[your.sls.ip]:8080?streamid=uplive.sls.com/live/test -i [the full file name of exist ts file]
+./srt_client -r srt://[your.sls.ip]:8080?streamid=uplive.sls/live/test -i [the full file name of exist ts file]
 ```
 
 #### Play a SRT stream
 
 ```bash
-./srt_client -r srt://[your.sls.ip]:8080?streamid=live.sls.com/live/test -o [the full file name of ts file to save]
+./srt_client -r srt://[your.sls.ip]:8080?streamid=live.sls/live/test -o [the full file name of ts file to save]
 ```
 
 ## Use SLS with docker
