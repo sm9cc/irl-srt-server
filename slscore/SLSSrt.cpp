@@ -47,7 +47,7 @@ CSLSSrt::CSLSSrt()
     m_sc.eid = 0;
     m_sc.latency = 20;
 
-    m_sc.backlog = 1024;
+    m_sc.backlog = 128;
     memset(m_peer_name, 0, sizeof(m_peer_name));
     m_peer_port = 0;
     m_peer_addr_raw = 0;

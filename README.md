@@ -21,11 +21,6 @@ make -j
 
 Binaries are created in `build/` directory.
 
-## Directivies
-
-Regarding the config file, please see the wiki:
-https://github.com/Edward-Wu/srt-live-server/wiki/Directives
-
 ## Usage
 
 `cd build`
@@ -42,9 +37,13 @@ https://github.com/Edward-Wu/srt-live-server/wiki/Directives
 ./srt_server -c ../sls.conf
 ```
 
+## Configuration
+
+Configuration directives are documented on the [wiki page](https://github.com/rstular/srt-live-server/wiki/Directives).
+
 ## Testing
 
-srt-live-server only supports the MPEG-TS format streaming. 
+srt-live-server only supports the MPEG-TS format streaming.
 
 ### Test with FFmpeg
 
@@ -71,7 +70,6 @@ If `error while loading shared libraries: libsrt.so.1` occurs, please add `srt` 
 ```bash
 ./ffplay -fflags nobuffer -i "srt://[your.sls.ip]:8080?streamid=live.sls.com/live/test"
 ```
-
 
 ### Test with OBS
 

@@ -577,8 +577,8 @@ int CSLSListener::handler()
     ca = (sls_conf_app_t *)m_map_publisher->get_ca(app_uplive);
     if (NULL == ca)
     {
-        spdlog::error("[{}] CSLSListener::handler, refused, new role[{}:{:d}], stream='{}',but no sls_conf_app_t info.",
-                      fmt::ptr(this), peer_name, peer_port, key_stream_name);
+        spdlog::warn("[{}] CSLSListener::handler, refused, new role[{}:{:d}], non-existent publishing domain [stream='{}']",
+                     fmt::ptr(this), peer_name, peer_port, key_stream_name);
         srt->libsrt_close();
         delete srt;
         return client_count;
