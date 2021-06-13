@@ -149,7 +149,7 @@ int sls_conf_get_conf_count(sls_conf_base_t *c)
 vector<string> sls_conf_string_split(const string &str, const string &delim)
 {
     vector<string> res;
-    if ("" == str)
+    if (strcmp(str, "") == 0)
         return res;
 
     char *strs = new char[str.length() + 1];
