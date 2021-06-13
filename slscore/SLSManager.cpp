@@ -89,7 +89,7 @@ int CSLSManager::start()
         spdlog::error("[{}] CSLSManager::start, no server info, please check the conf file.", fmt::ptr(this));
         return SLS_ERROR;
     }
-    m_server_count = sls_conf_get_conf_count(conf_server);
+    m_server_count = sls_conf_get_conf_count((sls_conf_base_t *)conf_server);
     sls_conf_server_t *conf = conf_server;
     m_map_data = new CSLSMapData[m_server_count];
     m_map_publisher = new CSLSMapPublisher[m_server_count];

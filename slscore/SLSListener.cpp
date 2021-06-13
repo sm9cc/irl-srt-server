@@ -201,7 +201,7 @@ int CSLSListener::init_conf_app()
         return SLS_ERROR;
     }
 
-    int app_count = sls_conf_get_conf_count(conf_app);
+    int app_count = sls_conf_get_conf_count((sls_conf_base_t *)conf_app);
     sls_conf_app_t *ca = conf_app;
     for (int i = 0; i < app_count; i++)
     {
@@ -213,7 +213,7 @@ int CSLSListener::init_conf_app()
             return SLS_ERROR;
         }
         strUplive = strUpliveDomain + "/" + strUplive;
-        m_map_publisher->set_conf(strUplive, ca);
+        m_map_publisher->set_conf(strUplive, (sls_conf_base_t *)ca);
         spdlog::info("[{}] CSLSListener::init_conf_app, add app push '{}'.",
                      fmt::ptr(this), strUplive.c_str());
 
@@ -534,7 +534,7 @@ int CSLSListener::handler()
     //create new publisher
     CSLSPublisher *pub = new CSLSPublisher;
     pub->set_srt(srt);
-    pub->set_conf(ca);
+    pub->set_conf((sls_conf_base_t *)ca);
     pub->init();
     pub->set_idle_streams_timeout(m_idle_streams_timeout_role);
     //stat info

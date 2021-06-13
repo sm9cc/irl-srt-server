@@ -173,7 +173,7 @@ int main(int argc, char *argv[])
 	{
 		//printf log info
 		int64_t bitrate_kbps = sls_client.get_bitrate();
-		("\rSRT Live Client, cur bitrate=%lld(kbps)", bitrate_kbps);
+		("\rSRT Live Client, cur bitrate=%ld(kbps)", bitrate_kbps);
 
 		int ret = sls_client.handler();
 		if (ret > 0)

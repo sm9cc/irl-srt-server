@@ -263,7 +263,7 @@ void CSLSRole::set_conf(sls_conf_base_t *conf)
     m_conf = conf;
 }
 
-void CSLSRole::set_map_data(char *map_key, CSLSMapData *map_data)
+void CSLSRole::set_map_data(const char *map_key, CSLSMapData *map_data)
 {
     if (NULL != map_key)
     {
@@ -414,7 +414,7 @@ void CSLSRole::check_hls_file()
         //update vod file
         if (0 == m_record_hls_vod_fd)
         {
-            snprintf(m_record_hls_vod_filename, sizeof(m_record_hls_vod_filename), "%s/vod-%lld.m3u8.extinfo", m_record_hls_path, cur_tm_ms / 1000);
+            snprintf(m_record_hls_vod_filename, sizeof(m_record_hls_vod_filename), "%s/vod-%ld.m3u8.extinfo", m_record_hls_path, cur_tm_ms / 1000);
             struct stat stat_file;
             if (0 == stat(m_record_hls_vod_filename, &stat_file))
             {
@@ -432,7 +432,7 @@ void CSLSRole::check_hls_file()
         }
     }
     char full_ts_name[FILENAME_MAX] = {0};
-    snprintf(m_record_hls_ts_filename, sizeof(m_record_hls_ts_filename), "%lld.ts", cur_tm_ms / 1000);
+    snprintf(m_record_hls_ts_filename, sizeof(m_record_hls_ts_filename), "%ld.ts", cur_tm_ms / 1000);
     snprintf(full_ts_name, sizeof(full_ts_name), "%s/%s", m_record_hls_path, m_record_hls_ts_filename);
     m_record_hls_ts_fd = ::open(full_ts_name, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IXOTH);
     spdlog::info("[{}] CSLSRole::check_hls_file, create ts file='{}', fd={:d}.", fmt::ptr(this), full_ts_name, m_record_hls_ts_fd);

@@ -88,15 +88,15 @@ typedef struct sls_conf_base_t sls_conf_base_s;
 typedef sls_conf_base_t *(*create_conf_func)();
 struct sls_runtime_conf_t
 {
-    char *conf_name;
-    //    char                    * higher_conf_names;//if allow existing in one than one higher conf , split with '|'
+    const char *conf_name;
+    // char *higher_conf_names; //if allow existing in one than one higher conf, split with '|'
     create_conf_func create_fn;
     sls_conf_cmd_t *conf_cmd;
     int conf_cmd_size;
 
     sls_runtime_conf_t *next;
     static sls_runtime_conf_t *first;
-    sls_runtime_conf_t(char *c, create_conf_func f, sls_conf_cmd_t *cmd, int len);
+    sls_runtime_conf_t(const char *c, create_conf_func f, sls_conf_cmd_t *cmd, int len);
 };
 
 /*
@@ -105,7 +105,7 @@ struct sls_runtime_conf_t
  */
 struct sls_conf_base_t
 {
-    char *name;
+    const char *name;
     sls_conf_base_t *sibling;
     sls_conf_base_t *child;
 };
@@ -123,20 +123,20 @@ struct sls_conf_base_t
     }                                \
     ;
 
-#define SLS_CONF_DYNAMIC_IMPLEMENT(c_n)                       \
-    sls_conf_base_t *sls_conf_##c_n##_t::create_conf()        \
-    {                                                         \
-        sls_conf_base_t *p = new sls_conf_##c_n##_t;          \
-        memset(p, 0, sizeof(sls_conf_##c_n##_t));             \
-        p->child = NULL;                                      \
-        p->sibling = NULL;                                    \
-        p->name = sls_conf_##c_n##_t::runtime_conf.conf_name; \
-        return p;                                             \
-    }                                                         \
-    sls_runtime_conf_t sls_conf_##c_n##_t::runtime_conf(      \
-        #c_n,                                                 \
-        sls_conf_##c_n##_t::create_conf,                      \
-        conf_cmd_##c_n,                                       \
+#define SLS_CONF_DYNAMIC_IMPLEMENT(c_n)                                 \
+    sls_conf_base_t *sls_conf_##c_n##_t::create_conf()                  \
+    {                                                                   \
+        sls_conf_base_t *p = (sls_conf_base_t *)new sls_conf_##c_n##_t; \
+        memset(p, 0, sizeof(sls_conf_##c_n##_t));                       \
+        p->child = NULL;                                                \
+        p->sibling = NULL;                                              \
+        p->name = sls_conf_##c_n##_t::runtime_conf.conf_name;           \
+        return p;                                                       \
+    }                                                                   \
+    sls_runtime_conf_t sls_conf_##c_n##_t::runtime_conf(                \
+        #c_n,                                                           \
+        sls_conf_##c_n##_t::create_conf,                                \
+        conf_cmd_##c_n,                                                 \
         sizeof(conf_cmd_##c_n) / sizeof(sls_conf_cmd_t));
 
 /*
