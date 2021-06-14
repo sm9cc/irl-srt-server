@@ -29,6 +29,7 @@
 #include "common.hpp"
 #include "SLSRelayManager.hpp"
 #include "SLSLog.hpp"
+#include "util.hpp"
 
 /**
  * CSLSRelayManager class implementation
@@ -72,8 +73,8 @@ void CSLSRelayManager::set_relay_conf(SLS_RELAY_INFO *sri)
 
 void CSLSRelayManager::set_relay_info(const char *app_uplive, const char *stream_name)
 {
-	strncpy(m_app_uplive, app_uplive, sizeof(m_app_uplive));
-	strncpy(m_stream_name, stream_name, sizeof(m_stream_name));
+	strlcpy(m_app_uplive, app_uplive, sizeof(m_app_uplive));
+	strlcpy(m_stream_name, stream_name, sizeof(m_stream_name));
 }
 
 void CSLSRelayManager::set_listen_port(int port)

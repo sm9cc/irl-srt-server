@@ -23,7 +23,6 @@
  */
 
 #include <stdio.h>
-#include <string.h>
 #include <signal.h>
 #include <unistd.h>
 #include "spdlog/spdlog.h"
@@ -32,6 +31,7 @@ using namespace std;
 
 #include "SLSLog.hpp"
 #include "SLSClient.hpp"
+#include "util.hpp"
 
 /*
  * ctrl + c controller
@@ -94,19 +94,19 @@ int main(int argc, char *argv[])
 		{
 			i++;
 			sls_remove_marks(argv[i]);
-			strncpy(sls_opt.srt_url, argv[i++], sizeof(sls_opt.srt_url));
+			strlcpy(sls_opt.srt_url, argv[i++], sizeof(sls_opt.srt_url));
 		}
 		else if (strcmp("-i", argv[i]) == 0)
 		{
 			i++;
 			sls_remove_marks(argv[i]);
-			strncpy(sls_opt.ts_file_name, argv[i++], sizeof(sls_opt.ts_file_name));
+			strlcpy(sls_opt.ts_file_name, argv[i++], sizeof(sls_opt.ts_file_name));
 		}
 		else if (strcmp("-o", argv[i]) == 0)
 		{
 			i++;
 			sls_remove_marks(argv[i]);
-			strncpy(sls_opt.out_file_name, argv[i++], sizeof(sls_opt.out_file_name));
+			strlcpy(sls_opt.out_file_name, argv[i++], sizeof(sls_opt.out_file_name));
 		}
 		else if (strcmp("-c", argv[i]) == 0)
 		{

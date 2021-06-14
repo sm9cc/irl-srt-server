@@ -34,6 +34,7 @@
 #include "conf.hpp"
 #include "common.hpp"
 #include "SLSLog.hpp"
+#include "util.hpp"
 
 sls_conf_base_t sls_first_conf = {"", NULL, NULL};
 sls_runtime_conf_t *sls_runtime_conf_t::first = NULL;
@@ -540,7 +541,7 @@ int sls_parse_argv(int argc, char *argv[], sls_opt_t *sls_opt, sls_conf_cmd_t *c
     //special for '-h'
     if (argc == 2)
     {
-        strncpy(temp, argv[1], sizeof(temp));
+        strlcpy(temp, argv[1], sizeof(temp));
         sls_remove_marks(temp);
         if (strcmp(temp, "-h") == 0)
         {
@@ -562,7 +563,7 @@ int sls_parse_argv(int argc, char *argv[], sls_opt_t *sls_opt, sls_conf_cmd_t *c
     }
     while (i < argc)
     {
-        strncpy(temp, argv[i], sizeof(temp));
+        strlcpy(temp, argv[i], sizeof(temp));
         len = strlen(temp);
         if (len == 0)
         {
@@ -577,7 +578,7 @@ int sls_parse_argv(int argc, char *argv[], sls_opt_t *sls_opt, sls_conf_cmd_t *c
             ret = SLS_ERROR;
             return ret;
         }
-        strncpy(opt_name, temp + 1, sizeof(opt_name));
+        strlcpy(opt_name, temp + 1, sizeof(opt_name));
 
         sls_conf_cmd_t *it = sls_conf_find(opt_name, conf_cmd_opt, cmd_size);
         if (!it)
@@ -587,7 +588,7 @@ int sls_parse_argv(int argc, char *argv[], sls_opt_t *sls_opt, sls_conf_cmd_t *c
             return ret;
         }
         i++;
-        strncpy(opt_value, argv[i++], sizeof(opt_value));
+        strlcpy(opt_value, argv[i++], sizeof(opt_value));
         sls_remove_marks(opt_value);
         const char *r = it->set(opt_value, it, sls_opt);
         if (r != SLS_CONF_OK)

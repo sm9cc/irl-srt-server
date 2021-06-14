@@ -33,6 +33,7 @@
 
 #include "SLSClient.hpp"
 #include "SLSLog.hpp"
+#include "util.hpp"
 
 /**
  * CSLSClient class implementation
@@ -92,7 +93,7 @@ int CSLSClient::play(const char *url, const char *out_file_name)
 	m_is_write = false;
 	if (out_file_name != NULL && strlen(out_file_name) > 0)
 	{
-		strncpy(m_out_file_name, out_file_name, sizeof(m_out_file_name));
+		strlcpy(m_out_file_name, out_file_name, sizeof(m_out_file_name));
 	}
 
 	return open_url(url);

@@ -34,6 +34,7 @@
 #include "SLSPlayer.hpp"
 #include "SLSPullerManager.hpp"
 #include "SLSPusherManager.hpp"
+#include "util.hpp"
 
 const char SLS_SERVER_STAT_INFO_BASE[] = "\
 {\
@@ -143,7 +144,7 @@ void CSLSListener::set_record_hls_path_prefix(char *path)
 {
     if (path != NULL && strlen(path) > 0)
     {
-        strncpy(m_record_hls_path_prefix, path, sizeof(m_record_hls_path_prefix));
+        strlcpy(m_record_hls_path_prefix, path, sizeof(m_record_hls_path_prefix));
     }
 }
 
@@ -178,7 +179,7 @@ int CSLSListener::init_conf_app()
 
     m_back_log = conf_server->backlog;
     m_idle_streams_timeout_role = conf_server->idle_streams_timeout;
-    strncpy(m_http_url_role, conf_server->on_event_url, sizeof(m_http_url_role));
+    strlcpy(m_http_url_role, conf_server->on_event_url, sizeof(m_http_url_role));
     spdlog::info("[{}] CSLSListener::init_conf_app, m_back_log={:d}, m_idle_streams_timeout={:d}.",
                  fmt::ptr(this), m_back_log, m_idle_streams_timeout_role);
 

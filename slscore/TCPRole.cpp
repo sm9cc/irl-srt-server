@@ -25,8 +25,9 @@
 #include <string.h>
 #include "spdlog/spdlog.h"
 
-#include "TCPRole.hpp"
 #include "SLSLog.hpp"
+#include "TCPRole.hpp"
+#include "util.hpp"
 
 #define MAX_TCP_SOCK_COUNT 1
 
@@ -41,7 +42,7 @@ CTCPRole::CTCPRole()
     m_remote_port = 0;
     m_valid = false;
 
-    strncpy(m_remote_host, "", sizeof(m_remote_host));
+    strlcpy(m_remote_host, "", sizeof(m_remote_host));
     snprintf(m_role_name, sizeof(m_role_name), "tcp_role");
 }
 CTCPRole::~CTCPRole()
@@ -139,7 +140,7 @@ int CTCPRole::connect(char *host, int port)
     }
 
     spdlog::info("[{}] CTCPRole::connect, ok, m_fd={:d}, host={}, port=={:d}.", fmt::ptr(this), m_fd, host, port);
-    strncpy(m_remote_host, host, sizeof(m_remote_host));
+    strlcpy(m_remote_host, host, sizeof(m_remote_host));
     m_remote_port = port;
     return SLS_OK;
 }

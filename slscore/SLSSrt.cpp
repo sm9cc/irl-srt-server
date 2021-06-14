@@ -32,6 +32,7 @@
 #include "SLSSrt.hpp"
 #include "SLSLog.hpp"
 #include "SLSLock.hpp"
+#include "util.hpp"
 
 /**
  * CSLSSrt class implementation
@@ -330,7 +331,7 @@ int CSLSSrt::libsrt_split_sid(char *sid, char *host, char *app, char *name)
     p = strchr(p1, '/');
     if (p)
     {
-        strncpy(host, (const char *)p1, p - p1);
+        strlcpy(host, (const char *)p1, p - p1);
         p1 = p + 1;
     }
     else
@@ -342,7 +343,7 @@ int CSLSSrt::libsrt_split_sid(char *sid, char *host, char *app, char *name)
     p = strchr(p1, '/');
     if (p)
     {
-        strncpy(app, (const char *)p1, p - p1);
+        strlcpy(app, (const char *)p1, p - p1);
         p1 = p + 1;
     }
     else

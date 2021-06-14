@@ -47,6 +47,7 @@
 #include <vector>
 
 #include "common.hpp"
+#include "util.hpp"
 
 /**
 * sls_format
@@ -113,7 +114,7 @@ void sls_gettime_fmt(char *dst, size_t dst_len, int64_t cur_time_sec, const char
     rawtime = (time_t)cur_time_sec;
     timeinfo = localtime(&rawtime);
     strftime(timef, sizeof(timef), fmt, timeinfo);
-    strncpy(dst, timef, dst_len);
+    strlcpy(dst, timef, dst_len);
     return;
 }
 
@@ -390,7 +391,7 @@ int sls_write_pid(int pid)
 
     string pidfile_dir_string = std::filesystem::path(pid_file_name).parent_path().u8string();
     char pidfile_dir[pidfile_dir_string.length() + 1];
-    strncpy(pidfile_dir, pidfile_dir_string.c_str(), sizeof(pidfile_dir));
+    strlcpy(pidfile_dir, pidfile_dir_string.c_str(), sizeof(pidfile_dir));
 
     if (strcmp(pidfile_dir, pid_file_name) == 0)
     {

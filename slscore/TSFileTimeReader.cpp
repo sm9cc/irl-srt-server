@@ -35,8 +35,9 @@
 #include <unistd.h>
 #include "spdlog/spdlog.h"
 
-#include "TSFileTimeReader.hpp"
 #include "SLSLog.hpp"
+#include "TSFileTimeReader.hpp"
+#include "util.hpp"
 
 #define RTS_PACK_LEN (1316 + sizeof(int64_t))
 #define RTS_BUF_SIZE (RTS_PACK_LEN * 100)
@@ -196,7 +197,7 @@ int64_t CTSFileTimeReader::generate_rts_file(const char *ts_file_name)
     }
     char rts_file_name[URL_MAX_LEN] = {0};
     snprintf(rts_file_name, sizeof(rts_file_name), "%s.rts", ts_file_name);
-    strncpy(m_file_name, rts_file_name, sizeof(m_file_name));
+    strlcpy(m_file_name, rts_file_name, sizeof(m_file_name));
 
     struct stat rts_file;
     if (0 == stat(rts_file_name, &rts_file))

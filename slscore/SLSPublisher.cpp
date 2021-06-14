@@ -29,6 +29,7 @@
 #include "SLSPublisher.hpp"
 #include "SLSPlayer.hpp"
 #include "SLSLog.hpp"
+#include "util.hpp"
 
 /**
  * app conf
@@ -59,7 +60,7 @@ int CSLSPublisher::init()
     {
         sls_conf_app_t *app_conf = ((sls_conf_app_t *)m_conf);
         //m_exit_delay = ((sls_conf_app_t *)m_conf)->publisher_exit_delay;
-        strncpy(m_record_hls, app_conf->record_hls, sizeof(m_record_hls));
+        strlcpy(m_record_hls, app_conf->record_hls, sizeof(m_record_hls));
         m_record_hls_segment_duration = app_conf->record_hls_segment_duration;
     }
 
