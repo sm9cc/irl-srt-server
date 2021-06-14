@@ -81,14 +81,14 @@ public:
     static int stat_client_callback(void *p, HTTP_CALLBACK_TYPE type, void *v, void *context);
 
 private:
-    std::list<CSLSListener *> m_servers;
+    vector<CSLSListener *> m_servers;
     int m_server_count;
     CSLSMapData *m_map_data;
     CSLSMapPublisher *m_map_publisher;
     CSLSMapRelay *m_map_puller;
     CSLSMapRelay *m_map_pusher;
 
-    std::list<CSLSGroup *> m_workers;
+    vector<CSLSGroup *> m_workers;
     int m_worker_threads;
 
     CSLSRoleList *m_list_role;

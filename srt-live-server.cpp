@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
 
     CSLSManager *sls_manager = NULL;
 std:
-    list<CSLSManager *> reload_manager_list;
+    vector<CSLSManager *> reload_manager_list;
     CHttpClient *http_stat_client = new CHttpClient;
 
     int ret = SLS_OK;
@@ -119,7 +119,7 @@ std:
         sls_set_log_level(sls_opt.log_level);
     }
 
-    //test erro info...
+    // Test erro info...
     //CSLSSrt::libsrt_print_error_info();
 
     //ctrl + c to exit
@@ -207,31 +207,23 @@ std:
 		}
 		//*/
 
-        //check reloaded manager
-        int reload_managers = reload_manager_list.size();
-        std::list<CSLSManager *>::iterator it;
-        std::list<CSLSManager *>::iterator it_erase;
-        for (it = reload_manager_list.begin(); it != reload_manager_list.end();)
+        // Check reloaded manager
+        std::vector<CSLSManager *>::iterator it;
+        for (it = reload_manager_list.begin(); it != reload_manager_list.end(); it++)
         {
             CSLSManager *manager = *it;
-            it_erase = it;
-            it++;
-            if (NULL == manager)
-            {
-                continue;
-            }
-            if (SLS_OK == manager->check_invalid())
+            if (nullptr != manager && SLS_OK == manager->check_invalid())
             {
                 spdlog::info("Checking reloaded manager, deleting manager={:p} ...", fmt::ptr(manager));
                 manager->stop();
+                reload_manager_list.erase(it);
                 delete manager;
-                reload_manager_list.erase(it_erase);
             }
         }
 
         if (b_reload)
         {
-            //reload
+            // Reload
             b_reload = false;
             spdlog::info("Reloading SRT Live Server...");
             ret = sls_manager->reload();
@@ -278,7 +270,7 @@ EXIT_PROC:
 
     //release all reload manager
     spdlog::info("Releasing reload_manager_list, count={:d}.", reload_manager_list.size());
-    std::list<CSLSManager *>::iterator it;
+    std::vector<CSLSManager *>::iterator it;
     for (it = reload_manager_list.begin(); it != reload_manager_list.end(); it++)
     {
         CSLSManager *manager = *it;

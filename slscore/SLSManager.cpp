@@ -191,19 +191,16 @@ int CSLSManager::stop()
     spdlog::info("[{}] CSLSManager::stop.", fmt::ptr(this));
 
     //stop all listeners
-    std::list<CSLSListener *>::iterator it;
-    for (it = m_servers.begin(); it != m_servers.end(); it++)
+    for (CSLSListener *server : m_servers)
     {
-        CSLSListener *server = *it;
-        if (NULL == server)
+        if (server)
         {
-            continue;
+            server->uninit();
         }
-        server->uninit();
     }
     m_servers.clear();
 
-    std::list<CSLSGroup *>::iterator it_worker;
+    vector<CSLSGroup *>::iterator it_worker;
     for (it_worker = m_workers.begin(); it_worker != m_workers.end(); it_worker++)
     {
         CSLSGroup *p = *it_worker;
@@ -255,24 +252,19 @@ int CSLSManager::reload()
 {
     spdlog::info("[{}] CSLSManager::reload begin.", fmt::ptr(this));
 
-    //stop all listeners
-    std::list<CSLSListener *>::iterator it;
-    for (it = m_servers.begin(); it != m_servers.end(); it++)
+    // stop all listeners
+    for (CSLSListener *server : m_servers)
     {
-        CSLSListener *server = *it;
-        if (NULL == server)
+        if (server)
         {
-            continue;
+            server->uninit();
         }
-        server->uninit();
     }
     m_servers.clear();
 
-    //set all groups reload flag
-    std::list<CSLSGroup *>::iterator it_worker;
-    for (it_worker = m_workers.begin(); it_worker != m_workers.end(); it_worker++)
+    // set all groups reload flag
+    for (CSLSGroup *worker : m_workers)
     {
-        CSLSGroup *worker = *it_worker;
         if (worker)
         {
             worker->reload();
@@ -283,9 +275,9 @@ int CSLSManager::reload()
 
 int CSLSManager::check_invalid()
 {
-    std::list<CSLSGroup *>::iterator it;
-    std::list<CSLSGroup *>::iterator it_erase;
-    std::list<CSLSGroup *>::iterator it_end = m_workers.end();
+    vector<CSLSGroup *>::iterator it;
+    vector<CSLSGroup *>::iterator it_erase;
+    vector<CSLSGroup *>::iterator it_end = m_workers.end();
     for (it = m_workers.begin(); it != it_end;)
     {
         CSLSGroup *worker = *it;
@@ -314,13 +306,9 @@ int CSLSManager::check_invalid()
 
 void CSLSManager::get_stat_info(std::string &info)
 {
-    std::list<CSLSGroup *>::iterator it;
-    std::list<CSLSGroup *>::iterator it_end = m_workers.end();
-    for (it = m_workers.begin(); it != it_end;)
+    for (CSLSGroup *worker : m_workers)
     {
-        CSLSGroup *worker = *it;
-        it++;
-        if (NULL != worker)
+        if (worker)
         {
             worker->get_stat_info(info);
         }

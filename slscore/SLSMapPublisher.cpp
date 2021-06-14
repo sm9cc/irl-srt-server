@@ -80,12 +80,11 @@ std::string CSLSMapPublisher::get_uplive(std::string key_app)
     CSLSLock lock(&m_rwclock, false);
     std::string uplive_app = "";
     std::map<std::string, std::string>::iterator it;
-    it = m_map_live_2_uplive.find(key_app); //is publiser?
-    if (it == m_map_live_2_uplive.end())
+    it = m_map_live_2_uplive.find(key_app); // is publisher?
+    if (it != m_map_live_2_uplive.end())
     {
-        return uplive_app;
+        uplive_app = it->second;
     }
-    uplive_app = it->second;
     return uplive_app;
 }
 
@@ -123,25 +122,15 @@ int CSLSMapPublisher::remove(CSLSRole *role)
 
     CSLSLock lock(&m_rwclock, true);
 
-    std::map<std::string, CSLSRole *>::iterator it;
-    std::map<std::string, CSLSRole *>::iterator it_erase;
-    for (it = m_map_push_2_pushlisher.begin(); it != m_map_push_2_pushlisher.end();)
+    for (auto const &[live_stream_name, pub] : m_map_push_2_pushlisher)
     {
-        std::string live_stream_name = it->first;
-        CSLSRole *pub = it->second;
         if (role == pub)
         {
             spdlog::info("[{}] CSLSMapPublisher::remove, {}={}, live_key={}.",
-                         fmt::ptr(this), pub->get_role_name(), fmt::ptr(pub), live_stream_name.c_str());
-            it_erase = it;
-            it++;
-            m_map_push_2_pushlisher.erase(it_erase);
+                         fmt::ptr(this), pub->get_role_name(), fmt::ptr(pub), live_stream_name);
+            m_map_push_2_pushlisher.erase(live_stream_name);
             ret = SLS_OK;
             break;
-        }
-        else
-        {
-            it++;
         }
     }
     return ret;
@@ -150,7 +139,7 @@ int CSLSMapPublisher::remove(CSLSRole *role)
 void CSLSMapPublisher::clear()
 {
     CSLSLock lock(&m_rwclock, true);
-    spdlog::info("[{}] CSLSMapPublisher::clear.", fmt::ptr(this));
+    spdlog::debug("[{}] CSLSMapPublisher::clear", fmt::ptr(this));
     m_map_push_2_pushlisher.clear();
     m_map_live_2_uplive.clear();
     m_map_uplive_2_conf.clear();
