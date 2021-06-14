@@ -210,19 +210,25 @@ int CSLSListener::init_conf_app()
         if (strUplive.length() == 0)
         {
             spdlog::error("[{}] CSLSListener::init_conf_app, wrong app_publisher='{}', domain_publisher='{}'.",
-                          fmt::ptr(this), strUplive.c_str(), strUpliveDomain.c_str());
+                          fmt::ptr(this), strUplive, strUpliveDomain);
             return SLS_ERROR;
         }
         strUplive = strUpliveDomain + "/" + strUplive;
-        m_map_publisher->set_conf(strUplive, (sls_conf_base_t *)ca);
+        // If we cannot add publisher to the map, we have a duplicate publisher
+        if (m_map_publisher->set_conf(strUplive, (sls_conf_base_t *)ca) != SLS_OK)
+        {
+            spdlog::error("[{}] SLSListener::init_conf_app, duplicate app_publisher='{}'",
+                          fmt::ptr(this), strUplive);
+            return SLS_ERROR;
+        }
         spdlog::info("[{}] CSLSListener::init_conf_app, add app push '{}'.",
-                     fmt::ptr(this), strUplive.c_str());
+                     fmt::ptr(this), strUplive);
 
         strLive = ca->app_player;
         if (strLive.length() == 0)
         {
             spdlog::error("[{}] CSLSListener::init_conf_app, wrong app_player='{}', domain_publisher='{}'.",
-                          fmt::ptr(this), strLive.c_str(), strUpliveDomain.c_str());
+                          fmt::ptr(this), strLive, strUpliveDomain);
             return SLS_ERROR;
         }
 
@@ -235,11 +241,18 @@ int CSLSListener::init_conf_app()
             strTemp = strLiveDomain + "/" + strLive;
             if (strUplive == strTemp)
             {
-                spdlog::error("[{}] CSLSListener::init_conf_app faild, domain/uplive='{}' and domain/live='{}' must not be equal.",
+                spdlog::error("[{}] CSLSListener::init_conf_app failed, domain/uplive='{}' and domain/live='{}' must not be equal.",
                               fmt::ptr(this), strUplive.c_str(), strTemp.c_str());
                 return SLS_ERROR;
             }
             //m_map_live_2_uplive[strTemp]  = strUplive;
+            // If we cannot add player to the map, we have a duplicate player
+            if (m_map_publisher->set_live_2_uplive(strTemp, strUplive) != SLS_OK)
+            {
+                spdlog::error("[{}] CSLSListener::init_conf_app, duplicate app_player='{}'",
+                              fmt::ptr(this), strTemp);
+                return SLS_ERROR;
+            }
             m_map_publisher->set_live_2_uplive(strTemp, strUplive);
 
             spdlog::info("[{}] CSLSListener::init_conf_app, add app live='{}', app push='{}'.",

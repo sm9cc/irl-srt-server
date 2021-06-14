@@ -38,8 +38,8 @@ public:
     CSLSMapPublisher();
     virtual ~CSLSMapPublisher();
 
-    void set_conf(std::string key, sls_conf_base_t *ca);
-    void set_live_2_uplive(std::string strLive, std::string strUplive);
+    int set_conf(std::string key, sls_conf_base_t *ca);
+    int set_live_2_uplive(std::string strLive, std::string strUplive);
     int set_push_2_pushlisher(std::string app_streamname, CSLSRole *role);
     int remove(CSLSRole *role);
     void clear();

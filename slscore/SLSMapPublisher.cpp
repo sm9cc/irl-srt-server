@@ -41,16 +41,28 @@ CSLSMapPublisher::~CSLSMapPublisher()
     clear();
 }
 
-void CSLSMapPublisher::set_conf(std::string key, sls_conf_base_t *ca)
+int CSLSMapPublisher::set_conf(std::string key, sls_conf_base_t *ca)
 {
     CSLSLock lock(&m_rwclock, true);
+    // Check if publisher with this name already exists
+    if (m_map_uplive_2_conf.count(key) > 0)
+    {
+        return SLS_ERROR;
+    }
     m_map_uplive_2_conf[key] = ca;
+    return SLS_OK;
 }
 
-void CSLSMapPublisher::set_live_2_uplive(std::string strLive, std::string strUplive)
+int CSLSMapPublisher::set_live_2_uplive(std::string strLive, std::string strUplive)
 {
     CSLSLock lock(&m_rwclock, true);
+    // Check if player with this name already exists
+    if (m_map_live_2_uplive.count(strLive) > 0)
+    {
+        return SLS_ERROR;
+    }
     m_map_live_2_uplive[strLive] = strUplive;
+    return SLS_OK;
 }
 
 int CSLSMapPublisher::set_push_2_pushlisher(std::string app_streamname, CSLSRole *role)
