@@ -80,11 +80,6 @@ int CHttpClient::open(const char *url, const char *method, int interval)
 	m_begin_tm_ms = sls_gettime_ms();
 	int ret = SLS_OK;
 	strncpy(m_url, url, sizeof(m_url));
-	if (NULL == m_url)
-	{
-		spdlog::error("[{}] CHttpClient::open, failed, m_url is NULL.", fmt::ptr(this));
-		goto FUNC_END;
-	}
 	if (strlen(m_url) == 0)
 	{
 		spdlog::error("[{}] CHttpClient::open, failed, m_url='{}'.", fmt::ptr(this), m_url);
@@ -479,7 +474,7 @@ int CHttpClient::handler()
 int CHttpClient::parse_url()
 {
 	//http://hostname:port/sls?method=stat or http://hostname:port/sls?method=on_connect&srt_url=srt://....
-	if (NULL == m_url || strlen(m_url) == 0)
+	if (strlen(m_url) == 0)
 	{
 		return SLS_ERROR;
 	}
@@ -551,7 +546,6 @@ int CHttpClient::parse_url()
 
 int CHttpClient::write_http_header(int data_len)
 {
-std:
 	string http_header;
 	char data[HTTP_HEADER_SIZE] = {0};
 
