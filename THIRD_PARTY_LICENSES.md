@@ -1,11 +1,11 @@
 # License overview of included 3rd party libraries
 
-The Pimcore project is licensed under the terms of the [MIT license](LICENSE.md).
+The SRT Live Server project is licensed under the terms of the [MIT license](LICENSE.md).
 
 However, SRT Live Server includes several third-party Open-Source libraries,
 which are licensed under their own respective Open-Source licenses.
 
-## Libraries directly included in Pimcore
+## Libraries directly included in SRT Live Server
 
 ### spdlog by Gabi Melman
 
