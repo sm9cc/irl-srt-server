@@ -18,6 +18,7 @@
 
 #include <sys/types.h>
 #include <string.h>
+#include "spdlog/spdlog.h"
 
 /*
  * Copy string src to buffer dst of size dsize.  At most dsize-1
@@ -43,6 +44,8 @@ strlcpy(char *dst, const char *src, size_t dsize)
     /* Not enough room in dst, add NUL and traverse rest of src. */
     if (nleft == 0)
     {
+        // Log a warning regarding the would-be overflow (were we to use strcpy)
+        spdlog::debug("[stlcpy] warning: strcpy would overflow [src='{}']", src);
         if (dsize != 0)
             *dst = '\0'; /* NUL-terminate dst */
         while (*src++)
