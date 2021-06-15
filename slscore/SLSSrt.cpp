@@ -321,7 +321,7 @@ int CSLSSrt::libsrt_socket_nonblock(int enable)
     return srt_setsockopt(m_sc.fd, 0, SRTO_RCVSYN, &enable, sizeof(enable));
 }
 
-int CSLSSrt::libsrt_split_sid(char *sid, char *host, char *app, char *name)
+int CSLSSrt::libsrt_split_sid(char *sid, char *host, size_t host_size, char *app, size_t app_size, char *name, size_t name_size)
 {
     int i = 0;
     char *p, *p1;
@@ -329,30 +329,43 @@ int CSLSSrt::libsrt_split_sid(char *sid, char *host, char *app, char *name)
 
     //host
     p = strchr(p1, '/');
-    if (p)
+    if ((p - p1 + 1) > host_size)
     {
-        strlcpy(host, (const char *)p1, p - p1);
+        spdlog::error("[{}] CSLSSrt::libsrt_split_sid, sid='{}' is longer than allocated host buffer [len={:d}]",
+                      fmt::ptr(this), sid, host_size);
+        return SLS_ERROR;
+    }
+    else if (p)
+    {
+
+        strlcpy(host, (const char *)p1, (p - p1 + 1));
         p1 = p + 1;
     }
     else
     {
         spdlog::error("[{}] CSLSSrt::libsrt_split_sid, sid='{}' is not as host/app/name.", fmt::ptr(this), sid);
-        return -1;
+        return SLS_ERROR;
     }
     //app
     p = strchr(p1, '/');
-    if (p)
+    if ((p - p1 + 1) > app_size)
     {
-        strlcpy(app, (const char *)p1, p - p1);
+        spdlog::error("[{}] CSLSSrt::libsrt_split_sid, sid='{}' is longer than allocated app buffer [len={:d}]",
+                      fmt::ptr(this), sid, app_size);
+        return SLS_ERROR;
+    }
+    else if (p)
+    {
+        strlcpy(app, (const char *)p1, p - p1 + 1);
         p1 = p + 1;
     }
     else
     {
         spdlog::error("[{}] CSLSSrt::libsrt_split_sid, sid='{}' is not as host/app/name.", fmt::ptr(this), sid);
-        return -1;
+        return SLS_ERROR;
     }
 
-    strcpy(name, (const char *)p1);
+    strlcpy(name, (const char *)p1, name_size);
 
     return 0;
 }

@@ -415,7 +415,7 @@ int CSLSListener::handler()
         return client_count;
     }
 
-    if (0 != srt->libsrt_split_sid(sid, host_name, app_name, stream_name))
+    if (0 != srt->libsrt_split_sid(sid, host_name, sizeof(host_name), app_name, sizeof(app_name), stream_name, sizeof(stream_name)))
     {
         spdlog::error("[{}] CSLSListener::handler, [{}:{:d}], parse sid='{}' failed.", fmt::ptr(this), peer_name, peer_port, sid);
         srt->libsrt_close();
