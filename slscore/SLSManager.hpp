@@ -41,6 +41,7 @@
 SLS_CONF_DYNAMIC_DECLARE_BEGIN(srt)
 char log_file[URL_MAX_LEN];
 char log_level[URL_MAX_LEN];
+char pid_file[URL_MAX_LEN];
 int worker_threads;
 int worker_connections;
 char stat_post_url[URL_MAX_LEN];
@@ -54,6 +55,7 @@ SLS_CONF_DYNAMIC_DECLARE_END
 SLS_CONF_CMD_DYNAMIC_DECLARE_BEGIN(srt)
 SLS_SET_CONF(srt, string, log_file, "save log file name.", 1, URL_MAX_LEN - 1),
     SLS_SET_CONF(srt, string, log_level, "log level", 1, URL_MAX_LEN - 1),
+    SLS_SET_CONF(srt, string, pid_file, "PID file path", 1, URL_MAX_LEN - 1),
     SLS_SET_CONF(srt, int, worker_threads, "count of worker thread, if 0, only main thread.", 0, 100),
     SLS_SET_CONF(srt, int, worker_connections, "", 1, 1024),
     SLS_SET_CONF(srt, string, stat_post_url, "statistic info post url", 1, URL_MAX_LEN - 1),

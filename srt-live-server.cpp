@@ -149,6 +149,7 @@ std:
         goto EXIT_PROC;
     }
 
+    sls_load_pid_filename();
     if (0 != sls_write_pid(getpid()))
     {
         spdlog::critical("Could not write PID file, exiting.");
@@ -243,7 +244,15 @@ std:
                 spdlog::critical("Reload failed (could not read config file)");
                 break;
             }
-            spdlog::info("reload config file ok.");
+            spdlog::info("Successfuly reloaded config file.");
+
+            spdlog::info("Reloading PID file location (if needed)");
+            if (sls_reload_pid() != SLS_OK)
+            {
+                spdlog::critical("Reload recreate PID file");
+                break;
+            }
+
             sls_manager = new CSLSManager;
             if (SLS_OK != sls_manager->start())
             {

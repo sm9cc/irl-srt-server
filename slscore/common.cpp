@@ -47,6 +47,7 @@
 #include <vector>
 
 #include "common.hpp"
+#include "SLSManager.hpp"
 #include "util.hpp"
 
 /**
@@ -347,7 +348,6 @@ void sls_remove_marks(char *s)
     }
 }
 
-static char pid_file_name[] = "/tmp/sls/pid.txt";
 int sls_read_pid()
 {
     struct stat stat_file;
@@ -376,6 +376,60 @@ int sls_read_pid()
     }
     close(fd);
     return ret;
+}
+
+bool sls_is_pid_location_changed()
+{
+    sls_conf_srt_t *conf_srt = (sls_conf_srt_t *)sls_conf_get_root_conf();
+    if (strcmp(conf_srt->pid_file, pid_file_name) == 0)
+    {
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+
+int sls_reload_pid()
+{
+    if (sls_is_pid_location_changed())
+    {
+        spdlog::debug("Reloading PID file location");
+        if (sls_remove_pid() != SLS_OK)
+        {
+            spdlog::error("Could not remove PID file");
+            return SLS_ERROR;
+        }
+        if (sls_write_pid(getpid()) != SLS_OK)
+        {
+            spdlog::error("Could not write new PID file");
+            return SLS_ERROR;
+        }
+    }
+    return SLS_OK;
+}
+
+int sls_load_pid_filename()
+{
+    // Load configuration from SLSManager
+    sls_conf_srt_t *conf_srt = (sls_conf_srt_t *)sls_conf_get_root_conf();
+    if (!sls_is_pid_location_changed())
+    {
+        spdlog::debug("PID file not changed, using default value [{}]", pid_file_name);
+        return SLS_ERROR;
+    }
+    else if (strlen(conf_srt->pid_file) > 0)
+    {
+        spdlog::debug("PID file specified in configuration [{}]", conf_srt->pid_file);
+        strlcpy(pid_file_name, conf_srt->pid_file, sizeof(pid_file_name));
+        return SLS_OK;
+    }
+    else
+    {
+        spdlog::debug("PID file not specified, using default [{}]", pid_file_name);
+        return SLS_ERROR;
+    }
 }
 
 int sls_write_pid(int pid)

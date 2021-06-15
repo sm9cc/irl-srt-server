@@ -37,12 +37,6 @@
 
 std::mutex LOGGER_MUTEX;
 
-#ifdef NDEBUG
-    static const spdlog::level::level_enum DEFAULT_LOG_LEVEL = spdlog::level::info;
-#else
-    static const spdlog::level::level_enum DEFAULT_LOG_LEVEL = spdlog::level::debug;
-#endif
-
 int initialize_logger()
 {
     std::vector<spdlog::sink_ptr> sinks;

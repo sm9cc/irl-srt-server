@@ -3,6 +3,7 @@ set(slscore_files
 	common.hpp
 	conf.cpp
 	conf.hpp
+	constants.hpp
 	CxxUrl.cpp
 	CxxUrl.hpp
 	HttpClient.cpp

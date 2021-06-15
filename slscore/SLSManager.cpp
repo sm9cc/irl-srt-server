@@ -64,7 +64,7 @@ int CSLSManager::start()
     int ret = 0;
     int i = 0;
 
-    //read config info from config file
+    // Read loaded config file
     sls_conf_srt_t *conf_srt = (sls_conf_srt_t *)sls_conf_get_root_conf();
 
     if (!conf_srt)

@@ -31,6 +31,8 @@
 #include <vector>
 #include <unistd.h>
 
+#include "constants.hpp"
+
 using namespace std;
 
 /**********************************************
@@ -100,6 +102,9 @@ uint32_t sls_hash_key(const char *data, int len);
 int sls_gethostbyname(const char *hostname, char *ip);
 int sls_mkdir_p(const char *path);
 
+static char pid_file_name[STR_MAX_LEN] = DEFAULT_PIDFILE;
+int sls_load_pid_filename();
+int sls_reload_pid();
 int sls_read_pid();
 int sls_write_pid(int pid);
 int sls_remove_pid();
