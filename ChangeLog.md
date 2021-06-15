@@ -1,5 +1,11 @@
 # Release Notes
 
+## v1.5.0
+
+- Added `allow` and `deny` directives, to enable simple access control (see [Directives](https://github.com/rstular/srt-live-server/wiki/Directives) for more info).
+- Added `pidfile` directive (see [Directives](https://github.com/rstular/srt-live-server/wiki/Directives) for more info).
+- Bug fixes.
+
 ## v1.4.9
 
 - Compatibility with Raspberry Pi.

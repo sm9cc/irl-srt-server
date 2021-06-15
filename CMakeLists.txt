@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.0)
-project(srt-live-server VERSION 1.4.9)
+project(srt-live-server VERSION 1.5.0)
 
 set(CMAKE_CXX_STANDARD 17)
 
