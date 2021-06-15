@@ -381,7 +381,7 @@ int sls_read_pid()
 bool sls_is_pid_location_changed()
 {
     sls_conf_srt_t *conf_srt = (sls_conf_srt_t *)sls_conf_get_root_conf();
-    if (strcmp(conf_srt->pid_file, pid_file_name) == 0)
+    if (strcmp(conf_srt->pidfile, pid_file_name) == 0)
     {
         return false;
     }
@@ -419,10 +419,10 @@ int sls_load_pid_filename()
         spdlog::debug("PID file not changed, using default value [{}]", pid_file_name);
         return SLS_ERROR;
     }
-    else if (strlen(conf_srt->pid_file) > 0)
+    else if (strlen(conf_srt->pidfile) > 0)
     {
-        spdlog::debug("PID file specified in configuration [{}]", conf_srt->pid_file);
-        strlcpy(pid_file_name, conf_srt->pid_file, sizeof(pid_file_name));
+        spdlog::debug("PID file specified in configuration [{}]", conf_srt->pidfile);
+        strlcpy(pid_file_name, conf_srt->pidfile, sizeof(pid_file_name));
         return SLS_OK;
     }
     else
