@@ -23,12 +23,13 @@
  */
 
 #include <errno.h>
-#include <string.h>
 #include "spdlog/spdlog.h"
 
+#include "CxxUrl.hpp"
 #include "SLSRelay.hpp"
 #include "SLSLog.hpp"
 #include "SLSRelayManager.hpp"
+#include "util.hpp"
 
 /**
  * relay conf
@@ -86,121 +87,57 @@ void *CSLSRelay::get_relay_manager()
     return m_relay_manager;
 }
 
-int CSLSRelay::parse_url(char *url, char *host_name, int &port, char *streamid)
+int CSLSRelay::parse_url(char *url, char *host_name, size_t host_name_size, int &port, char *streamid, size_t streamid_size)
 {
-    //
-    if (strlen(url) == 0)
+    // Parse the URL
+    Url parsed_url(url);
+    string scheme;
+    bool streamid_found = false;
+    try
     {
-        spdlog::error("[{}] CSLSRelay::parse_url='{}', url must like 'srt://hostname:port?streamid=your_stream_id' or 'srt://hostname:port/app/stream_name'.",
+        // Check if URL scheme is correct
+        scheme = parsed_url.scheme();
+        if (scheme.compare("srt") != 0)
+        {
+            spdlog::error("[{}] CSLSRelay::parse_url invalid URL scheme [scheme='{}']", fmt::ptr(this), scheme);
+            return SLS_ERROR;
+        }
+        // Copy hostname
+        strlcpy(host_name, parsed_url.host().c_str(), host_name_size);
+        // Set port
+        port = stoi(parsed_url.port());
+
+        for (Url::KeyVal query_param : parsed_url.query())
+        {
+            if (query_param.key().compare("streamid") == 0)
+            {
+                // Set streamid
+                streamid_found = true;
+                strlcpy(streamid, query_param.val().c_str(), streamid_size);
+            }
+        }
+    }
+    catch (Url::parse_error error)
+    {
+        spdlog::error("[{}] CSLSRelay::parse_url error [{}]",
+                      fmt::ptr(this), error.what());
+        spdlog::error("[{}] CSLSRelay::parse_url URL should be in format 'srt://hostname:port?streamid=your_stream_id'",
+                      fmt::ptr(this));
+        return SLS_ERROR;
+    }
+
+    if (!streamid_found)
+    {
+        spdlog::error("[{}] CSLSRelay::parse_url query parameter 'streamid' not found in URL '{}'",
                       fmt::ptr(this), url);
-        return SLS_ERROR;
-    }
-    snprintf(m_url, sizeof(m_url), "%s", url);
-
-    char *p = url;
-    // protocol
-    p = strchr(url, ':');
-    if (!p)
-    {
-        spdlog::error("[{}] CSLSRelay::parse_url, no ':', url='{}', url must like 'srt://hostname:port?streamid=your_stream_id' or 'srt://hostname:port/app/stream_name'.",
-                      fmt::ptr(this), m_url);
-        return SLS_ERROR;
-    }
-    p[0] = 0x00;
-    if (strcmp(url, "srt") != 0)
-    {
-        spdlog::error("[{}] CSLSRelay::parse_url, not 'srt' prefix, url='{}', url must like 'srt://hostname:port?streamid=your_stream_id' or 'srt://hostname:port/app/stream_name'.",
-                      fmt::ptr(this), m_url);
-        return SLS_ERROR;
-    }
-    p += 3; //skip 'srt://'
-
-    //hostname:port
-    char *p_tmp = strchr(p, ':');
-    if (p_tmp)
-    {
-        p_tmp[0] = 0x00;
-        strcpy(host_name, p);
-        p = p_tmp + 1;
-    }
-    else
-    {
-        spdlog::error("[{}] CSLSRelay::parse_url, not 'hostname:port', url='{}', url must like 'srt://hostname:port?streamid=your_stream_id' or 'srt://hostname:port/app/stream_name'.",
-                      fmt::ptr(this), m_url);
+        spdlog::error("[{}] CSLSRelay::parse_url URL should be in format 'srt://hostname:port?streamid=your_stream_id'",
+                      fmt::ptr(this));
         return SLS_ERROR;
     }
 
-    // XXX: This logic looks broken af
-    //hostname
-    bool b_streamid = false;
-    p_tmp = strchr(p, '?');
-    if (!p_tmp)
-    {
-        spdlog::info("[{}] CSLSRelay::parse_url='{}', no '?' param, come on.",
-                     fmt::ptr(this), m_url);
-        p_tmp = strchr(p, '/'); //app
-        if (!p_tmp)
-        { //app
-            spdlog::error("[{}] CSLSRelay::parse_url, url='{}', url must like 'srt://hostname:port?streamid=your_stream_id' or 'srt://hostname:port/app/stream_name'.",
-                          fmt::ptr(this), m_url);
-            return SLS_ERROR;
-        }
-        p_tmp++;
-        p_tmp = strchr(p_tmp, '/'); //stream
-        if (!p_tmp)
-        {
-            spdlog::error("[{}] CSLSRelay::parse_url, url='{}', url must like 'srt://hostname:port?streamid=your_stream_id' or 'srt://hostname:port/app/stream_name'.",
-                          fmt::ptr(this), m_url);
-            return SLS_ERROR;
-        }
-        p_tmp++;
-        if (strlen(p_tmp) == 0)
-        {
-            spdlog::error("[{}] CSLSRelay::parse_url, url='{}', url must like 'srt://hostname:port?streamid=your_stream_id' or 'srt://hostname:port/app/stream_name'.",
-                          fmt::ptr(this), m_url);
-            return SLS_ERROR;
-        }
-        p_tmp++;
-        p_tmp = strchr(p_tmp, '/'); //redundant
-        if (p_tmp)
-        {
-            spdlog::error("[{}] CSLSRelay::parse_url, url='{}', url must like 'srt://hostname:port?streamid=your_stream_id' or 'srt://hostname:port/app/stream_name'.",
-                          fmt::ptr(this), m_url);
-            return SLS_ERROR;
-        }
-    }
-    else
-    {
-        b_streamid = true;
-    }
+    spdlog::warn("{}", url);
+    spdlog::warn("{}:{:d} | {}", host_name, port, streamid);
 
-    if (b_streamid)
-    {
-        p_tmp[0] = 0;
-        port = atoi(p);
-        p = p_tmp + 1;
-        //streamid
-        p_tmp = strchr(p, '=');
-        if (!p)
-        {
-            spdlog::error("[{}] CSLSRelay::parse_url='{}', no 'stream=', url must like 'hostname:port?streamid=your_stream_id'.", fmt::ptr(this), url);
-            return SLS_ERROR;
-        }
-        p_tmp[0] = 0;
-        if (strcmp(p, "streamid") != 0)
-        {
-            spdlog::error("[{}] CSLSRelay::parse_url='{}', no 'stream', url must like 'hostname:port?streamid=your_stream_id'.", fmt::ptr(this), url);
-            return SLS_ERROR;
-        }
-        p = p_tmp + 1;
-        strcpy(streamid, p);
-    }
-    else
-    {
-        p_tmp = m_url + strlen("srt://");
-        p_tmp = strchr(p, '/');
-        snprintf(streamid, sizeof(streamid), "%s%s", host_name, p_tmp);
-    }
     return SLS_OK;
 }
 
@@ -216,8 +153,8 @@ int CSLSRelay::open(const char *srt_url)
     char url[1024] = {0};
     int latency = 10;
 
-    strncpy(m_url, srt_url, sizeof(m_url));
-    strncpy(url, srt_url, sizeof(url));
+    strlcpy(m_url, srt_url, sizeof(m_url));
+    strlcpy(url, srt_url, sizeof(url));
 
     //init listener
     if (NULL != m_srt)
@@ -227,7 +164,7 @@ int CSLSRelay::open(const char *srt_url)
     }
 
     //parse url
-    if (SLS_OK != parse_url(url, host_name, server_port, streamid))
+    if (SLS_OK != parse_url(url, host_name, sizeof(host_name), server_port, streamid, sizeof(streamid)))
     {
         return SLS_ERROR;
     }
@@ -255,7 +192,7 @@ int CSLSRelay::open(const char *srt_url)
         return SLS_ERROR;
     }
 
-    //    srt_setsockflag(fd, SRTO_SENDER, &m_is_write, sizeof m_is_write);
+    // srt_setsockflag(fd, SRTO_SENDER, &m_is_write, sizeof m_is_write);
     /*
     status = srt_setsockopt(fd, 0, SRTO_TSBPDMODE, &yes, sizeof yes); //
     if (status == SRT_ERROR) {
@@ -269,7 +206,7 @@ int CSLSRelay::open(const char *srt_url)
     	sls_log(SLS_LOG_ERROR, "[%p]CSLSRelay::open, srt_setsockopt SRTO_TRANSTYPE failure. err=%s.", this, srt_getlasterror_str());
         return SLS_ERROR;
     }
-*/
+    */
 
     if (srt_setsockopt(fd, 0, SRTO_STREAMID, streamid, strlen(streamid)) < 0)
     {
@@ -298,7 +235,7 @@ int CSLSRelay::open(const char *srt_url)
     }
     m_srt = new CSLSSrt();
     m_srt->libsrt_set_fd(fd);
-    strncpy(m_server_ip, server_ip, sizeof(m_server_ip));
+    strlcpy(m_server_ip, server_ip, sizeof(m_server_ip));
     m_server_port = server_port;
     return status;
 }

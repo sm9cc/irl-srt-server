@@ -50,7 +50,7 @@ int CSLSPusherManager::connect_all()
 	if (m_sri == NULL)
 	{
 		spdlog::info("[{}] CSLSPusherManager::connect_all, failed, m_upstreams.size()=0, m_app_uplive={}, m_stream_name={}.",
-				fmt::ptr(this), m_app_uplive, m_stream_name);
+					 fmt::ptr(this), m_app_uplive, m_stream_name);
 		return ret;
 	}
 
@@ -59,12 +59,36 @@ int CSLSPusherManager::connect_all()
 	{
 		char szURL[1024] = {0};
 		const char *szTmp = m_sri->m_upstreams[i].c_str();
-		snprintf(szURL, sizeof(szURL), "srt://%s/%s", szTmp, m_stream_name);
-		ret = connect(szURL);
-		if (SLS_OK != ret)
+		// Check if the srt:// prefix is already specified
+		bool endpoint_load_success = false;
+		try
 		{
-			CSLSLock lock(&m_rwclock, true);
-			m_map_reconnect_relay[std::string(szURL)] = sls_gettime_ms();
+			if (strncmp(szTmp, "srt://", 6) == 0)
+			{
+				snprintf(szURL, sizeof(szURL), "%s", fmt::format(szTmp, fmt::arg("stream_name", m_stream_name)).c_str());
+			}
+			else
+			{
+				snprintf(szURL, sizeof(szURL), "srt://%s", fmt::format(szTmp, fmt::arg("stream_name", m_stream_name)).c_str());
+			}
+			endpoint_load_success = true;
+		}
+		catch (fmt::v7::format_error error)
+		{
+			spdlog::error("[{}] CSLSPusherManager::connect_all key '{{stream_name}}' not found in entry '{}'",
+						  fmt::ptr(this), szTmp);
+			// If argument is not found, notify of failure and don't try to reconnect
+			ret = SLS_ERROR;
+		}
+
+		if (endpoint_load_success)
+		{
+			ret = connect(szURL);
+			if (SLS_OK != ret)
+			{
+				CSLSLock lock(&m_rwclock, true);
+				m_map_reconnect_relay[std::string(szURL)] = sls_gettime_ms();
+			}
 		}
 		all_ret |= ret;
 	}
@@ -77,7 +101,7 @@ int CSLSPusherManager::start()
 	if (m_sri == NULL)
 	{
 		spdlog::info("[{}] CSLSPusherManager::start, failed, m_upstreams.size()=0, m_app_uplive={}, m_stream_name={}.",
-				fmt::ptr(this), m_app_uplive, m_stream_name);
+					 fmt::ptr(this), m_app_uplive, m_stream_name);
 		return ret;
 	}
 
@@ -90,7 +114,7 @@ int CSLSPusherManager::start()
 		if (NULL == publisher)
 		{
 			spdlog::info("[{}] CSLSPullerManager::start, failed, key_stream_name={}, publisher=NULL not exist.",
-					fmt::ptr(this), key_stream_name);
+						 fmt::ptr(this), key_stream_name);
 			return ret;
 		}
 	}
@@ -106,7 +130,7 @@ int CSLSPusherManager::start()
 	else
 	{
 		spdlog::info("[{}] CSLSPusherManager::start, failed, wrong m_sri->m_mode={:d}, m_app_uplive={}, m_stream_name={}.",
-				fmt::ptr(this), m_sri->m_mode, m_app_uplive, m_stream_name);
+					 fmt::ptr(this), m_sri->m_mode, m_app_uplive, m_stream_name);
 	}
 	return ret;
 }
@@ -134,7 +158,7 @@ int CSLSPusherManager::add_reconnect_stream(char *relay_url)
 	if (m_sri == NULL)
 	{
 		spdlog::info("[{}] CSLSPusherManager::add_reconnect_stream, failed, m_upstreams.size()=0, m_app_uplive={}, m_stream_name={}.",
-				fmt::ptr(this), m_app_uplive, m_stream_name);
+					 fmt::ptr(this), m_app_uplive, m_stream_name);
 		return ret;
 	}
 
@@ -154,7 +178,7 @@ int CSLSPusherManager::add_reconnect_stream(char *relay_url)
 	else
 	{
 		spdlog::info("[{}] CSLSPusherManager::add_reconnect_stream, failed, wrong m_sri->m_mode={:d}, m_app_uplive={}, m_stream_name={}.",
-				fmt::ptr(this), m_sri->m_mode, m_app_uplive, m_stream_name);
+					 fmt::ptr(this), m_sri->m_mode, m_app_uplive, m_stream_name);
 	}
 	return ret;
 }
@@ -165,14 +189,14 @@ int CSLSPusherManager::reconnect(int64_t cur_tm_ms)
 	if (SLS_OK != check_relay_param())
 	{
 		spdlog::warn("[{}] CSLSPusherManager::reconnect, check_relay_param failed, stream={}.",
-				fmt::ptr(this), m_stream_name);
+					 fmt::ptr(this), m_stream_name);
 		return ret;
 	}
 
 	if (m_sri == NULL)
 	{
 		spdlog::info("[{}] CSLSPusherManager::reconnect, failed, m_upstreams.size()=0, m_app_uplive={}, m_stream_name={}.",
-				fmt::ptr(this), m_app_uplive, m_stream_name);
+					 fmt::ptr(this), m_app_uplive, m_stream_name);
 		return ret;
 	}
 
@@ -204,7 +228,7 @@ int CSLSPusherManager::reconnect(int64_t cur_tm_ms)
 		if (no_publisher)
 		{
 			spdlog::info("[{}] CSLSPullerManager::reconnect, connect_hash failed, key_stream_name={}, publisher=NULL not exist.",
-					fmt::ptr(this), key_stream_name);
+						 fmt::ptr(this), key_stream_name);
 			return ret;
 		}
 		ret = connect_hash();
@@ -212,7 +236,7 @@ int CSLSPusherManager::reconnect(int64_t cur_tm_ms)
 	else
 	{
 		spdlog::info("[{}] CSLSPusherManager::reconnect, failed, wrong m_sri->m_mode={:d}, m_app_uplive={}, m_stream_name={}.",
-				fmt::ptr(this), m_sri->m_mode, m_app_uplive, m_stream_name);
+					 fmt::ptr(this), m_sri->m_mode, m_app_uplive, m_stream_name);
 	}
 	return ret;
 }
@@ -222,13 +246,13 @@ int CSLSPusherManager::check_relay_param()
 	if (NULL == m_role_list)
 	{
 		spdlog::warn("[{}] CSLSRelayManager::check_relay_param, failed, m_role_list is null, stream={}.",
-				fmt::ptr(this), m_stream_name);
+					 fmt::ptr(this), m_stream_name);
 		return SLS_ERROR;
 	}
 	if (NULL == m_map_data)
 	{
 		spdlog::warn("[{}] CSLSRelayManager::check_relay_param, failed, m_map_data is null, stream={}.",
-				fmt::ptr(this), m_stream_name);
+					 fmt::ptr(this), m_stream_name);
 		return SLS_ERROR;
 	}
 	return SLS_OK;
@@ -259,20 +283,20 @@ int CSLSPusherManager::reconnect_all(int64_t cur_tm_ms, bool no_publisher)
 			all_ret |= ret;
 			m_map_reconnect_relay[url] = cur_tm_ms;
 			spdlog::info("[{}] CSLSPullerManager::reconnect_all, failed, url={}, publisher=NULL not exist.",
-					fmt::ptr(this), url.c_str());
+						 fmt::ptr(this), url.c_str());
 			continue;
 		}
 		ret = connect(url.c_str());
 		if (SLS_OK != ret)
 		{
 			spdlog::info("[{}] CSLSRelayManager::reconnect_all, faild, connect url='{}'.",
-					fmt::ptr(this), url.c_str());
+						 fmt::ptr(this), url.c_str());
 			m_map_reconnect_relay[url] = cur_tm_ms;
 		}
 		else
 		{
 			spdlog::info("[{}] CSLSRelayManager::reconnect_all, ok, connect url='{}', erase item from m_map_reconnect_relay.",
-					fmt::ptr(this), url.c_str());
+						 fmt::ptr(this), url.c_str());
 			m_map_reconnect_relay.erase(it_cur);
 		}
 		all_ret |= ret;
