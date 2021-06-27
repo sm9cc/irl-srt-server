@@ -23,8 +23,6 @@
 
 #pragma once
 
-#include <list>
-
 #include "TCPRole.hpp"
 #include "SLSArray.hpp"
 #include "common.hpp"

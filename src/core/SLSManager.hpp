@@ -24,8 +24,6 @@
 
 #pragma once
 
-#include <list>
-
 #include "SLSRole.hpp"
 #include "SLSRoleList.hpp"
 #include "SLSGroup.hpp"

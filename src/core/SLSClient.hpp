@@ -24,8 +24,6 @@
 
 #pragma once
 
-#include <list>
-
 #include "SLSRelay.hpp"
 #include "TSFileTimeReader.hpp"
 
