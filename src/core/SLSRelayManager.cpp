@@ -109,7 +109,7 @@ int CSLSRelayManager::connect(const char *url)
 		cur_relay->get_stat_base(stat_base);
 
 		//stat info
-		stat_info_t *stat_info_obj = new stat_info_t;
+		stat_info_t *stat_info_obj = new stat_info_t();
 		stat_info_obj->port = m_listen_port;
 		stat_info_obj->role = cur_relay->get_role_name();
 		stat_info_obj->pub_domain_app = m_app_uplive;

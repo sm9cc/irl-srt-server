@@ -534,7 +534,7 @@ int CSLSListener::handler()
         player->set_map_data(key_stream_name, m_map_data);
 
         //stat info
-        stat_info_t *stat_info_obj = new stat_info_t;
+        stat_info_t *stat_info_obj = new stat_info_t();
         stat_info_obj->port = m_port;
         stat_info_obj->role = player->get_role_name();
         stat_info_obj->pub_domain_app = app_uplive;
@@ -629,7 +629,7 @@ int CSLSListener::handler()
     pub->set_idle_streams_timeout(m_idle_streams_timeout_role);
 
     //stat info
-    stat_info_t *stat_info_obj = new stat_info_t;
+    stat_info_t *stat_info_obj = new stat_info_t();
     stat_info_obj->port = m_port;
     stat_info_obj->role = pub->get_role_name();
     stat_info_obj->pub_domain_app = app_uplive;

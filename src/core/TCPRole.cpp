@@ -64,7 +64,7 @@ int CTCPRole::write(const char *buf, int size)
     if (len <= 0)
     {
         spdlog::error("[{}] CTCPRole::write, len={:d}, errno={:d}, err='{}'",
-                     fmt::ptr(this), len, errno, strerror(errno));
+                      fmt::ptr(this), len, errno, strerror(errno));
     }
     return len;
 }
@@ -80,8 +80,7 @@ int CTCPRole::read(char *buf, int size)
         if (errno != EAGAIN)
         {
             // TODO
-            spdlog::error("[{}] CTCPRole::read, invalid tcp. {:d}",
-                          fmt::ptr(this), errno);
+            spdlog::trace("[{}] CTCPRole::read, invalid tcp.", fmt::ptr(this));
             m_valid = false;
         }
     }
