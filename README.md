@@ -19,7 +19,7 @@ cmake ../ -DCMAKE_BUILD_TYPE=Release
 make -j
 ```
 
-Binaries are created in `build/` directory.
+Binaries are created in `build/bin/` directory.
 
 ## Usage
 

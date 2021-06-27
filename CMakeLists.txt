@@ -7,6 +7,9 @@ set(CMAKE_CXX_FLAGS "-Wall -Wno-invalid-offsetof")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
+set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
+set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib )
+
 include(CTest)
 enable_testing()
 
@@ -17,28 +20,11 @@ include(CPack)
 add_compile_definitions( SLS_VERSION="${PROJECT_VERSION}" )
 
 # Use spdlog
-add_subdirectory(lib/spdlog)
+add_subdirectory(${PROJECT_SOURCE_DIR}/lib/spdlog)
 find_package(spdlog)
 
 # Use threads library
 find_package(Threads)
 
-# Use SLSCore
-include_directories(slscore)
-add_subdirectory(slscore)
-
-add_executable(srt_server srt-live-server.cpp)
-target_link_libraries(srt_server
-        slscore
-        spdlog
-        -lsrt
-        ${CMAKE_THREAD_LIBS_INIT}
-)
-
-add_executable(srt_client srt-live-client.cpp)
-target_link_libraries(srt_client
-        slscore
-        spdlog
-        -lsrt
-        ${CMAKE_THREAD_LIBS_INIT}
-)
+# Use SLS Core
+add_subdirectory(${PROJECT_SOURCE_DIR}/src)

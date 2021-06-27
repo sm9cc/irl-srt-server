@@ -1,4 +1,4 @@
-set(slscore_files
+set(sls_core_files
 	common.cpp
 	common.hpp
 	conf.cpp
@@ -68,5 +68,6 @@ set(slscore_files
 	util.hpp
 )
 
-add_library(slscore ${slscore_files})
-target_link_libraries(slscore spdlog stdc++fs)
+add_library(sls_core STATIC ${sls_core_files})
+target_link_libraries(sls_core spdlog stdc++fs)
+target_include_directories(sls_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
