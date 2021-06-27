@@ -1,5 +1,3 @@
-/*	$OpenBSD: strlcpy.c,v 1.12 2015/01/15 03:54:12 millert Exp $	*/
-
 /*
  * Copyright (c) 1998, 2015 Todd C. Miller <Todd.Miller@courtesan.com>
  *
@@ -28,6 +26,11 @@
 size_t
 strlcpy(char *dst, const char *src, size_t dsize)
 {
+
+    // In theory, we don't want to use strlcpy - instead, the length of the target
+    // buffer should be known in advance, and truncations should be handled properly
+    spdlog::debug("[deprecated]: use of 'strlcpy'");
+
     const char *osrc = src;
     size_t nleft = dsize;
 
@@ -44,8 +47,6 @@ strlcpy(char *dst, const char *src, size_t dsize)
     /* Not enough room in dst, add NUL and traverse rest of src. */
     if (nleft == 0)
     {
-        // Log a warning regarding the would-be overflow (were we to use strcpy)
-        spdlog::debug("[stlcpy] warning: strcpy would overflow [src='{}']", src);
         if (dsize != 0)
             *dst = '\0'; /* NUL-terminate dst */
         while (*src++)
