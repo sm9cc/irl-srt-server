@@ -61,9 +61,9 @@ int CTCPRole::write(const char *buf, int size)
 {
     int len = 0;
     len = send(m_fd, buf, size, 0);
-    if (0 >= len)
+    if (len <= 0)
     {
-        spdlog::info("[{}] CTCPRole::read, len={:d}, errno={:d}, err='{}'",
+        spdlog::error("[{}] CTCPRole::write, len={:d}, errno={:d}, err='{}'",
                      fmt::ptr(this), len, errno, strerror(errno));
     }
     return len;
@@ -91,12 +91,12 @@ int CTCPRole::open(char *host, int port)
 {
     if (SLS_OK != setup())
     {
-        spdlog::error("[{}] CTCPRole::open setup failure, host='{}', port=={:d}.", fmt::ptr(this), host, port);
+        spdlog::error("[{}] CTCPRole::open setup failure, host='{}', port={:d}.", fmt::ptr(this), host, port);
         return SLS_ERROR;
     }
     if (SLS_OK != connect(host, port))
     {
-        spdlog::error("[{}] CTCPRole::open setup connect failure, host='{}', port=={:d}.", fmt::ptr(this), host, port);
+        spdlog::error("[{}] CTCPRole::open setup connect failure, host='{}', port={:d}.", fmt::ptr(this), host, port);
         return SLS_ERROR;
     }
     m_valid = true;
@@ -107,7 +107,7 @@ int CTCPRole::connect(char *host, int port)
 {
     if (m_fd <= 0)
     {
-        spdlog::error("[{}] CTCPRole::connect, m_fd={:d}, cant't setup, host='{}', port=={:d}.", fmt::ptr(this), m_fd, host, port);
+        spdlog::error("[{}] CTCPRole::connect, m_fd={:d}, cant't setup, host='{}', port={:d}.", fmt::ptr(this), m_fd, host, port);
         return SLS_ERROR;
     }
     int ret = SLS_ERROR;
@@ -132,14 +132,14 @@ int CTCPRole::connect(char *host, int port)
     {
         if (errno != EINPROGRESS)
         {
-            spdlog::error("[{}] CTCPRole::connect, failure, m_fd={:d}, host={}, port=={:d}, errno={:d}.", fmt::ptr(this), m_fd, host, port, errno);
+            spdlog::error("[{}] CTCPRole::connect, failure, m_fd={:d}, host={}, port={:d}, errno={:d}.", fmt::ptr(this), m_fd, host, port, errno);
             ::close(m_fd);
             m_fd = 0;
             return SLS_ERROR;
         }
     }
 
-    spdlog::info("[{}] CTCPRole::connect, ok, m_fd={:d}, host={}, port=={:d}.", fmt::ptr(this), m_fd, host, port);
+    spdlog::info("[{}] CTCPRole::connect, ok, m_fd={:d}, host={}, port={:d}.", fmt::ptr(this), m_fd, host, port);
     strlcpy(m_remote_host, host, sizeof(m_remote_host));
     m_remote_port = port;
     return SLS_OK;
@@ -149,12 +149,12 @@ int CTCPRole::open(int port, int backlog)
 {
     if (SLS_OK != setup())
     {
-        spdlog::error("[{}] CTCPRole::open setup failure, port=={:d}.", fmt::ptr(this), port);
+        spdlog::error("[{}] CTCPRole::open setup failure, port={:d}.", fmt::ptr(this), port);
         return SLS_ERROR;
     }
     if (SLS_OK != listen(port, backlog))
     {
-        spdlog::error("[{}] CTCPRole::open listen failure, port=={:d}.", fmt::ptr(this), port);
+        spdlog::error("[{}] CTCPRole::open listen failure, port={:d}.", fmt::ptr(this), port);
         return SLS_ERROR;
     }
     m_valid = true;
