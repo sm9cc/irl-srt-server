@@ -23,6 +23,10 @@ add_compile_definitions( SLS_VERSION="${PROJECT_VERSION}" )
 add_subdirectory(${PROJECT_SOURCE_DIR}/lib/spdlog)
 find_package(spdlog)
 
+# Use JSON library
+set(JSON_BuildTests OFF CACHE INTERNAL "")
+add_subdirectory(${PROJECT_SOURCE_DIR}/lib/json)
+
 # Use threads library
 find_package(Threads)
 

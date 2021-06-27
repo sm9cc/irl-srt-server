@@ -107,10 +107,19 @@ int CSLSRelayManager::connect(const char *url)
 		int relay_peer_port = 0;
 		cur_relay->get_peer_info(relay_peer_name, relay_peer_port);
 		cur_relay->get_stat_base(stat_base);
-		sprintf(tmp, stat_base,
-				m_listen_port, cur_relay->get_role_name(), m_app_uplive, m_stream_name, url, relay_peer_name, relay_peer_port, cur_time);
-		std::string stat_info = std::string(tmp);
-		cur_relay->set_stat_info_base(stat_info);
+
+		//stat info
+		stat_info_t *stat_info_obj = new stat_info_t;
+		stat_info_obj->port = m_listen_port;
+		stat_info_obj->role = cur_relay->get_role_name();
+		stat_info_obj->pub_domain_app = m_app_uplive;
+		stat_info_obj->stream_name = m_stream_name;
+		stat_info_obj->url = url;
+		stat_info_obj->remote_ip = relay_peer_name;
+		stat_info_obj->remote_port = relay_peer_port;
+		stat_info_obj->start_time = cur_time;
+
+		cur_relay->set_stat_info_base(*stat_info_obj);
 
 		ret = set_relay_param(cur_relay);
 		if (SLS_OK != ret)

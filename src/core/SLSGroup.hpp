@@ -54,7 +54,7 @@ public:
     void set_stat_post_interval(int interval);
     void set_http_stat_post(CHttpClient *p);
 
-    void get_stat_info(std::string &info);
+    void get_stat_info(vector<stat_info_t> &info);
 
 protected:
     virtual void clear();
@@ -79,5 +79,5 @@ private:
     int64_t m_stat_post_last_tm_ms;
     int m_stat_post_interval;
     CSLSMutex m_mutex_stat;
-    std::string m_stat_info;
+    std::vector<stat_info_t> m_stat_info;
 };

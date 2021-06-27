@@ -24,6 +24,9 @@
 
 #pragma once
 
+#include <vector>
+
+#include "common.hpp"
 #include "SLSRole.hpp"
 #include "SLSRoleList.hpp"
 #include "SLSGroup.hpp"
@@ -76,7 +79,7 @@ public:
     int check_invalid();
     bool is_single_thread();
 
-    void get_stat_info(std::string &info);
+    std::string get_stat_info();
     static int stat_client_callback(void *p, HTTP_CALLBACK_TYPE type, void *v, void *context);
 
 private:

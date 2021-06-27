@@ -30,6 +30,9 @@
 #include <vector>
 #include <unistd.h>
 
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
+
 #include "constants.hpp"
 
 using namespace std;
@@ -110,7 +113,20 @@ int sls_remove_pid();
 int sls_send_cmd(const char *cmd);
 
 void sls_split_string(std::string str, std::string separator, std::vector<std::string> &result, int count = -1);
-std::string sls_find_string(std::vector<std::string> &src, std::string &dst);
+std::string sls_find_string(std::vector<std::string> &src, std::string &dst, bool caseSensitive = true);
+
+struct stat_info_t
+{
+    int port;
+    std::string role;
+    std::string pub_domain_app;
+    std::string stream_name;
+    std::string url;
+    std::string remote_ip;
+    int remote_port;
+    std::string start_time;
+    int kbitrate;
+};
 
 /*
  * parse ts packet

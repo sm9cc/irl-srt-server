@@ -83,8 +83,9 @@ public:
     char *get_streamid();
     bool is_reconnect();
 
-    void set_stat_info_base(std::string &v);
-    virtual std::string get_stat_info();
+    void set_stat_info_base(stat_info_t &v);
+    virtual stat_info_t get_stat_info();
+
     void update_stat_info();
     virtual int get_peer_info(char *peer_name, int &peer_port);
 
@@ -126,7 +127,7 @@ protected:
     int m_data_len;
     int m_data_pos;
     bool m_need_reconnect;
-    std::string m_stat_info_base;
+    stat_info_t m_stat_info_base;
     CHttpClient *m_http_client;
 
     char m_record_hls[SHORT_STR_MAX_LEN];

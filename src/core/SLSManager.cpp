@@ -26,6 +26,9 @@
 #include <string.h>
 #include "spdlog/spdlog.h"
 
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
+
 #include "common.hpp"
 #include "SLSManager.hpp"
 #include "SLSLog.hpp"
@@ -304,15 +307,36 @@ int CSLSManager::check_invalid()
     return SLS_ERROR;
 }
 
-void CSLSManager::get_stat_info(std::string &info)
+std::string CSLSManager::get_stat_info()
 {
+    json info_obj;
+    info_obj["stats"] = json::array();
+
     for (CSLSGroup *worker : m_workers)
     {
         if (worker)
         {
-            worker->get_stat_info(info);
+            vector<stat_info_t> worker_info;
+            worker->get_stat_info(worker_info);
+
+            for (stat_info_t &role_info : worker_info)
+            {
+                info_obj["stats"].push_back(json{
+                    {"port", role_info.port},
+                    {"role", role_info.role},
+                    {"pub_domain_app", role_info.pub_domain_app},
+                    {"stream_name", role_info.stream_name},
+                    {"url", role_info.url},
+                    {"remote_ip", role_info.remote_ip},
+                    {"remote_port", role_info.remote_port},
+                    {"start_time", role_info.start_time},
+                    {"kbitrate", role_info.kbitrate}});
+            }
+
         }
     }
+
+    return info_obj.dump();
 }
 
 int CSLSManager::stat_client_callback(void *p, HTTP_CALLBACK_TYPE type, void *v, void *context)
@@ -321,7 +345,7 @@ int CSLSManager::stat_client_callback(void *p, HTTP_CALLBACK_TYPE type, void *v,
     if (HCT_REQUEST_CONTENT == type)
     {
         std::string *p_response = (std::string *)v;
-        manager->get_stat_info(*p_response);
+        p_response->assign(manager->get_stat_info());
     }
     else if (HCT_RESPONSE_END == type)
     {

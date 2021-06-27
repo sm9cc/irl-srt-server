@@ -115,7 +115,7 @@ void CSLSGroup::check_new_role()
     else
     {
         spdlog::error("[{}] CSLSGroup::check_new_role, worker_number={:d}, {}={}, add_to_epoll failed, fd={:d}.",
-                     fmt::ptr(this), m_worker_number, role->get_role_name(), fmt::ptr(role), fd);
+                      fmt::ptr(this), m_worker_number, role->get_role_name(), fmt::ptr(role), fd);
         delete role;
     }
 }
@@ -324,9 +324,12 @@ void CSLSGroup::check_invalid_sock()
 
         if (update_stat_info)
         {
-            std::string stat_info = role->get_stat_info();
+
+
+            stat_info_t stat_info = role->get_stat_info();
+
             CSLSLock lock(&m_mutex_stat);
-            m_stat_info.append(stat_info);
+            m_stat_info.push_back(stat_info);
         }
 
         int state = role->get_state(cur_time_ms);
@@ -402,8 +405,8 @@ void CSLSGroup::set_stat_post_interval(int interval)
     m_stat_post_interval = interval;
 }
 
-void CSLSGroup::get_stat_info(std::string &info)
+void CSLSGroup::get_stat_info(vector<stat_info_t> &info)
 {
     CSLSLock lock(&m_mutex_stat);
-    info.append(m_stat_info);
+    info.insert(info.end(), m_stat_info.begin(), m_stat_info.end());
 }

@@ -69,5 +69,9 @@ set(sls_core_files
 )
 
 add_library(sls_core STATIC ${sls_core_files})
-target_link_libraries(sls_core spdlog stdc++fs)
+target_link_libraries(sls_core
+	spdlog
+	stdc++fs
+	nlohmann_json::nlohmann_json
+)
 target_include_directories(sls_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

@@ -168,7 +168,10 @@ std:
 
     conf_srt = (sls_conf_srt_t *)sls_conf_get_root_conf();
     if (strlen(conf_srt->stat_post_url) > 0)
+    {
+        http_stat_client->set_stage_callback(CSLSManager::stat_client_callback, sls_manager);
         http_stat_client->open(conf_srt->stat_post_url, stat_method, conf_srt->stat_post_interval);
+    }
 
     while (!b_exit)
     {
@@ -260,7 +263,11 @@ std:
                 break;
             }
             if (strlen(conf_srt->stat_post_url) > 0)
+            {
+                http_stat_client->set_stage_callback(CSLSManager::stat_client_callback, sls_manager);
                 http_stat_client->open(conf_srt->stat_post_url, stat_method, conf_srt->stat_post_interval);
+            }
+
             spdlog::info("Reloaded successfully.");
         }
     }

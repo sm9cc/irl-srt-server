@@ -36,45 +36,6 @@
 #include "SLSPusherManager.hpp"
 #include "util.hpp"
 
-const char SLS_SERVER_STAT_INFO_BASE[] = "\
-{\
-\"port\": \"%d\",\
-\"role\": \"%s\",\
-\"pub_domain_app\": \"\",\
-\"stream_name\": \"\",\
-\"url\": \"\",\
-\"remote_ip\": \"\",\
-\"remote_port\": \"\",\
-\"start_time\": \"%s\",\
-\"kbitrate\": \"0\"\
-}";
-
-const char SLS_PUBLISHER_STAT_INFO_BASE[] = "\
-{\
-\"port\": \"%d\",\
-\"role\": \"%s\",\
-\"pub_domain_app\": \"%s\",\
-\"stream_name\": \"%s\",\
-\"url\": \"%s\",\
-\"remote_ip\": \"%s\",\
-\"remote_port\": \"%d\",\
-\"start_time\": \"%s\",\
-\"kbitrate\":\
-";
-
-const char SLS_PLAYER_STAT_INFO_BASE[] = "\
-{\
-\"port\": \"%d\",\
-\"role\": \"%s\",\
-\"pub_domain_app\": \"%s\",\
-\"stream_name\": \"%s\",\
-\"url\": \"%s\",\
-\"remote_ip\": \"%s\",\
-\"remote_port\": \"%d\",\
-\"start_time\": \"%s\",\
-\"kbitrate\":\
-";
-
 /**
  * server conf
  */
@@ -96,7 +57,7 @@ CSLSListener::CSLSListener()
     m_map_puller = NULL;
     m_idle_streams_timeout = UNLIMITED_TIMEOUT;
     m_idle_streams_timeout_role = 0;
-    m_stat_info = std::string("");
+    m_stat_info = {};
     memset(m_http_url_role, 0, URL_MAX_LEN);
     memset(m_record_hls_path_prefix, 0, URL_MAX_LEN);
 
@@ -571,17 +532,25 @@ int CSLSListener::handler()
         player->set_idle_streams_timeout(m_idle_streams_timeout_role);
         player->set_srt(srt);
         player->set_map_data(key_stream_name, m_map_data);
+
         //stat info
-        snprintf(tmp, sizeof(tmp), SLS_PLAYER_STAT_INFO_BASE,
-                 m_port, player->get_role_name(), app_uplive.c_str(), stream_name, sid, peer_name, peer_port, cur_time);
-        std::string stat_info = std::string(tmp);
-        player->set_stat_info_base(stat_info);
+        stat_info_t *stat_info_obj = new stat_info_t;
+        stat_info_obj->port = m_port;
+        stat_info_obj->role = player->get_role_name();
+        stat_info_obj->pub_domain_app = app_uplive;
+        stat_info_obj->stream_name = stream_name;
+        stat_info_obj->url = sid;
+        stat_info_obj->remote_ip = peer_name;
+        stat_info_obj->remote_port = peer_port;
+        stat_info_obj->start_time = cur_time;
+        player->set_stat_info_base(*stat_info_obj);
+
         player->set_http_url(m_http_url_role);
         player->on_connect();
 
         m_list_role->push(player);
         spdlog::info("[{}] CSLSListener::handler, new player[{}] =[{}:{:d}], key_stream_name={}, {}={}, m_list_role->size={:d}.",
-                     fmt::ptr(this), fmt::ptr(player), peer_name, peer_port, key_stream_name, pub->get_role_name(), fmt::ptr(pub), m_list_role->size());
+                     fmt::ptr(this), fmt::ptr(player), peer_name, peer_port, key_stream_name, player->get_role_name(), fmt::ptr(player), m_list_role->size());
         return client_count;
     }
 
@@ -658,11 +627,20 @@ int CSLSListener::handler()
     pub->set_conf((sls_conf_base_t *)ca);
     pub->init();
     pub->set_idle_streams_timeout(m_idle_streams_timeout_role);
+
     //stat info
-    snprintf(tmp, sizeof(tmp), SLS_PUBLISHER_STAT_INFO_BASE,
-             m_port, pub->get_role_name(), app_uplive.c_str(), stream_name, sid, peer_name, peer_port, cur_time);
-    std::string stat_info = std::string(tmp);
-    pub->set_stat_info_base(stat_info);
+    stat_info_t *stat_info_obj = new stat_info_t;
+    stat_info_obj->port = m_port;
+    stat_info_obj->role = pub->get_role_name();
+    stat_info_obj->pub_domain_app = app_uplive;
+    stat_info_obj->stream_name = stream_name;
+    stat_info_obj->url = sid;
+    stat_info_obj->remote_ip = peer_name;
+    stat_info_obj->remote_port = peer_port;
+    stat_info_obj->start_time = cur_time;
+
+    pub->set_stat_info_base(*stat_info_obj);
+
     pub->set_http_url(m_http_url_role);
     //set hls record path
     snprintf(tmp, sizeof(tmp), "%s/%d/%s",
@@ -724,15 +702,16 @@ int CSLSListener::handler()
     return client_count;
 }
 
-std::string CSLSListener::get_stat_info()
+stat_info_t CSLSListener::get_stat_info()
 {
-    if (m_stat_info.length() == 0)
+    if (m_stat_info.port == 0)
     {
-        char tmp[STR_MAX_LEN] = {0};
         char cur_time[STR_DATE_TIME_LEN] = {0};
         sls_gettime_default_string(cur_time, sizeof(cur_time));
-        snprintf(tmp, sizeof(tmp), SLS_SERVER_STAT_INFO_BASE, m_port, m_role_name, cur_time);
-        m_stat_info = std::string(tmp);
+
+        m_stat_info.port = m_port;
+        m_stat_info.role = m_role_name,
+        m_stat_info.start_time = cur_time;
     }
     return m_stat_info;
 }

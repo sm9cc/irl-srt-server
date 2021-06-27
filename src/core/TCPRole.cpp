@@ -79,8 +79,9 @@ int CTCPRole::read(char *buf, int size)
                       fmt::ptr(this), len, errno, strerror(errno));
         if (errno != EAGAIN)
         {
-            spdlog::error("[{}] CTCPRole::read, invalid tcp.",
-                          fmt::ptr(this));
+            // TODO
+            spdlog::error("[{}] CTCPRole::read, invalid tcp. {:d}",
+                          fmt::ptr(this), errno);
             m_valid = false;
         }
     }

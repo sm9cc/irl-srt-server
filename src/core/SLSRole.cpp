@@ -615,16 +615,15 @@ int CSLSRole::handler_write_data()
     return write_size;
 }
 
-void CSLSRole::set_stat_info_base(std::string &v)
+void CSLSRole::set_stat_info_base(stat_info_t &v)
 {
     m_stat_info_base = v;
 }
 
-std::string CSLSRole::get_stat_info()
+stat_info_t CSLSRole::get_stat_info()
 {
-    char tmp[STR_MAX_LEN] = {0};
-    snprintf(tmp, sizeof(tmp), "\"%d\"}", m_kbitrate);
-    return m_stat_info_base + std::string(tmp);
+    m_stat_info_base.kbitrate = m_kbitrate;
+    return m_stat_info_base;
 }
 
 int CSLSRole::get_peer_info(char *peer_name, int &peer_port)
