@@ -22,8 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _SLSRoleList_INCLUDE_
-#define _SLSRoleList_INCLUDE_
+#pragma once
 
 #include <list>
 
@@ -50,5 +49,3 @@ private:
 
     CSLSMutex m_mutex;
 };
-
-#endif

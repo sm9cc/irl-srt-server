@@ -22,8 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _SLSClient_INCLUDE_
-#define _SLSClient_INCLUDE_
+#pragma once
 
 #include <list>
 
@@ -68,5 +67,3 @@ protected:
     CTSFileTimeReader *m_ts_file_time_reader;
     CSLSSyncClock m_sync_clock;
 };
-
-#endif

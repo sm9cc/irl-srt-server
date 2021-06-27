@@ -22,8 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _SLSRecycleArray_INCLUDE_
-#define _SLSRecycleArray_INCLUDE_
+#pragma once
 
 #include <list>
 #include <string.h>
@@ -65,5 +64,3 @@ private:
 
     CSLSRWLock m_rwclock;
 };
-
-#endif

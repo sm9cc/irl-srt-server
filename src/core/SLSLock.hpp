@@ -22,8 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _SLSLock_INCLUDE_
-#define _SLSLock_INCLUDE_
+#pragma once
 
 #include <pthread.h>
 #include <stdarg.h>
@@ -173,5 +172,3 @@ private:
 
     bool m_locked;
 };
-
-#endif

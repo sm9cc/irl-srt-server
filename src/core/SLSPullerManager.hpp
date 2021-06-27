@@ -22,8 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _SLSPulllerManager_INCLUDE_
-#define _SLSPulllerManager_INCLUDE_
+#pragma once
 
 #include <vector>
 #include <string>
@@ -52,5 +51,3 @@ protected:
 
     int m_cur_loop_index;
 };
-
-#endif

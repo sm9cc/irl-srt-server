@@ -21,8 +21,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _HttpClient_INCLUDE_
-#define _HttpClient_INCLUDE_
+#pragma once
 
 #include <list>
 
@@ -117,5 +116,3 @@ protected:
 
 private:
 };
-
-#endif

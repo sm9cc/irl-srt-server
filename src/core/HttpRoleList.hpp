@@ -21,8 +21,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _HttpRoleList_INCLUDE_
-#define _HttpRoleList_INCLUDE_
+#pragma once
 
 #include <list>
 
@@ -48,5 +47,3 @@ private:
     std::list<CHttpClient *> m_list_role;
     CSLSMutex m_mutex;
 };
-
-#endif

@@ -22,8 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _SLSSyncLock_INCLUDE_
-#define _SLSSyncLock_INCLUDE_
+#pragma once
 
 #include <sys/time.h>
 #include <sys/types.h>
@@ -45,5 +44,3 @@ private:
     int64_t m_begin_ms_sys;
     int m_jitter;
 };
-
-#endif

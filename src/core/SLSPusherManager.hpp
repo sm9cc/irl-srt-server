@@ -22,8 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _SLSPusherManager_INCLUDE_
-#define _SLSPusherManager_INCLUDE_
+#pragma once
 
 #include <vector>
 #include <string>
@@ -54,5 +53,3 @@ private:
     CSLSRWLock m_rwclock;
     std::map<std::string, int64_t> m_map_reconnect_relay; //relay:timeout
 };
-
-#endif

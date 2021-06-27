@@ -22,8 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _CONF_INCLUDE_
-#define _CONF_INCLUDE_
+#pragma once
 
 #include <stddef.h>
 #include <stdint.h>
@@ -245,5 +244,3 @@ int sls_parse_argv(int argc, char *argv[], sls_opt_t *sls_opt, sls_conf_cmd_t *c
 sls_conf_cmd_t *sls_conf_find(const char *n, sls_conf_cmd_t *cmd, int size);
 sls_conf_base_t *sls_conf_get_root_conf();
 vector<string> sls_conf_string_split(const char *str, const char *delim);
-
-#endif

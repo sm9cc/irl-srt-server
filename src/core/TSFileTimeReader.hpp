@@ -22,8 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _TSFileTimeReader_INCLUDE_
-#define _TSFileTimeReader_INCLUDE_
+#pragma once
 
 #include <string.h>
 
@@ -58,5 +57,3 @@ private:
     int64_t m_udp_duration;
     int64_t m_readed_count;
 };
-
-#endif

@@ -22,8 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _SLSArray_INCLUDE_
-#define _SLSArray_INCLUDE_
+#pragma once
 
 #include <list>
 #include <string.h>
@@ -59,5 +58,3 @@ private:
 
     int get_inline(uint8_t *data, int size);
 };
-
-#endif

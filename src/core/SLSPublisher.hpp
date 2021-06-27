@@ -22,8 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _SLSPublisher_INCLUDE_
-#define _SLSPublisher_INCLUDE_
+#pragma once
 
 #include <vector>
 
@@ -75,5 +74,3 @@ public:
 private:
     CSLSMapPublisher *m_map_publisher;
 };
-
-#endif

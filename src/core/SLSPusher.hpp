@@ -22,8 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _SLSPusher_INCLUDE_
-#define _SLSPusher_INCLUDE_
+#pragma once
 
 #include "SLSRelay.hpp"
 
@@ -41,5 +40,3 @@ public:
 
 protected:
 };
-
-#endif

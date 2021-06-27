@@ -22,8 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _SLSMapData_INCLUDE_
-#define _SLSMapData_INCLUDE_
+#pragma once
 
 #include <map>
 #include <string>
@@ -55,5 +54,3 @@ private:
 
     int check_ts_info(char *data, int len, ts_info *ti);
 };
-
-#endif

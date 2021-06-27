@@ -22,8 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _SLSRelayManager_INCLUDE_
-#define _SLSRelayManager_INCLUDE_
+#pragma once
 
 #include <vector>
 #include <string>
@@ -83,5 +82,3 @@ protected:
 
     virtual int set_relay_param(CSLSRelay *relay) = 0;
 };
-
-#endif

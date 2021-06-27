@@ -22,8 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _SLSLOG_INCLUDE_
-#define _SLSLOG_INCLUDE_
+#pragma once
 
 #include <cstdarg>
 #include <stdio.h>
@@ -48,5 +47,3 @@ int initialize_logger();
 int sls_set_log_level(char *log_level);
 
 int sls_set_log_file(char *log_file);
-
-#endif

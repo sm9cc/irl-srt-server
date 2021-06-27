@@ -22,8 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _SLSMapRelay_INCLUDE_
-#define _SLSMapRelay_INCLUDE_
+#pragma once
 
 #include <map>
 #include <string>
@@ -49,5 +48,3 @@ private:
 
     std::map<std::string, SLS_RELAY_INFO *> m_map_relay_info; //uplive: relay_conf_info
 };
-
-#endif

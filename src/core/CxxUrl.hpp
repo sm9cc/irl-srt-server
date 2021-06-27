@@ -1,5 +1,4 @@
-#ifndef URL_HPP
-#define URL_HPP
+#pragma once
 
 #include <vector>
 #include <utility>
@@ -295,5 +294,3 @@ private:
     mutable bool m_built;
     mutable std::int8_t m_ip_v;
 };
-
-#endif // URL_HPP

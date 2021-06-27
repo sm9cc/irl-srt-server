@@ -22,8 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _SLSEpollThread_INCLUDE_
-#define _SLSEpollThread_INCLUDE_
+#pragma once
 
 #include <srt/srt.h>
 #include "SLSThread.hpp"
@@ -53,5 +52,3 @@ protected:
     SRTSOCKET m_read_socks[MAX_SOCK_COUNT];
     SRTSOCKET m_write_socks[MAX_SOCK_COUNT];
 };
-
-#endif

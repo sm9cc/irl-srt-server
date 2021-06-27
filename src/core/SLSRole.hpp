@@ -22,8 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _SLSRole_INCLUDE_
-#define _SLSRole_INCLUDE_
+#pragma once
 
 #include <map>
 
@@ -148,5 +147,3 @@ protected:
 
 private:
 };
-
-#endif

@@ -21,8 +21,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _TCPRole_INCLUDE_
-#define _TCPRole_INCLUDE_
+#pragma once
 
 #include <unistd.h>
 #include <sys/types.h>
@@ -85,5 +84,3 @@ protected:
     int listen(int port, int backlog);
     int connect(char *host, int port);
 };
-
-#endif

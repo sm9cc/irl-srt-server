@@ -22,8 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _SLSRrt_INCLUDE_
-#define _SLSRrt_INCLUDE_
+#pragma once
 
 #include <srt/srt.h>
 
@@ -134,5 +133,3 @@ protected:
 private:
     static bool m_inited;
 };
-
-#endif

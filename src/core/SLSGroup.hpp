@@ -22,8 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _SLSGroup_INCLUDE_
-#define _SLSGroup_INCLUDE_
+#pragma once
 
 #include <map>
 
@@ -82,5 +81,3 @@ private:
     CSLSMutex m_mutex_stat;
     std::string m_stat_info;
 };
-
-#endif

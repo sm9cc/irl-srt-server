@@ -22,8 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _SLSRelay_INCLUDE_
-#define _SLSRelay_INCLUDE_
+#pragma once
 
 #include <list>
 
@@ -92,5 +91,3 @@ protected:
 
     int parse_url(char *url, char *host_name, size_t host_name_size, int &port, char *streamid, size_t streamid_size);
 };
-
-#endif

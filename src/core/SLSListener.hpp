@@ -22,8 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _SLSListener_INCLUDE_
-#define _SLSListener_INCLUDE_
+#pragma once
 
 #include <map>
 #include <string>
@@ -102,5 +101,3 @@ private:
 
     int init_conf_app();
 };
-
-#endif

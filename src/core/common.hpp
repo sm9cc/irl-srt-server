@@ -22,8 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _COMMON_INCLUDE_
-#define _COMMON_INCLUDE_
+#pragma once
 
 #include <stddef.h>
 #include <stdint.h>
@@ -143,5 +142,3 @@ struct ts_info
 };
 void sls_init_ts_info(ts_info *ti);
 int sls_parse_ts_info(const uint8_t *packet, ts_info *ti);
-
-#endif

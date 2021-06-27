@@ -22,8 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _SLSThread_INCLUDE_
-#define _SLSThread_INCLUDE_
+#pragma once
 
 #include <pthread.h>
 
@@ -52,5 +51,3 @@ protected:
 private:
     static void *thread_func(void *);
 };
-
-#endif

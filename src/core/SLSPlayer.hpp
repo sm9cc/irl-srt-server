@@ -22,8 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _SLSPlayer_INCLUDE_
-#define _SLSPlayer_INCLUDE_
+#pragma once
 
 #include "SLSRole.hpp"
 
@@ -40,5 +39,3 @@ public:
 
 private:
 };
-
-#endif

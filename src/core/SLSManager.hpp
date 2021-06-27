@@ -22,8 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _SLSManager_INCLUDE_
-#define _SLSManager_INCLUDE_
+#pragma once
 
 #include <list>
 
@@ -96,5 +95,3 @@ private:
     CSLSRoleList *m_list_role;
     CSLSGroup *m_single_group;
 };
-
-#endif

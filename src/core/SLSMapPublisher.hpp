@@ -22,8 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _SLSMapPublisher_INCLUDE_
-#define _SLSMapPublisher_INCLUDE_
+#pragma once
 
 #include <map>
 #include <string>
@@ -56,5 +55,3 @@ private:
 
     CSLSRWLock m_rwclock;
 };
-
-#endif
