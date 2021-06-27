@@ -25,6 +25,8 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/stat.h>
+
+#include <fmt/core.h>
 #include "spdlog/spdlog.h"
 
 #include "SLSRole.hpp"
@@ -666,8 +668,15 @@ int CSLSRole::on_connect()
     {
         get_peer_info(m_peer_ip, m_peer_port);
     }
-    snprintf(on_event_url, sizeof(on_event_url), "%s?on_event=on_connect&role_name=%s&srt_url=%s&remote_ip=%s&remote_port=%d",
-             m_http_url, m_role_name, get_streamid(), m_peer_ip, m_peer_port);
+
+    std::string on_event_url_str = fmt::format("{0}?on_event=on_connect&role_name={1}&srt_url={2}&remote_ip={3}&remote_port={4:d}",
+                                               m_http_url, url_encode(m_role_name), url_encode(get_streamid()), m_peer_ip, m_peer_port);
+    if (on_event_url_str.size() >= sizeof(on_event_url))
+    {
+        spdlog::warn("[SLSRole::on_connect] callback URL too long, truncating [len={:d}]",
+                     on_event_url_str.size());
+    }
+    strncpy(on_event_url, on_event_url_str.c_str(), sizeof(on_event_url) - 1);
 
     return m_http_client->open(on_event_url);
 }

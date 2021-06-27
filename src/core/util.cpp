@@ -14,8 +14,12 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <sys/types.h>
+#include <cctype>
+#include <iomanip>
+#include <sstream>
 #include <string.h>
+#include <sys/types.h>
+
 #include "spdlog/spdlog.h"
 
 /*
@@ -54,4 +58,28 @@ strlcpy(char *dst, const char *src, size_t dsize)
     }
 
     return (src - osrc - 1); /* count does not include NUL */
+}
+
+std::string url_encode(const std::string &value)
+{
+    std::ostringstream escaped;
+    escaped.fill('0');
+    escaped << std::hex;
+
+    for (std::string::const_iterator i = value.begin(), n = value.end(); i != n; i++)
+    {
+        std::string::value_type c = (*i);
+
+        if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~')
+        {
+            escaped << c;
+            continue;
+        }
+
+        escaped << std::uppercase;
+        escaped << '%' << std::setw(2) << int((unsigned char)c);
+        escaped << std::nouppercase;
+    }
+
+    return escaped.str();
 }
