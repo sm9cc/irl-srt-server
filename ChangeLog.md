@@ -1,5 +1,10 @@
 # Release Notes
 
+## v1.5.1
+
+- Fixed JSON status callback - information is now being sent via HTTP to the endpoint specified in the configuration file.
+- Use proper JSON encoding library.
+
 ## v1.5.0
 
 - Added `allow` and `deny` directives, to enable simple access control (see [Directives](https://github.com/rstular/srt-live-server/wiki/Directives) for more info).
