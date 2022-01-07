@@ -43,7 +43,7 @@ CSLSPusherManager::~CSLSPusherManager()
 {
 }
 
-//start to connect from next of cur index per time.
+// start to connect from next of cur index per time.
 int CSLSPusherManager::connect_all()
 {
 	int ret = SLS_ERROR;
@@ -73,7 +73,7 @@ int CSLSPusherManager::connect_all()
 			}
 			endpoint_load_success = true;
 		}
-		catch (fmt::v7::format_error error)
+		catch (fmt::v8::format_error error)
 		{
 			spdlog::error("[{}] CSLSPusherManager::connect_all key '{{stream_name}}' not found in entry '{}'",
 						  fmt::ptr(this), szTmp);
@@ -105,7 +105,7 @@ int CSLSPusherManager::start()
 		return ret;
 	}
 
-	//check publisher
+	// check publisher
 	char key_stream_name[URL_MAX_LEN] = {0};
 	snprintf(key_stream_name, sizeof(key_stream_name), "%s/%s", m_app_uplive, m_stream_name);
 	if (NULL != m_map_publisher)
@@ -200,7 +200,7 @@ int CSLSPusherManager::reconnect(int64_t cur_tm_ms)
 		return ret;
 	}
 
-	//check publisher
+	// check publisher
 	bool no_publisher = false;
 	char key_stream_name[1024] = {0};
 	snprintf(key_stream_name, sizeof(key_stream_name), "%s/%s", m_app_uplive, m_stream_name);
@@ -279,7 +279,7 @@ int CSLSPusherManager::reconnect_all(int64_t cur_tm_ms, bool no_publisher)
 		}
 		if (no_publisher)
 		{
-			//it_cur->second = cur_tm_ms；
+			// it_cur->second = cur_tm_ms；
 			all_ret |= ret;
 			m_map_reconnect_relay[url] = cur_tm_ms;
 			spdlog::info("[{}] CSLSPullerManager::reconnect_all, failed, url={}, publisher=NULL not exist.",
