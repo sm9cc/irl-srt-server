@@ -80,11 +80,6 @@ namespace
         return true;
     }
 
-    inline bool is_pchars(const char *s, const char *e)
-    {
-        return is_chars(s, e, 0x07);
-    }
-
     inline char get_hex_digit(char c)
     {
         if (c >= '0' && c <= '9')
@@ -274,7 +269,8 @@ namespace
             return std::string(s, e - s);
 
         // Split IPv6 at colons
-        const char *p = s, *tokens[10];
+        const size_t token_size = 10;
+        const char *p = s, *tokens[token_size];
         if (*p == ':')
             ++p;
         if (e[-1] == ':')
@@ -285,6 +281,10 @@ namespace
         {
             if (*p++ == ':')
             {
+                if (i + 1 >= token_size)
+                {
+                    throw Url::parse_error("IPv6 [" + std::string(s, e - s) + "] is invalid");
+                }
                 tokens[i++] = b;
                 b = p;
             }
@@ -304,7 +304,8 @@ namespace
         }
 
         // Decode the fields
-        std::uint16_t fields[8];
+        const size_t fields_size = 8;
+        std::uint16_t fields[fields_size];
         size_t null_pos = 8, null_len = 0, nfields = 0;
         for (size_t i = 0; i < ntokens; ++i)
         {
@@ -313,6 +314,10 @@ namespace
                 null_pos = i;
             else
             {
+                if (nfields >= fields_size)
+                {
+                    throw Url::parse_error("IPv6 [" + std::string(s, e - s) + "] is invalid");
+                }
                 std::uint16_t field = get_hex_digit(*p++);
                 while (p != tokens[i + 1] && *p != ':')
                     field = (field << 4) | get_hex_digit(*p++);
@@ -323,6 +328,10 @@ namespace
         nfields = (ipv4_b) ? 6 : 8;
         if (i < nfields)
         {
+            if (i < null_pos)
+            {
+                throw Url::parse_error("IPv6 [" + std::string(s, e - s) + "] is invalid");
+            }
             size_t last = nfields;
             if (i != null_pos)
                 do
@@ -781,7 +790,7 @@ void Url::parse_url() const
             // get user info if any
             if (p != ea)
             {
-                if (!is_chars(b, p, 0x05))
+                if (!is_chars(b, p, 0x25))
                     throw Url::parse_error("User info in '" + std::string(s, e - s) + "' is invalid");
                 user_b = b;
                 user_e = p;
@@ -831,7 +840,7 @@ void Url::parse_url() const
                 host_e = p;
                 b = p;
             }
-            //get port if any
+            // get port if any
             if (b != ea && *b == ':')
             {
                 if (!is_port(++b, ea))
