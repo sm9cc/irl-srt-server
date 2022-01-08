@@ -43,17 +43,22 @@ CSLSGroup::CSLSGroup()
     m_reload = false;
 
     m_stat_post_last_tm_ms = sls_gettime_ms();
-    m_stat_post_interval = 5; //5s default
+    m_stat_post_interval = 5; // 5s default
 }
-
 CSLSGroup::~CSLSGroup()
 {
+    spdlog::trace("[{}] CSLSGroup::~CSLSGroup(), role={}", fmt::ptr(this), fmt::ptr(m_list_role));
+    if (m_list_role)
+    {
+        delete m_list_role;
+        m_list_role = NULL;
+    }
 }
 
 int CSLSGroup::start()
 {
     spdlog::info("[{}] CSLSGroup::start, worker_number={:d}.", fmt::ptr(this), m_worker_number);
-    //do something here
+    // do something here
     return CSLSEpollThread::start();
 }
 
@@ -100,12 +105,12 @@ void CSLSGroup::check_new_role()
     int fd = role->get_fd();
     if (fd == 0)
     {
-        //invalid role
+        // invalid role
         delete role;
         return;
     }
 
-    //add to epoll
+    // add to epoll
     if (0 == role->add_to_epoll(m_eid))
     {
         m_map_role[fd] = role;
@@ -137,14 +142,14 @@ int CSLSGroup::handler()
         return SLS_OK;
     }
 
-    //check epoll event
+    // check epoll event
     ret = srt_epoll_wait(m_eid, m_read_socks, &read_len, m_write_socks, &write_len, POLLING_TIME, 0, 0, 0, 0);
     if (ret < 0)
     {
-        //sls_log(SLS_LOG_TRACE, "[%p]CSLSGroup::handle, worker_number=%d, srt_epoll_wait, no epoll event, ret=%d.",
-        //        this, m_worker_number, ret);
+        // sls_log(SLS_LOG_TRACE, "[%p]CSLSGroup::handle, worker_number=%d, srt_epoll_wait, no epoll event, ret=%d.",
+        //         this, m_worker_number, ret);
         ret = srt_getlasterror(NULL);
-        if (ret == SRT_ETIMEOUT) //6003
+        if (ret == SRT_ETIMEOUT) // 6003
             ret = SLSERROR(EAGAIN);
         else
             ret = CSLSSrt::libsrt_neterrno();
@@ -177,7 +182,7 @@ int CSLSGroup::handler()
         ret = role->handler();
         if (ret < 0)
         {
-            //handle exception
+            // handle exception
             spdlog::trace("[{}] CSLSGroup::handle, worker_number={:d}, write sock={:d} is invalid, {}={}, write_len={:d}, role_map.size={:d}.",
                           fmt::ptr(this), m_worker_number, m_write_socks[i], role->get_role_name(), fmt::ptr(role), write_len, m_map_role.size());
             role->invalid_srt();
@@ -209,7 +214,7 @@ int CSLSGroup::handler()
         ret = role->handler();
         if (ret < 0)
         {
-            //handle exception
+            // handle exception
             spdlog::trace("[{}] CSLSGroup::handle, worker_number={:d}, readable sock={:d} is invalid, {}={}, readable len={:d}, role_map.size={:d}.",
                           fmt::ptr(this), m_worker_number, m_read_socks[i], role->get_role_name(), fmt::ptr(role), read_len, m_map_role.size());
             role->invalid_srt();
@@ -223,7 +228,7 @@ int CSLSGroup::handler()
     idle_check();
     if (0 == handler_count)
     {
-        //release cpu
+        // release cpu
         msleep(POLLING_TIME);
     }
     return handler_count;
@@ -268,7 +273,7 @@ void CSLSGroup::check_wait_http_role()
 
 void CSLSGroup::check_reconnect_relay()
 {
-    int64_t cur_time_ms = sls_gettime_ms(); //m_cur_time_microsec;
+    int64_t cur_time_ms = sls_gettime_ms(); // m_cur_time_microsec;
 
     CSLSRelayManager *relay_manager = NULL;
     std::list<CSLSRelayManager *>::iterator it_erase;
@@ -336,7 +341,7 @@ void CSLSGroup::check_invalid_sock()
         {
             spdlog::info("[{}] CSLSGroup::check_invalid_sock, worker_number={:d}, {}={}, invalid sock={:d}, state={:d}, role_map.size={:d}.",
                          fmt::ptr(this), m_worker_number, role->get_role_name(), fmt::ptr(role), role->get_fd(), state, m_map_role.size());
-            //check relay
+            // check relay
             if (role->is_reconnect())
             {
                 CSLSRelay *relay = (CSLSRelay *)role;

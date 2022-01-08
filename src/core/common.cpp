@@ -52,7 +52,7 @@
 #include "util.hpp"
 
 /**
-* sls_format
+ * sls_format
  */
 std::string sls_format(const char *pszFmt, ...)
 {
@@ -74,12 +74,12 @@ std::string sls_format(const char *pszFmt, ...)
 
 #define HAVE_GETTIMEOFDAY 1
 
-int64_t sls_gettime_ms(void) //rturn millisecond
+int64_t sls_gettime_ms(void) // rturn millisecond
 {
     return sls_gettime() / 1000;
 }
 
-int64_t sls_gettime(void) //rturn micro-second
+int64_t sls_gettime(void) // rturn micro-second
 {
 #if HAVE_GETTIMEOFDAY
     struct timeval tv;
@@ -128,10 +128,18 @@ char *sls_strupper(char *str)
     return orign;
 }
 
+char *sls_strlower(char *str)
+{
+    char *orign = str;
+    for (; *str != '\0'; str++)
+        *str = tolower(*str);
+    return orign;
+}
+
 #define sls_hash(key, c) ((uint32_t)key * 31 + c)
 uint32_t sls_hash_key(const char *data, size_t len)
 {
-    //copy form ngx
+    // copy form ngx
     uint32_t i, key;
 
     key = 0;
@@ -145,7 +153,8 @@ uint32_t sls_hash_key(const char *data, size_t len)
 
 int sls_gethostbyname(const char *hostname, char *ip)
 {
-    char *ptr, **pptr;
+    char *ptr;
+    // char **pptr;
     struct hostent *hptr;
     char str[32];
     ptr = (char *)hostname;
@@ -161,18 +170,18 @@ int sls_gethostbyname(const char *hostname, char *ip)
     printf("official hostname:%s\n",hptr->h_name);
      for(pptr = hptr->h_aliases; *pptr != NULL; pptr++)
          printf(" alias:%s\n",*pptr);
-*/
+    */
 
     switch (hptr->h_addrtype)
     {
     case AF_INET:
     case AF_INET6:
-        //pptr=hptr->h_addr_list;
-        //for(; *pptr!=NULL; pptr++)
-        //    printf(" address:%s\n",
-        //           inet_ntop(hptr->h_addrtype, *pptr, str, sizeof(str)));
+        // pptr=hptr->h_addr_list;
+        // for(; *pptr!=NULL; pptr++)
+        //     printf(" address:%s\n",
+        //            inet_ntop(hptr->h_addrtype, *pptr, str, sizeof(str)));
 
-        //copy the 1st ip
+        // copy the 1st ip
         strcpy(ip, inet_ntop(hptr->h_addrtype, hptr->h_addr, str, sizeof(str)));
         ret = SLS_OK;
         break;
@@ -206,7 +215,7 @@ static void *av_malloc(size_t size)
         return NULL;
 
 #if HAVE_POSIX_MEMALIGN
-    if (size) //OS X on SDK 10.6 has a broken posix_memalign implementation
+    if (size) // OS X on SDK 10.6 has a broken posix_memalign implementation
         if (posix_memalign(&ptr, ALIGN, size))
             ptr = NULL;
 #elif HAVE_ALIGNED_MALLOC
@@ -251,7 +260,7 @@ static void *av_malloc(size_t size)
 }
 static void av_free(void *arg)
 {
-    //memcpy(arg, &(void *){ NULL }, sizeof(arg));
+    // memcpy(arg, &(void *){ NULL }, sizeof(arg));
     free(arg);
 }
 
@@ -336,7 +345,7 @@ int sls_mkdir_p(const char *path)
 void sls_remove_marks(char *s)
 {
     int len = strlen(s);
-    if (len < 2) //pair
+    if (len < 2) // pair
         return;
 
     if ((s[0] == '\'' && s[len - 1] == '\'') || (s[0] == '"' && s[len - 1] == '"'))
@@ -463,10 +472,7 @@ int sls_write_pid(int pid)
         return SLS_ERROR;
     }
 
-    struct stat stat_file;
-    int fd = 0;
-    fd = open(pid_file_name, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
-
+    int fd = open(pid_file_name, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
     if (0 == fd)
     {
         spdlog::error("open file='{0}' failed, '{1}'.", pid_file_name, strerror(errno));
@@ -527,16 +533,16 @@ int sls_send_cmd(const char *cmd)
         return SLS_OK;
     }
 
-    //reload?
+    // reload?
     if (strcmp(cmd, "reload") == 0)
     {
-        //reload the existed sls
+        // reload the existed sls
         spdlog::info("sls_send_cmd ok, reload, sls pid = {0:d}, send SIGUP to it.", pid);
         kill(pid, SIGHUP);
         return SLS_OK;
     }
 
-    //ctrl + c
+    // ctrl + c
     if (strcmp(cmd, "stop") == 0)
     {
         //
@@ -632,8 +638,8 @@ static int sls_parse_spspps(const uint8_t *es, int es_len, ts_info *ti)
     uint8_t nal_type = 0;
     while (pos < es_len - 4)
     {
-        //avc nal
-        bool b_nal = false;
+        // avc nal
+        // bool b_nal = false;
         if (0x0 == es[pos] &&
             0x0 == es[pos + 1] &&
             0x0 == es[pos + 2] &&
@@ -678,7 +684,7 @@ static int sls_parse_spspps(const uint8_t *es, int es_len, ts_info *ti)
         }
     }
 
-    //last nal
+    // last nal
     if (p != NULL)
     {
 
@@ -719,8 +725,8 @@ static int sls_pes2es(const uint8_t *pes_frame, int pes_len, ts_info *ti, int pi
         pes[1] != 0x00 ||
         pes[2] != 0x01)
     {
-        //printf("pes2es: pid=%d, wrong pes header, pes=0x%x-0x%x-0x%x.\n",
-        //        ti->es_pid, pes[0], pes[1], pes[2]);
+        // printf("pes2es: pid=%d, wrong pes header, pes=0x%x-0x%x-0x%x.\n",
+        //         ti->es_pid, pes[0], pes[1], pes[2]);
         return SLS_ERROR;
     }
     pes += 3;
@@ -782,7 +788,7 @@ static int sls_pes2es(const uint8_t *pes_frame, int pes_len, ts_info *ti, int pi
     }
 
     int ret = SLS_OK;
-    //parse sps and pps
+    // parse sps and pps
     if (ti->need_spspps)
     {
         ret = sls_parse_spspps(pes, pes_end - pes, ti);
@@ -792,22 +798,22 @@ static int sls_pes2es(const uint8_t *pes_frame, int pes_len, ts_info *ti, int pi
             int pos = 0;
             uint8_t tmp;
 
-            //pat, pmt
+            // pat, pmt
             memcpy(p + pos, ti->pat, TS_PACK_LEN);
             pos += TS_PACK_LEN;
             memcpy(p + pos, ti->pmt, TS_PACK_LEN);
             pos += TS_PACK_LEN;
 
-            //sps pps
+            // sps pps
             int len = ti->sps_len + ti->pps_len;
-            len = len + 9 + 5; //pes len
+            len = len + 9 + 5; // pes len
             if (len > TS_PACK_LEN - 4)
             {
                 spdlog::error("pid={0:d}, pes size={1:d} is abnormal!!!!\n", pid, len);
                 return ret;
             }
             pos++;
-            //pid
+            // pid
             ti->es_pid = pid;
             tmp = ti->es_pid >> 8;
             p[pos++] = 0x40 | tmp;
@@ -818,7 +824,7 @@ static int sls_pes2es(const uint8_t *pes_frame, int pes_len, ts_info *ti, int pi
             if (ad_len > 0)
             {
                 p[pos++] = 0x30;
-                p[pos++] = ad_len; //adaptation length
+                p[pos++] = ad_len; // adaptation length
                 p[pos++] = 0x00;   //
                 memset(p + pos, 0xFF, ad_len - 1);
                 pos += ad_len - 1;
@@ -828,17 +834,17 @@ static int sls_pes2es(const uint8_t *pes_frame, int pes_len, ts_info *ti, int pi
                 pos++;
             }
 
-            //pes
+            // pes
             p[pos++] = 0;
             p[pos++] = 0;
             p[pos++] = 1;
             p[pos++] = stream_id;
-            p[pos++] = 0;    //total size
-            p[pos++] = 0;    //total size
-            p[pos++] = 0x80; //flag
-            p[pos++] = 0x80; //flag
-            p[pos++] = 5;    //header_len
-            p[pos++] = 0;    //pts
+            p[pos++] = 0;    // total size
+            p[pos++] = 0;    // total size
+            p[pos++] = 0x80; // flag
+            p[pos++] = 0x80; // flag
+            p[pos++] = 5;    // header_len
+            p[pos++] = 0;    // pts
             p[pos++] = 0;
             p[pos++] = 0;
             p[pos++] = 0;
@@ -906,7 +912,7 @@ int sls_parse_ts_info(const uint8_t *packet, ts_info *ti)
     int pid = (int)((packet[1] & 0x1F) << 8) | (packet[2] & 0xFF);
     if (PAT_PID == pid)
     {
-        //save pat table
+        // save pat table
         memcpy(ti->pat, packet, TS_PACK_LEN);
         ti->pat_len = TS_PACK_LEN;
     }
@@ -922,13 +928,13 @@ int sls_parse_ts_info(const uint8_t *packet, ts_info *ti)
         {
             if (pid != ti->es_pid)
             {
-                //not available pid
+                // not available pid
                 return SLS_ERROR;
             }
         }
     }
 
-    //start to parse the dts
+    // start to parse the dts
     int afc = (packet[3] >> 4) & 3;
     if (afc == 0) /* reserved value */
         return SLS_ERROR;
@@ -940,7 +946,7 @@ int sls_parse_ts_info(const uint8_t *packet, ts_info *ti)
 
     if ((packet[1] & 0x80) != 0)
     {
-        //Log.i(TAG, "SrsTSToES, Packet had TEI flag set; marking as corrupt ");
+        // Log.i(TAG, "SrsTSToES, Packet had TEI flag set; marking as corrupt ");
     }
 
     int pos = 4;
@@ -949,11 +955,11 @@ int sls_parse_ts_info(const uint8_t *packet, ts_info *ti)
     {
         int64_t pcr_h;
         int pcr_l;
-        //if (parse_pcr(&pcr_h, &pcr_l, packet) == 0)
-        //ts->last_pcr = pcr_h * 300 + pcr_l;
+        // if (parse_pcr(&pcr_h, &pcr_l, packet) == 0)
+        // ts->last_pcr = pcr_h * 300 + pcr_l;
         /* skip adaptation field */
         pos += p + 1;
-        //printf("ts2es: adaptation, pos=%d.", pos);
+        // printf("ts2es: adaptation, pos=%d.", pos);
     }
     /* if past the end of packet, ignore */
     if (pos >= TS_PACK_LEN || 1 != has_payload)

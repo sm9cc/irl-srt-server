@@ -35,8 +35,9 @@
 class CSLSEpollThread : public CSLSThread
 {
 public:
+    virtual ~CSLSEpollThread();
     CSLSEpollThread();
-    ~CSLSEpollThread();
+    // ~CSLSEpollThread();
 
     virtual int work();
 

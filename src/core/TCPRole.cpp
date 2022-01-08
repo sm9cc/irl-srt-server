@@ -42,8 +42,13 @@ CTCPRole::CTCPRole()
     m_remote_port = 0;
     m_valid = false;
 
-    strlcpy(m_remote_host, "", sizeof(m_remote_host));
-    snprintf(m_role_name, sizeof(m_role_name), "tcp_role");
+    strncpy(m_remote_host, "", sizeof(m_remote_host));
+    int ret = snprintf(m_role_name, sizeof(m_role_name), "tcp_role");
+    if (ret < 0 || (unsigned)ret >= sizeof(m_role_name))
+    {
+        spdlog::error("[{}] snprintf failed, ret={}", __func__, ret);
+        return;
+    }
 }
 CTCPRole::~CTCPRole()
 {
@@ -53,7 +58,7 @@ CTCPRole::~CTCPRole()
 int CTCPRole::handler(DATA_PARAM *p)
 {
     int ret = 0;
-    //spdlog::info("CTCPRole::handler()");
+    // spdlog::info("CTCPRole::handler()");
     return ret;
 }
 
@@ -112,7 +117,7 @@ int CTCPRole::connect(char *host, int port)
     }
     int ret = SLS_ERROR;
 
-    //must be nonblock, otherwise, if the host is wrong, connect will be blocked.
+    // must be nonblock, otherwise, if the host is wrong, connect will be blocked.
     ret = set_nonblock();
     if (ret == SLS_ERROR)
     {
@@ -124,7 +129,7 @@ int CTCPRole::connect(char *host, int port)
     bzero(&servaddr, sizeof(servaddr));
     servaddr.sin_family = AF_INET;
     servaddr.sin_port = htons(port);
-    //inet_pton(AF_INET, host, &servaddr.sin_addr);
+    // inet_pton(AF_INET, host, &servaddr.sin_addr);
     servaddr.sin_addr.s_addr = inet_addr(host);
 
     ret = ::connect(m_fd, (struct sockaddr *)&servaddr, sizeof(servaddr));
@@ -140,7 +145,7 @@ int CTCPRole::connect(char *host, int port)
     }
 
     spdlog::info("[{}] CTCPRole::connect, ok, m_fd={:d}, host={}, port={:d}.", fmt::ptr(this), m_fd, host, port);
-    strlcpy(m_remote_host, host, sizeof(m_remote_host));
+    strncpy(m_remote_host, host, sizeof(m_remote_host) - 1);
     m_remote_port = port;
     return SLS_OK;
 }
@@ -223,14 +228,12 @@ int CTCPRole::listen(int port, int backlog)
         return SLS_ERROR;
     }
     struct sockaddr_in serverAdd;
-    struct sockaddr_in clientAdd;
 
     bzero(&serverAdd, sizeof(serverAdd));
     serverAdd.sin_family = AF_INET;
     serverAdd.sin_addr.s_addr = htonl(INADDR_ANY);
     serverAdd.sin_port = htons(port);
 
-    socklen_t clientAddrLen;
     int ret = bind(m_fd, (struct sockaddr *)&serverAdd, sizeof(serverAdd));
     if (ret < 0)
     {

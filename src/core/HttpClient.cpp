@@ -28,8 +28,9 @@
 #include "HttpClient.hpp"
 #include "SLSLog.hpp"
 #include "util.hpp"
+#include "common.hpp"
 
-#define HTTP_HEADER_SIZE 1024
+#define HTTP_HEADER_SIZE STR_MAX_LEN
 
 //	 POST /sls?method=stat HTTP/1.1
 #define HTTP_REQUEST_HEADER_ACCEPT "Accept: text/html, */*\r\n"
@@ -548,6 +549,7 @@ int CHttpClient::parse_url()
 
 int CHttpClient::write_http_header(int data_len)
 {
+	int ret;
 	string http_header;
 	char data[HTTP_HEADER_SIZE] = {0};
 
@@ -557,14 +559,26 @@ int CHttpClient::write_http_header(int data_len)
 					  fmt::ptr(this), m_http_method);
 		return SLS_ERROR;
 	}
-	snprintf(data, sizeof(data), "%s %s HTTP/1.1\r\n", m_http_method, m_uri);
+	ret = snprintf(data, sizeof(data), "%s %s HTTP/1.1\r\n", m_http_method, m_uri);
+	if (ret < 0 || (unsigned)ret >= sizeof(data))
+	{
+		spdlog::error("[{}] CHttpClient::write_http_header, snprintf failed, ret={:d}.",
+					  fmt::ptr(this), ret);
+		return SLS_ERROR;
+	}
 	http_header = std::string(data);
 
 	http_header += std::string(HTTP_REQUEST_HEADER_ACCEPT);
 	http_header += std::string(HTTP_REQUEST_HEADER_USER_AGENT);
 	http_header += std::string(HTTP_REQUEST_HEADER_CONTENT_TYPE);
 
-	snprintf(data, sizeof(data), "Host: %s\r\n", m_remote_host);
+	ret = snprintf(data, sizeof(data), "Host: %s\r\n", m_remote_host);
+	if (ret < 0 || (unsigned)ret >= sizeof(data))
+	{
+		spdlog::error("[{}] CHttpClient::write_http_header, snprintf failed, ret={:d}.",
+					  fmt::ptr(this), ret);
+		return SLS_ERROR;
+	}
 	http_header += std::string(data);
 
 	if (data_len > 0)
@@ -579,7 +593,7 @@ int CHttpClient::write_http_header(int data_len)
 
 	//int ret = write(http_header.c_str(), http_header.length());
 	int len = http_header.length();
-	int ret = m_out_array.put((const uint8_t *)(http_header.c_str()), len);
+	ret = m_out_array.put((const uint8_t *)(http_header.c_str()), len);
 	if (len != ret)
 	{
 		spdlog::info("[{}] CHttpClient::write_http_header, failed, m_out_array.put len={:d}, ret={:d}, url='{}', http_method='{}'.",

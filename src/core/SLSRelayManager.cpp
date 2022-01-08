@@ -141,13 +141,20 @@ int CSLSRelayManager::connect(const char *url)
 
 int CSLSRelayManager::connect_hash()
 {
+	int ret;
+	char szURL[URL_MAX_LEN] = {0};
 	//make hash to hostnames by stream_name
 	std::string url = get_hash_url();
-	char szURL[1024] = {0};
 	const char *szTmp = url.c_str();
-	snprintf(szURL, sizeof(szURL), "srt://%s/%s", szTmp, m_stream_name);
-	int ret = connect(szURL);
-	if (SLS_OK != ret)
+
+	ret = snprintf(szURL, sizeof(szURL), "srt://%s/%s", szTmp, m_stream_name);
+	if (ret < 0 || (unsigned)ret >= sizeof(szURL))
+	{
+		spdlog::error("[{}] CSLSManager::connect_hash, failed, url={}.", fmt::ptr(this), url.c_str());
+		return SLS_ERROR;
+	}
+
+	if (SLS_OK != (ret = connect(szURL)))
 	{
 		spdlog::error("[{}] CSLSRelayManager::connect_hash, failed, connect szURL={}, m_stream_name={}.",
 					  fmt::ptr(this), szURL, m_stream_name);

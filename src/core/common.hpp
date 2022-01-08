@@ -84,20 +84,22 @@ using namespace std;
 #define msleep(ms) usleep(ms * 1000)
 
 #define TS_PACK_LEN 188
-#define TS_UDP_LEN 1316 //7*188
+#define TS_UDP_LEN 1316 // 7*188
 #define SHORT_STR_MAX_LEN 256
-#define STR_MAX_LEN 1024
+#define STR_MAX_LEN 2048
+#define HOST_MAX_LEN 256
 #define URL_MAX_LEN STR_MAX_LEN
 #define STR_DATE_TIME_LEN 32
 #define INET_ADDRSTRLEN 16
 #define INET6_ADDRSTRLEN 46
 #define IP_MAX_LEN INET6_ADDRSTRLEN
 
-int64_t sls_gettime_ms(void); //rturn millisecond
-int64_t sls_gettime(void);    //rturn microsecond
+int64_t sls_gettime_ms(void); // rturn millisecond
+int64_t sls_gettime(void);    // rturn microsecond
 void sls_gettime_fmt(char *dst, size_t dst_len, int64_t cur_time_sec, const char *fmt);
 void sls_gettime_default_string(char *cur_time_buf, size_t cur_time_buf_len);
 char *sls_strupper(char *str);
+char *sls_strlower(char *str);
 void sls_remove_marks(char *s);
 
 uint32_t sls_hash_key(const char *data, size_t len);

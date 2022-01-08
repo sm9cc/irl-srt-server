@@ -55,7 +55,7 @@ int CSLSEpollThread::init_epoll()
         spdlog::info("[{}] CSLSEpollThread::work, srt_epoll_create failed. th_id={:d}.", fmt::ptr(this), m_th_id);
         return CSLSSrt::libsrt_neterrno();
     }
-    //compatible with srt v1.4.0 when container is empty.
+    // compatible with srt v1.4.0 when container is empty.
     srt_epoll_set(m_eid, SRT_EPOLL_ENABLE_EMPTY);
     return ret;
 }
@@ -75,7 +75,7 @@ int CSLSEpollThread::work()
 {
     int ret = 0;
     spdlog::info("[{}] CSLSEpollThread::work, begin th_id={:d}.", fmt::ptr(this), m_th_id);
-    //epoll loop
+    // epoll loop
     while (!m_exit)
     {
         handler();

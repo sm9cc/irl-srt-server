@@ -247,7 +247,6 @@ char *CSLSRole::get_streamid()
     {
         return m_streamid;
     }
-    char sid[URL_MAX_LEN] = {0};
     int sid_size = sizeof(m_streamid);
     if (m_srt)
     {
@@ -412,8 +411,14 @@ void CSLSRole::check_hls_file()
         ::close(m_record_hls_ts_fd);
         m_record_hls_ts_fd = 0;
 
-        char ts_item[URL_MAX_LEN] = {0};
-        snprintf(ts_item, sizeof(ts_item), "#EXTINF:%0.3f,\n%s\n", d, m_record_hls_ts_filename);
+        char ts_item[STR_MAX_LEN] = {0};
+        int ret = snprintf(ts_item, sizeof(ts_item), "#EXTINF:%0.3f,\n%s\n", d, m_record_hls_ts_filename);
+        if (ret < 0 || (unsigned)ret >= sizeof(ts_item))
+        {
+            spdlog::error("[{}] CSLSRole::check_hls_file, snprintf ts item failed.", fmt::ptr(this));
+            return;
+        }
+
         //update vod file
         if (0 == m_record_hls_vod_fd)
         {
@@ -668,15 +673,13 @@ int CSLSRole::on_connect()
     {
         get_peer_info(m_peer_ip, m_peer_port);
     }
-
-    std::string on_event_url_str = fmt::format("{0}?on_event=on_connect&role_name={1}&srt_url={2}&remote_ip={3}&remote_port={4:d}",
-                                               m_http_url, url_encode(m_role_name), url_encode(get_streamid()), m_peer_ip, m_peer_port);
-    if (on_event_url_str.size() >= sizeof(on_event_url))
+    int ret = snprintf(on_event_url, sizeof(on_event_url), "%s?on_event=on_connect&role_name=%s&srt_url=%s&remote_ip=%s&remote_port=%d",
+                       m_http_url, url_encode(m_role_name).c_str(), url_encode(get_streamid()).c_str(), m_peer_ip, m_peer_port);
+    if (ret < 0 || (unsigned)ret >= sizeof(on_event_url))
     {
-        spdlog::warn("[SLSRole::on_connect] callback URL too long, truncating [len={:d}]",
-                     on_event_url_str.size());
+        spdlog::error("[{}] CSLSRole::on_connect, on_event_url is too long, ret={:d}.", fmt::ptr(this), ret);
+        return SLS_ERROR;
     }
-    strncpy(on_event_url, on_event_url_str.c_str(), sizeof(on_event_url) - 1);
 
     return m_http_client->open(on_event_url);
 }
@@ -701,11 +704,16 @@ int CSLSRole::on_close()
     {
         get_peer_info(m_peer_ip, m_peer_port);
     }
-    snprintf(on_event_url, sizeof(on_event_url), "%s?on_event=on_close&role_name=%s&srt_url=%s&remote_ip=%s&remote_port=%d",
-             m_http_url, m_role_name, get_streamid(), m_peer_ip, m_peer_port);
+    int ret = snprintf(on_event_url, sizeof(on_event_url), "%s?on_event=on_close&role_name=%s&srt_url=%s&remote_ip=%s&remote_port=%d",
+                       m_http_url, url_encode(m_role_name).c_str(), url_encode(get_streamid()).c_str(), m_peer_ip, m_peer_port);
+    if (ret < 0 || (unsigned)ret >= sizeof(on_event_url))
+    {
+        spdlog::error("[SLSRole::on_close] callback URL too long, truncating [len={:d}]",
+                      ret);
+        return SLS_ERROR;
+    }
 
-    int ret = m_http_client->open(on_event_url);
-    return ret;
+    return m_http_client->open(on_event_url);
 }
 
 int CSLSRole::check_http_passed()

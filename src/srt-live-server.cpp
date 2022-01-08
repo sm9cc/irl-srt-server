@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
     initialize_logger();
 
     CSLSManager *sls_manager = NULL;
-std:
+
     vector<CSLSManager *> reload_manager_list;
     CHttpClient *http_stat_client = new CHttpClient;
 
@@ -140,7 +140,12 @@ std:
     //parse conf file
     if (strlen(sls_opt.conf_file_name) == 0)
     {
-        snprintf(sls_opt.conf_file_name, sizeof(sls_opt.conf_file_name), "./sls.conf");
+        ret = snprintf(sls_opt.conf_file_name, sizeof(sls_opt.conf_file_name), "./sls.conf");
+        if (ret < 0 || (unsigned)ret >= sizeof(sls_opt.conf_file_name))
+        {
+            spdlog::critical("INTERNAL BUG! Conf file name is too long.");
+            goto EXIT_PROC;
+        }
     }
     ret = sls_conf_open(sls_opt.conf_file_name);
     if (ret != SLS_OK)
@@ -167,7 +172,13 @@ std:
     }
 
     conf_srt = (sls_conf_srt_t *)sls_conf_get_root_conf();
-    if (strlen(conf_srt->stat_post_url) > 0)
+    ret = strnlen(conf_srt->stat_post_url, URL_MAX_LEN);
+    if (ret >= URL_MAX_LEN)
+    {
+        spdlog::critical("stat_post_url is too long, exiting.");
+        goto EXIT_PROC;
+    }
+    else if (ret > 0)
     {
         http_stat_client->set_stage_callback(CSLSManager::stat_client_callback, sls_manager);
         http_stat_client->open(conf_srt->stat_post_url, stat_method, conf_srt->stat_post_interval);

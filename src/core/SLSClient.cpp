@@ -64,28 +64,29 @@ CSLSClient::~CSLSClient()
 
 int CSLSClient::init_epoll()
 {
-	int ret = 0;
-
 	m_eid = CSLSSrt::libsrt_epoll_create();
 	if (m_eid < 0)
 	{
 		spdlog::info("[{}] CSLSClient::work, srt_epoll_create failed.", fmt::ptr(this));
 		return CSLSSrt::libsrt_neterrno();
 	}
-	//compatible with srt v1.4.0 when container is empty.
-	srt_epoll_set(m_eid, SRT_EPOLL_ENABLE_EMPTY);
-	return ret;
+	// compatible with srt v1.4.0 when container is empty.
+	if (srt_epoll_set(m_eid, SRT_EPOLL_ENABLE_EMPTY) == -1)
+	{
+		spdlog::info("[{}] CSLSClient::work, srt_epoll_set failed.", fmt::ptr(this));
+		return CSLSSrt::libsrt_neterrno();
+	}
+	return SLS_OK;
 }
 
 int CSLSClient::uninit_epoll()
 {
-	int ret = 0;
 	if (m_eid >= 0)
 	{
 		CSLSSrt::libsrt_epoll_release(m_eid);
 		spdlog::info("[{}] CSLSEpollThread::work, srt_epoll_release ok.", fmt::ptr(this));
 	}
-	return ret;
+	return SLS_OK;
 }
 
 int CSLSClient::play(const char *url, const char *out_file_name)
@@ -101,6 +102,7 @@ int CSLSClient::play(const char *url, const char *out_file_name)
 
 int CSLSClient::open_url(const char *url)
 {
+	int ret;
 
 	if (url == NULL || strlen(url) == 0)
 	{
@@ -109,26 +111,23 @@ int CSLSClient::open_url(const char *url)
 		return SLS_ERROR;
 	}
 
-	int ret = open(url);
-	if (SLS_OK != ret)
+	if (SLS_OK != (ret = open(url)))
 	{
 		return ret;
 	}
 
-	//add to epoll
-	ret = init_epoll();
-	if (SLS_OK != ret)
+	// add to epoll
+	if (SLS_OK != init_epoll())
 	{
 		spdlog::info("[{}] CSLSClient::play, init_epoll failed.", fmt::ptr(this));
 		return CSLSSrt::libsrt_neterrno();
 	}
-	ret = add_to_epoll(m_eid);
-	if (SLS_OK != ret)
+	if (SLS_OK != add_to_epoll(m_eid))
 	{
 		spdlog::warn("[{}}]CSLSClient::play, add_to_epoll failed.", fmt::ptr(this));
 		return CSLSSrt::libsrt_neterrno();
 	}
-	return ret;
+	return SLS_OK;
 }
 
 int CSLSClient::push(const char *url, const char *ts_file_name, bool loop)
@@ -157,8 +156,6 @@ int CSLSClient::push(const char *url, const char *ts_file_name, bool loop)
 
 int CSLSClient::close()
 {
-
-	int ret = SLS_OK;
 	if (0 != m_out_file)
 	{
 		::close(m_out_file);
@@ -207,7 +204,7 @@ int CSLSClient::write_data_handler()
 		spdlog::error("[{}] CSLSClient::write_data_handler, failed, m_eid = 0.", fmt::ptr(this));
 		return SLS_ERROR;
 	}
-	//check epoll
+	// check epoll
 	int ret = srt_epoll_wait(m_eid, read_socks, &read_len, write_socks, &write_len, POLLING_TIME, 0, 0, 0, 0);
 	if (0 > ret)
 	{
@@ -223,7 +220,7 @@ int CSLSClient::write_data_handler()
 	{
 		return SLS_ERROR;
 	}
-	//write data
+	// write data
 	int n = m_srt->libsrt_write((char *)szData, TS_UDP_LEN);
 	if (n <= 0)
 	{
@@ -259,12 +256,12 @@ int CSLSClient::read_data_handler()
 
 	if (m_is_write)
 	{
-		//push
+		// push
 		return SLS_OK;
 	}
 	else
 	{
-		//play
+		// play
 		if (NULL == m_srt)
 		{
 			spdlog::error("[{}] CSLSClient::read_data_handler, failed, m_srt is null.", fmt::ptr(this));
@@ -276,7 +273,7 @@ int CSLSClient::read_data_handler()
 			return SLS_ERROR;
 		}
 		read_len = 1;
-		//check epoll
+		// check epoll
 		int ret = srt_epoll_wait(m_eid, read_socks, &read_len, write_socks, &write_len, POLLING_TIME, 0, 0, 0, 0);
 		if (0 > ret)
 		{
@@ -287,7 +284,7 @@ int CSLSClient::read_data_handler()
 			return SLS_OK;
 		}
 
-		//read data
+		// read data
 		int n = m_srt->libsrt_read(szData, TS_UDP_LEN);
 		if (n <= 0)
 		{
@@ -295,8 +292,8 @@ int CSLSClient::read_data_handler()
 			return SLS_OK;
 		}
 
-		//update invalid begin time
-		//m_invalid_begin_tm = sls_gettime();
+		// update invalid begin time
+		// m_invalid_begin_tm = sls_gettime();
 
 		if (0 == m_out_file)
 		{

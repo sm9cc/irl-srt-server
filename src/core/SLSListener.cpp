@@ -70,7 +70,6 @@ CSLSListener::~CSLSListener()
 
 int CSLSListener::init()
 {
-    int ret = 0;
     return CSLSRole::init();
 }
 
@@ -144,7 +143,7 @@ int CSLSListener::init_conf_app()
     spdlog::info("[{}] CSLSListener::init_conf_app, m_back_log={:d}, m_idle_streams_timeout={:d}.",
                  fmt::ptr(this), m_back_log, m_idle_streams_timeout_role);
 
-    //domain
+    // domain
     domain_players = sls_conf_string_split(conf_server->domain_player, " ");
     if (domain_players.size() == 0)
     {
@@ -207,8 +206,8 @@ int CSLSListener::init_conf_app()
                               fmt::ptr(this), strUplive.c_str(), strTemp.c_str());
                 return SLS_ERROR;
             }
-            //m_map_live_2_uplive[strTemp]  = strUplive;
-            // If we cannot add player to the map, we have a duplicate player
+            // m_map_live_2_uplive[strTemp]  = strUplive;
+            //  If we cannot add player to the map, we have a duplicate player
             if (m_map_publisher->set_live_2_uplive(strTemp, strUplive) != SLS_OK)
             {
                 spdlog::error("[{}] CSLSListener::init_conf_app, duplicate app_player='{}'",
@@ -279,7 +278,7 @@ int CSLSListener::start()
         return SLS_ERROR;
     }
 
-    //init listener
+    // init listener
     if (NULL == m_srt)
         m_srt = new CSLSSrt();
 
@@ -344,9 +343,9 @@ int CSLSListener::handler()
     unsigned long peer_addr_raw = 0;
     int client_count = 0;
 
-    //1: accept
+    // 1: accept
     fd_client = m_srt->libsrt_accept();
-    if (ret < 0)
+    if (fd_client < 0)
     {
         spdlog::error("[{}] CSLSListener::handler, srt_accept failed, fd={:d}.", fmt::ptr(this), get_fd());
         CSLSSrt::libsrt_neterrno();
@@ -354,7 +353,7 @@ int CSLSListener::handler()
     }
     client_count = 1;
 
-    //2.check streamid, split it
+    // 2.check streamid, split it
     srt = new CSLSSrt;
     srt->libsrt_set_fd(fd_client);
     ret = srt->libsrt_getpeeraddr(peer_name, peer_port);
@@ -395,7 +394,7 @@ int CSLSListener::handler()
     char cur_time[STR_DATE_TIME_LEN] = {0};
     sls_gettime_default_string(cur_time, sizeof(cur_time));
 
-    //3.is player?
+    // 3.is player?
     app_uplive = m_map_publisher->get_uplive(key_app);
     if (app_uplive.length() > 0)
     {
@@ -404,7 +403,7 @@ int CSLSListener::handler()
         if (NULL == pub)
         {
             //*
-            //3.1 check pullers
+            // 3.1 check pullers
             if (NULL == m_map_puller)
             {
                 spdlog::info("[{}] CSLSListener::handler, refused, new role[{}:{:d}], stream='{}', publisher is NULL and m_map_puller is NULL.",
@@ -512,7 +511,7 @@ int CSLSListener::handler()
             }
         }
 
-        //3.2 handle new play
+        // 3.2 handle new play
         if (!m_map_data->is_exist(key_stream_name))
         {
             spdlog::error("[{}] CSLSListener::handler, refused, new role[{}:{:d}], stream={}, but publisher data doesn't exist in m_map_data.",
@@ -522,7 +521,7 @@ int CSLSListener::handler()
             return client_count;
         }
 
-        //new player
+        // new player
         if (srt->libsrt_socket_nonblock(0) < 0)
             spdlog::warn("[{}] CSLSListener::handler, new player[{}:{:d}], libsrt_socket_nonblock failed.",
                          fmt::ptr(this), peer_name, peer_port);
@@ -533,7 +532,7 @@ int CSLSListener::handler()
         player->set_srt(srt);
         player->set_map_data(key_stream_name, m_map_data);
 
-        //stat info
+        // stat info
         stat_info_t *stat_info_obj = new stat_info_t();
         stat_info_obj->port = m_port;
         stat_info_obj->role = player->get_role_name();
@@ -554,7 +553,7 @@ int CSLSListener::handler()
         return client_count;
     }
 
-    //4. is publisher?
+    // 4. is publisher?
     app_uplive = key_app;
     snprintf(key_stream_name, sizeof(key_stream_name), "%s/%s", app_uplive.c_str(), stream_name);
     ca = (sls_conf_app_t *)m_map_publisher->get_ca(app_uplive);
@@ -621,14 +620,14 @@ int CSLSListener::handler()
         delete srt;
         return client_count;
     }
-    //create new publisher
+    // create new publisher
     CSLSPublisher *pub = new CSLSPublisher;
     pub->set_srt(srt);
     pub->set_conf((sls_conf_base_t *)ca);
     pub->init();
     pub->set_idle_streams_timeout(m_idle_streams_timeout_role);
 
-    //stat info
+    // stat info
     stat_info_t *stat_info_obj = new stat_info_t();
     stat_info_obj->port = m_port;
     stat_info_obj->role = pub->get_role_name();
@@ -642,15 +641,25 @@ int CSLSListener::handler()
     pub->set_stat_info_base(*stat_info_obj);
 
     pub->set_http_url(m_http_url_role);
-    //set hls record path
-    snprintf(tmp, sizeof(tmp), "%s/%d/%s",
-             m_record_hls_path_prefix, m_port, key_stream_name);
+    // set hls record path
+    ret = snprintf(tmp, sizeof(tmp), "%s/%d/%s",
+                   m_record_hls_path_prefix, m_port, key_stream_name);
+    if (ret < 0 || (unsigned)ret >= sizeof(tmp))
+    {
+        spdlog::error("[{}] CSLSListener::handler, snprintf failed, ret={:d}, errno={:d}",
+                      fmt::ptr(this), ret, errno);
+        pub->close();
+        srt->libsrt_close();
+        delete srt;
+        delete pub;
+        return client_count;
+    }
     pub->set_record_hls_path(tmp);
 
     spdlog::info("[{}] CSLSListener::handler, new pub={}, key_stream_name={}.",
                  fmt::ptr(this), fmt::ptr(pub), key_stream_name);
 
-    //init data array
+    // init data array
     if (SLS_OK != m_map_data->add(key_stream_name))
     {
         spdlog::warn("[{}] CSLSListener::handler, m_map_data->add failed, new pub[{}:{:d}], stream={}.",
@@ -677,7 +686,7 @@ int CSLSListener::handler()
     spdlog::info("[{}] CSLSListener::handler, new publisher[{}:{:d}], key_stream_name={}.",
                  fmt::ptr(this), peer_name, peer_port, key_stream_name);
 
-    //5. check pusher
+    // 5. check pusher
     if (NULL == m_map_pusher)
     {
         return client_count;

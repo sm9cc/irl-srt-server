@@ -107,7 +107,13 @@ int CSLSPusherManager::start()
 
 	// check publisher
 	char key_stream_name[URL_MAX_LEN] = {0};
-	snprintf(key_stream_name, sizeof(key_stream_name), "%s/%s", m_app_uplive, m_stream_name);
+	ret = snprintf(key_stream_name, sizeof(key_stream_name), "%s/%s", m_app_uplive, m_stream_name);
+	if (ret < 0 || (unsigned)ret >= sizeof(key_stream_name))
+	{
+		spdlog::error("[{}] CSLSPusherManager::start, failed, snprintf key_stream_name failed, ret={}, m_app_uplive={}, m_stream_name={}.",
+					  fmt::ptr(this), ret, m_app_uplive, m_stream_name);
+		return SLS_ERROR;
+	}
 	if (NULL != m_map_publisher)
 	{
 		CSLSRole *publisher = m_map_publisher->get_publisher(key_stream_name);
@@ -115,7 +121,7 @@ int CSLSPusherManager::start()
 		{
 			spdlog::info("[{}] CSLSPullerManager::start, failed, key_stream_name={}, publisher=NULL not exist.",
 						 fmt::ptr(this), key_stream_name);
-			return ret;
+			return SLS_ERROR;
 		}
 	}
 
@@ -143,8 +149,16 @@ CSLSRelay *CSLSPusherManager::create_relay()
 
 int CSLSPusherManager::set_relay_param(CSLSRelay *relay)
 {
+	int ret;
 	char key_stream_name[1024] = {0};
-	snprintf(key_stream_name, sizeof(key_stream_name), "%s/%s", m_app_uplive, m_stream_name);
+
+	ret = snprintf(key_stream_name, sizeof(key_stream_name), "%s/%s", m_app_uplive, m_stream_name);
+	if (ret < 0 || (unsigned)ret >= sizeof(key_stream_name))
+	{
+		spdlog::error("[{}] CSLSPusherManager::set_relay_param, failed, snprintf key_stream_name failed, ret={}, m_app_uplive={}, m_stream_name={}.",
+					  fmt::ptr(this), ret, m_app_uplive, m_stream_name);
+		return SLS_ERROR;
+	}
 	relay->set_map_data(key_stream_name, m_map_data);
 	relay->set_map_publisher(m_map_publisher);
 	relay->set_relay_manager(this);
@@ -202,8 +216,14 @@ int CSLSPusherManager::reconnect(int64_t cur_tm_ms)
 
 	// check publisher
 	bool no_publisher = false;
-	char key_stream_name[1024] = {0};
-	snprintf(key_stream_name, sizeof(key_stream_name), "%s/%s", m_app_uplive, m_stream_name);
+	char key_stream_name[URL_MAX_LEN] = {0};
+	ret = snprintf(key_stream_name, sizeof(key_stream_name), "%s/%s", m_app_uplive, m_stream_name);
+	if (ret < 0 || (unsigned)ret >= sizeof(key_stream_name))
+	{
+		spdlog::error("[{}] CSLSPusherManager::reconnect, failed, snprintf key_stream_name failed, ret={}, m_app_uplive={}, m_stream_name={}.",
+					  fmt::ptr(this), ret, m_app_uplive, m_stream_name);
+		return SLS_ERROR;
+	}
 	if (NULL != m_map_publisher)
 	{
 		CSLSRole *publisher = m_map_publisher->get_publisher(key_stream_name);
@@ -216,20 +236,19 @@ int CSLSPusherManager::reconnect(int64_t cur_tm_ms)
 	if (SLS_PM_ALL == m_sri->m_mode)
 	{
 		ret = reconnect_all(cur_tm_ms, no_publisher);
-		return ret;
 	}
 	else if (SLS_PM_HASH == m_sri->m_mode)
 	{
 		if (cur_tm_ms - m_reconnect_begin_tm < (m_sri->m_reconnect_interval * 1000))
 		{
-			return ret;
+			return SLS_ERROR;
 		}
 		m_reconnect_begin_tm = cur_tm_ms;
 		if (no_publisher)
 		{
 			spdlog::info("[{}] CSLSPullerManager::reconnect, connect_hash failed, key_stream_name={}, publisher=NULL not exist.",
 						 fmt::ptr(this), key_stream_name);
-			return ret;
+			return SLS_ERROR;
 		}
 		ret = connect_hash();
 	}
@@ -237,6 +256,7 @@ int CSLSPusherManager::reconnect(int64_t cur_tm_ms)
 	{
 		spdlog::info("[{}] CSLSPusherManager::reconnect, failed, wrong m_sri->m_mode={:d}, m_app_uplive={}, m_stream_name={}.",
 					 fmt::ptr(this), m_sri->m_mode, m_app_uplive, m_stream_name);
+		return SLS_ERROR;
 	}
 	return ret;
 }

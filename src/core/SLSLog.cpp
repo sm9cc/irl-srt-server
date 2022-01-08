@@ -34,7 +34,6 @@
 #include "SLSLog.hpp"
 #include "SLSLock.hpp"
 
-
 std::mutex LOGGER_MUTEX;
 
 int initialize_logger()
@@ -54,19 +53,12 @@ int initialize_logger()
 
 int sls_set_log_level(char *log_level)
 {
-    log_level = sls_strupper(log_level); //to upper
-    int n = sizeof(LOG_LEVEL_NAME) / sizeof(char *);
-    for (int i = 0; i < n; i++)
-    {
-        if (strcmp(log_level, LOG_LEVEL_NAME[i]) == 0)
-        {
-            spdlog::get(APP_NAME)->set_level((spdlog::level::level_enum)i);
-            spdlog::info("set log level='{}'.", LOG_LEVEL_NAME[i]);
-            return 0;
-        }
-    }
-    spdlog::warn("!!!wrong log level '{}', set default '{}'.", log_level, LOG_LEVEL_NAME[DEFAULT_LOG_LEVEL]);
-    return 1;
+    log_level = sls_strlower(log_level); //to upper
+    std::string log_level_str(log_level);
+    spdlog::level::level_enum new_level = spdlog::level::from_str(log_level_str);
+    spdlog::get(APP_NAME)->set_level(new_level);
+    spdlog::warn("Setting logging level to {}", spdlog::level::to_string_view(new_level));
+    return SLS_OK;
 }
 
 int sls_set_log_file(char *log_file)
@@ -79,8 +71,5 @@ int sls_set_log_file(char *log_file)
         LOGGER_MUTEX.unlock();
         return SLS_OK;
     }
-    else
-    {
-        return SLS_ERROR;
-    }
+    return SLS_ERROR;
 }

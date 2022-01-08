@@ -31,15 +31,6 @@
 #include "common.hpp"
 #include "SLSLock.hpp"
 
-static char const *LOG_LEVEL_NAME[] = {
-    "TRACE",
-    "DEBUG",
-    "INFO",
-    "WARNING",
-    "ERROR",
-    "FATAL",
-    "OFF"};
-
 static const char APP_NAME[] = "srt-live";
 
 int initialize_logger();

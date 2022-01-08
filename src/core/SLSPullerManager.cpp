@@ -44,7 +44,7 @@ CSLSPullerManager::~CSLSPullerManager()
 {
 }
 
-//start to connect from next of cur index per time.
+// start to connect from next of cur index per time.
 int CSLSPullerManager::connect_loop()
 {
 	int ret = SLS_ERROR;
@@ -53,10 +53,9 @@ int CSLSPullerManager::connect_loop()
 	{
 		spdlog::info("[{}] CSLSPullerManager::connect_loop, failed, m_upstreams.size()=0, m_app_uplive={}, m_stream_name={}.",
 					 fmt::ptr(this), m_app_uplive, m_stream_name);
-		return ret;
+		return SLS_ERROR;
 	}
 
-	CSLSRelay *puller = NULL;
 	if (-1 == m_cur_loop_index)
 	{
 		m_cur_loop_index = m_sri->m_upstreams.size() - 1;
@@ -64,14 +63,20 @@ int CSLSPullerManager::connect_loop()
 	int index = m_cur_loop_index;
 	index++;
 
-	char szURL[1024] = {0};
+	char szURL[URL_MAX_LEN] = {};
 	while (true)
 	{
 		if (index >= (int)m_sri->m_upstreams.size())
 			index = 0;
 
 		const char *szTmp = m_sri->m_upstreams[index].c_str();
-		snprintf(szURL, sizeof(szURL), "srt://%s/%s", szTmp, m_stream_name);
+		ret = snprintf(szURL, sizeof(szURL), "srt://%s/%s", szTmp, m_stream_name);
+		if (ret < 0 || (unsigned)ret >= sizeof(szURL))
+		{
+			spdlog::error("[{}] snprintf failed, ret={}", __func__, ret);
+			return SLS_ERROR;
+		}
+
 		ret = connect(szURL);
 		if (SLS_OK == ret)
 		{
@@ -93,18 +98,23 @@ int CSLSPullerManager::connect_loop()
 
 int CSLSPullerManager::start()
 {
-	int ret = SLS_ERROR;
+	int ret;
 
 	if (NULL == m_sri)
 	{
 		spdlog::error("[{}] CSLSPullerManager::start, failed, m_upstreams.size()=0, m_app_uplive={}, m_stream_name={}.",
 					  fmt::ptr(this), m_app_uplive, m_stream_name);
-		return ret;
+		return SLS_ERROR;
 	}
 
-	//check publisher
+	// check publisher
 	char key_stream_name[1024] = {0};
-	snprintf(key_stream_name, sizeof(key_stream_name), "%s/%s", m_app_uplive, m_stream_name);
+	ret = snprintf(key_stream_name, sizeof(key_stream_name), "%s/%s", m_app_uplive, m_stream_name);
+	if (ret < 0 || (unsigned)ret >= sizeof(key_stream_name))
+	{
+		spdlog::error("[{}] snprintf failed, ret={}", __func__, ret);
+		return SLS_ERROR;
+	}
 	if (NULL != m_map_publisher)
 	{
 		CSLSRole *publisher = m_map_publisher->get_publisher(key_stream_name);
@@ -112,7 +122,7 @@ int CSLSPullerManager::start()
 		{
 			spdlog::error("[{}] CSLSPullerManager::start, failed, key_stream_name={}, publisher={} exist.",
 						  fmt::ptr(this), key_stream_name, fmt::ptr(publisher));
-			return ret;
+			return SLS_ERROR;
 		}
 	}
 
@@ -128,6 +138,7 @@ int CSLSPullerManager::start()
 	{
 		spdlog::error("[{}] CSLSPullerManager::start, failed, wrong m_sri->m_mode={:d}, m_app_uplive={}, m_stream_name={}.",
 					  fmt::ptr(this), m_sri->m_mode, m_app_uplive, m_stream_name);
+		ret = SLS_ERROR;
 	}
 	return ret;
 }
@@ -163,8 +174,15 @@ int CSLSPullerManager::check_relay_param()
 
 int CSLSPullerManager::set_relay_param(CSLSRelay *relay)
 {
-	char key_stream_name[1024] = {0};
-	snprintf(key_stream_name, sizeof(key_stream_name), "%s/%s", m_app_uplive, m_stream_name);
+	int ret;
+	char key_stream_name[URL_MAX_LEN] = {0};
+
+	ret = snprintf(key_stream_name, sizeof(key_stream_name), "%s/%s", m_app_uplive, m_stream_name);
+	if (ret < 0 || (unsigned)ret >= sizeof(key_stream_name))
+	{
+		spdlog::error("[{}] snprintf failed, ret={}", __func__, ret);
+		return SLS_ERROR;
+	}
 
 	if (SLS_OK != check_relay_param())
 	{
@@ -205,6 +223,8 @@ int CSLSPullerManager::add_reconnect_stream(char *relay_url)
 int CSLSPullerManager::reconnect(int64_t cur_tm_ms)
 {
 	int ret = SLS_ERROR;
+	char key_stream_name[URL_MAX_LEN] = {0};
+
 	if (cur_tm_ms - m_reconnect_begin_tm < (m_sri->m_reconnect_interval * 1000))
 	{
 		return ret;
@@ -218,19 +238,20 @@ int CSLSPullerManager::reconnect(int64_t cur_tm_ms)
 		return SLS_ERROR;
 	}
 
-	char key_stream_name[1024] = {0};
-	snprintf(key_stream_name, sizeof(key_stream_name), "%s/%s", m_app_uplive, m_stream_name);
+	ret = snprintf(key_stream_name, sizeof(key_stream_name), "%s/%s", m_app_uplive, m_stream_name);
+	if (ret < 0 || (unsigned)ret >= sizeof(key_stream_name))
+	{
+		spdlog::error("[{}] snprintf failed, ret={}", __func__, ret);
+		return SLS_ERROR;
+	}
 
-	ret = start();
-	if (SLS_OK != ret)
+	if (SLS_OK != start())
 	{
 		spdlog::error("[{}] CSLSPullerManager::reconnect, start failed, key_stream_name={}.",
 					  fmt::ptr(this), key_stream_name);
+		return SLS_ERROR;
 	}
-	else
-	{
-		spdlog::info("[{}] CSLSPullerManager::reconnect, start ok, key_stream_name={}.",
-					 fmt::ptr(this), key_stream_name);
-	}
-	return ret;
+	spdlog::info("[{}] CSLSPullerManager::reconnect, start ok, key_stream_name={}.",
+				 fmt::ptr(this), key_stream_name);
+	return SLS_OK;
 }
