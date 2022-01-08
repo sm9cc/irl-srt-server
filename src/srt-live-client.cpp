@@ -170,10 +170,6 @@ int main(int argc, char *argv[])
 	spdlog::info("SRT Live Client is running...");
 	while (!b_exit)
 	{
-		//printf log info
-		int64_t bitrate_kbps = sls_client.get_bitrate();
-		spdlog::info("\rSRT Live Client, cur bitrate=%ld(kbps)", bitrate_kbps);
-
 		int ret = sls_client.handler();
 		if (ret > 0)
 		{
