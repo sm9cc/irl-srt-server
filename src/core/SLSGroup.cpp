@@ -325,7 +325,6 @@ void CSLSGroup::check_invalid_sock()
         if (update_stat_info)
         {
 
-
             stat_info_t stat_info = role->get_stat_info();
 
             CSLSLock lock(&m_mutex_stat);
@@ -395,7 +394,7 @@ void CSLSGroup::set_worker_number(int n)
     m_worker_number = n;
 }
 
-void CSLSGroup::set_worker_connections(int n)
+void CSLSGroup::set_worker_connections(unsigned int n)
 {
     m_worker_connections = n;
 }

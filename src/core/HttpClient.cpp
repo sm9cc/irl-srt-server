@@ -66,7 +66,7 @@ CHttpClient::CHttpClient()
 	m_callback = NULL;
 	m_callback_context = NULL;
 
-	m_response_info.m_response_content_length = -1;
+	m_response_info.b_response_is_present = false;
 	sprintf(m_role_name, "http_client");
 	sprintf(m_http_method, "POST");
 }
@@ -117,7 +117,7 @@ int CHttpClient::open(const char *url, const char *method, int interval)
 	//clear response
 	m_response_info.m_response_header.clear();
 	m_response_info.m_response_content.clear();
-	m_response_info.m_response_content_length = -1;
+	m_response_info.b_response_is_present = false;
 	m_end_tm_ms = 0;
 	m_out_array.clear();
 
@@ -150,7 +150,7 @@ int CHttpClient::close()
 	}
 	m_response_info.m_response_header.clear();
 	m_response_info.m_response_content.clear();
-	m_response_info.m_response_content_length = -1;
+	m_response_info.b_response_is_present = false;
 	m_end_tm_ms = 0;
 	m_out_array.clear();
 	return ret;
@@ -171,7 +171,7 @@ int CHttpClient::check_timeout(int64_t cur_tm_ms)
 
 	if (m_end_tm_ms > 0)
 	{
-		if (m_response_info.m_response_content_length == m_response_info.m_response_content.length())
+		if (m_response_info.b_response_is_present && m_response_info.m_response_content_length == m_response_info.m_response_content.length())
 			return SLS_ERROR;
 		return SLS_OK;
 	}
@@ -244,7 +244,7 @@ HTTP_RESPONSE_INFO *CHttpClient::get_response_info()
 
 int CHttpClient::check_finished()
 {
-	if (m_response_info.m_response_content_length == m_response_info.m_response_content.length())
+	if (m_response_info.b_response_is_present && m_response_info.m_response_content_length == m_response_info.m_response_content.length())
 	{
 		return SLS_OK;
 	}
@@ -260,7 +260,7 @@ int CHttpClient::parse_http_response(std::string &response)
 	if (m_response_info.m_response_header.size() > 0)
 	{
 		m_response_info.m_response_content += response;
-		if (m_response_info.m_response_content_length == m_response_info.m_response_content.length())
+		if (m_response_info.b_response_is_present && m_response_info.m_response_content_length == m_response_info.m_response_content.length())
 		{
 			spdlog::info("[{}] CHttpClient::parse_http_response, finished, url='{}', http_method='{}', content_len={:d}.",
 						 fmt::ptr(this), m_url, m_http_method, m_response_info.m_response_content.length());
@@ -304,6 +304,7 @@ int CHttpClient::parse_http_response(std::string &response)
 			if (parts.size() == 2)
 			{
 				m_response_info.m_response_content_length = atoi(parts[1].c_str());
+				m_response_info.b_response_is_present = true;
 				spdlog::info("[{}] CHttpClient::parse_http_response, m_response_content_length={:d}.",
 							 fmt::ptr(this), m_response_info.m_response_content_length);
 			}
@@ -313,7 +314,7 @@ int CHttpClient::parse_http_response(std::string &response)
 	if (response_parts.size() == 2)
 	{
 		m_response_info.m_response_content = response_parts[1];
-		if (m_response_info.m_response_content_length == m_response_info.m_response_content.length())
+		if (m_response_info.b_response_is_present && m_response_info.m_response_content_length == m_response_info.m_response_content.length())
 		{
 			m_end_tm_ms = sls_gettime_ms();
 			if (NULL != m_callback)

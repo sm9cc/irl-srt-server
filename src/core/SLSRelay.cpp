@@ -31,6 +31,8 @@
 #include "SLSRelayManager.hpp"
 #include "util.hpp"
 
+#define DEFAULT_LATENCY 100
+
 /**
  * relay conf
  */
@@ -87,12 +89,13 @@ void *CSLSRelay::get_relay_manager()
     return m_relay_manager;
 }
 
-int CSLSRelay::parse_url(char *url, char *host_name, size_t host_name_size, int &port, char *streamid, size_t streamid_size)
+int CSLSRelay::parse_url(char *url, char *host_name, size_t host_name_size, int &port, char *streamid, size_t streamid_size, int &latency)
 {
     // Parse the URL
     Url parsed_url(url);
     string scheme;
     bool streamid_found = false;
+    bool latency_found = false;
     try
     {
         // Check if URL scheme is correct
@@ -115,9 +118,23 @@ int CSLSRelay::parse_url(char *url, char *host_name, size_t host_name_size, int 
                 streamid_found = true;
                 strlcpy(streamid, query_param.val().c_str(), streamid_size);
             }
+            else if (query_param.key().compare("latency") == 0)
+            {
+                try
+                {
+                    // Set latency
+                    latency = stoi(query_param.val());
+                    latency_found = true;
+                }
+                catch (std::overflow_error)
+                {
+                    spdlog::error("[{}] CSLSRelay::parse_url invalid latency [latency='{}']", fmt::ptr(this), query_param.val());
+                    return SLS_ERROR;
+                }
+            }
         }
     }
-    catch (Url::parse_error error)
+    catch (Url::parse_error const &error)
     {
         spdlog::error("[{}] CSLSRelay::parse_url error [{}]",
                       fmt::ptr(this), error.what());
@@ -135,6 +152,12 @@ int CSLSRelay::parse_url(char *url, char *host_name, size_t host_name_size, int 
         return SLS_ERROR;
     }
 
+    if (!latency_found)
+    {
+        spdlog::warn("[{}] CSLSRelay::parse_url query parameter 'latency' not found in URL '{}', use default latency {}",
+                     fmt::ptr(this), url, DEFAULT_LATENCY);
+    }
+
     spdlog::warn("{}", url);
     spdlog::warn("{}:{:d} | {}", host_name, port, streamid);
 
@@ -144,14 +167,14 @@ int CSLSRelay::parse_url(char *url, char *host_name, size_t host_name_size, int 
 int CSLSRelay::open(const char *srt_url)
 {
 
-    int yes = 1;
-    int no = 0;
+    const int bool_true = 1;
+    const int bool_false = 0;
     char host_name[128] = "192.168.31.56"; //test
     char server_ip[128] = "";
     int server_port = 8080;
     char streamid[1024] = "uplive.sls.net/live/1234"; //test
     char url[1024] = {0};
-    int latency = 10;
+    int latency;
 
     strlcpy(m_url, srt_url, sizeof(m_url));
     strlcpy(url, srt_url, sizeof(url));
@@ -164,7 +187,7 @@ int CSLSRelay::open(const char *srt_url)
     }
 
     //parse url
-    if (SLS_OK != parse_url(url, host_name, sizeof(host_name), server_port, streamid, sizeof(streamid)))
+    if (SLS_OK != parse_url(url, host_name, sizeof(host_name), server_port, streamid, sizeof(streamid), latency))
     {
         return SLS_ERROR;
     }
@@ -178,14 +201,21 @@ int CSLSRelay::open(const char *srt_url)
 
     SRTSOCKET fd = srt_create_socket();
 
-    int status = srt_setsockopt(fd, 0, SRTO_SNDSYN, &no, sizeof no); // for async write
+    int status = srt_setsockopt(fd, 0, SRTO_LATENCY, &latency, sizeof(latency)); //
+    if (status == SRT_ERROR)
+    {
+        spdlog::error("[{}] CSLSRelay::open, srt_setsockopt SRTO_TSBPDMODE failure. err={}.", fmt::ptr(this), srt_getlasterror_str());
+        return SLS_ERROR;
+    }
+
+    status = srt_setsockopt(fd, 0, SRTO_SNDSYN, &bool_false, sizeof(bool_false)); // for async write
     if (status == SRT_ERROR)
     {
         spdlog::error("[{}] CSLSRelay::open, srt_setsockopt SRTO_SNDSYN failure. err={}.", fmt::ptr(this), srt_getlasterror_str());
         return SLS_ERROR;
     }
 
-    status = srt_setsockopt(fd, 0, SRTO_RCVSYN, &no, sizeof no); // for async read
+    status = srt_setsockopt(fd, 0, SRTO_RCVSYN, &bool_false, sizeof(bool_false)); // for async read
     if (status == SRT_ERROR)
     {
         spdlog::error("[{}] CSLSRelay::open, srt_setsockopt SRTO_SNDSYN failure. err={}.", fmt::ptr(this), srt_getlasterror_str());
@@ -199,6 +229,7 @@ int CSLSRelay::open(const char *srt_url)
     	sls_log(SLS_LOG_ERROR, "[%p]CSLSRelay::open, srt_setsockopt SRTO_TSBPDMODE failure. err=%s.", this, srt_getlasterror_str());
         return SLS_ERROR;
     }
+    */
     /*
     SRT_TRANSTYPE tt = SRTT_LIVE;
     status = srt_setsockopt(fd, 0, SRTO_TRANSTYPE, &tt, sizeof tt);

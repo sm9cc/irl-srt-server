@@ -87,5 +87,5 @@ protected:
     CSLSMapPublisher *m_map_publisher;
     void *m_relay_manager;
 
-    int parse_url(char *url, char *host_name, size_t host_name_size, int &port, char *streamid, size_t streamid_size);
+    int parse_url(char *url, char *host_name, size_t host_name_size, int &port, char *streamid, size_t streamid_size, int &latency);
 };

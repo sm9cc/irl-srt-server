@@ -55,7 +55,7 @@ int CSLSPusherManager::connect_all()
 	}
 
 	int all_ret = SLS_OK;
-	for (int i = 0; i < m_sri->m_upstreams.size(); i++)
+	for (unsigned int i = 0; i < m_sri->m_upstreams.size(); i++)
 	{
 		char szURL[1024] = {0};
 		const char *szTmp = m_sri->m_upstreams[i].c_str();
@@ -73,7 +73,7 @@ int CSLSPusherManager::connect_all()
 			}
 			endpoint_load_success = true;
 		}
-		catch (fmt::v8::format_error error)
+		catch (fmt::v8::format_error const &error)
 		{
 			spdlog::error("[{}] CSLSPusherManager::connect_all key '{{stream_name}}' not found in entry '{}'",
 						  fmt::ptr(this), szTmp);

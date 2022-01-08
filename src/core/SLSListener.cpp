@@ -197,7 +197,7 @@ int CSLSListener::init_conf_app()
         // Setup mapping between player endpoints and publishing endpoints
         // Each player endpoint has a corresponding (not necessarily unique)
         // publishing endpoint.
-        for (int j = 0; j < domain_players.size(); j++)
+        for (unsigned int j = 0; j < domain_players.size(); j++)
         {
             strLiveDomain = domain_players[j];
             strTemp = strLiveDomain + "/" + strLive;

@@ -160,8 +160,6 @@ int CSLSSrt::libsrt_setup(int port)
     int fd = -1;
     int ret;
     char portstr[10];
-    int timeout = 10; //ms
-    int eid;
     SRTContext *s = &m_sc;
 
     m_sc.port = port;
@@ -323,13 +321,12 @@ int CSLSSrt::libsrt_socket_nonblock(int enable)
 
 int CSLSSrt::libsrt_split_sid(char *sid, char *host, size_t host_size, char *app, size_t app_size, char *name, size_t name_size)
 {
-    int i = 0;
     char *p, *p1;
     p1 = sid;
 
     //host
     p = strchr(p1, '/');
-    if ((p - p1 + 1) > host_size)
+    if ((size_t)(p - p1 + 1) > host_size)
     {
         spdlog::error("[{}] CSLSSrt::libsrt_split_sid, sid='{}' is longer than allocated host buffer [len={:d}]",
                       fmt::ptr(this), sid, host_size);
@@ -348,7 +345,7 @@ int CSLSSrt::libsrt_split_sid(char *sid, char *host, size_t host_size, char *app
     }
     //app
     p = strchr(p1, '/');
-    if ((p - p1 + 1) > app_size)
+    if ((size_t)(p - p1 + 1) > app_size)
     {
         spdlog::error("[{}] CSLSSrt::libsrt_split_sid, sid='{}' is longer than allocated app buffer [len={:d}]",
                       fmt::ptr(this), sid, app_size);

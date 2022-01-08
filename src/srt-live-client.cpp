@@ -74,7 +74,6 @@ int main(int argc, char *argv[])
 	struct sigaction sigIntHandler;
 	sls_opt_client_t sls_opt;
 
-	int ret = SLS_OK;
 	usage();
 
 	//parse cmd line
@@ -173,7 +172,7 @@ int main(int argc, char *argv[])
 	{
 		//printf log info
 		int64_t bitrate_kbps = sls_client.get_bitrate();
-		("\rSRT Live Client, cur bitrate=%ld(kbps)", bitrate_kbps);
+		spdlog::info("\rSRT Live Client, cur bitrate=%ld(kbps)", bitrate_kbps);
 
 		int ret = sls_client.handler();
 		if (ret > 0)
@@ -194,5 +193,5 @@ int main(int argc, char *argv[])
 	sls_client.close();
 
 	spdlog::info("Execution finished, goodbye.");
-	return 0;
+	return SLS_OK;
 }

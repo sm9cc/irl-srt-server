@@ -46,7 +46,7 @@ public:
     void reload();
 
     void set_role_list(CSLSRoleList *list_role);
-    void set_worker_connections(int n);
+    void set_worker_connections(unsigned int n);
     void set_worker_number(int n);
 
     virtual int handler();
@@ -71,8 +71,8 @@ private:
     void check_new_role();
     void check_wait_http_role();
 
-    int m_worker_connections;
-    int m_worker_number;
+    unsigned int m_worker_connections;
+    unsigned int m_worker_number;
     int64_t m_cur_time_microsec;
     bool m_reload;
 

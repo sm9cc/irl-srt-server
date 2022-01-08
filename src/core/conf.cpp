@@ -72,7 +72,6 @@ const char *sls_conf_set_int(const char *v, sls_conf_cmd_t *cmd, void *conf)
     char *p = (char *)conf;
     int v1;
     int *np;
-    char *value;
 
     np = (int *)(p + cmd->offset);
 
@@ -185,7 +184,6 @@ const char *sls_conf_set_double(const char *v, sls_conf_cmd_t *cmd, void *conf)
     char *p = (char *)conf;
     double v1;
     double *np;
-    char *value;
 
     np = (double *)(p + cmd->offset);
 
@@ -200,7 +198,6 @@ const char *sls_conf_set_bool(const char *v, sls_conf_cmd_t *cmd, void *conf)
 {
     char *p = (char *)conf;
     bool *np;
-    char *value;
 
     np = (bool *)(p + cmd->offset);
 

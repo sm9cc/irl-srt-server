@@ -67,7 +67,7 @@ int CSLSPullerManager::connect_loop()
 	char szURL[1024] = {0};
 	while (true)
 	{
-		if (index >= m_sri->m_upstreams.size())
+		if (index >= (int)m_sri->m_upstreams.size())
 			index = 0;
 
 		const char *szTmp = m_sri->m_upstreams[index].c_str();

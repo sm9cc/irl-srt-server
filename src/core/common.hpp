@@ -100,7 +100,7 @@ void sls_gettime_default_string(char *cur_time_buf, size_t cur_time_buf_len);
 char *sls_strupper(char *str);
 void sls_remove_marks(char *s);
 
-uint32_t sls_hash_key(const char *data, int len);
+uint32_t sls_hash_key(const char *data, size_t len);
 int sls_gethostbyname(const char *hostname, char *ip);
 int sls_mkdir_p(const char *path);
 

@@ -129,7 +129,7 @@ char *sls_strupper(char *str)
 }
 
 #define sls_hash(key, c) ((uint32_t)key * 31 + c)
-uint32_t sls_hash_key(const char *data, int len)
+uint32_t sls_hash_key(const char *data, size_t len)
 {
     //copy form ngx
     uint32_t i, key;

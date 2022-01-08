@@ -45,7 +45,8 @@ struct HTTP_RESPONSE_INFO
 	std::vector<std::string> m_response_header;
 	std::string m_response_code;
 	std::string m_response_content;
-	int m_response_content_length;
+	size_t m_response_content_length;
+	bool b_response_is_present;
 };
 /**
  * CHttpClient
@@ -100,7 +101,8 @@ protected:
 	std::vector<std::string> m_response_header;
 	std::string              m_response_code;
 	std::string              m_response_content;
-	int                      m_response_content_length;
+	size_t                   m_response_content_length;
+	bool					 b_response_is_present;
     */
 	HTTP_CALLBACK m_callback;
 	void *m_callback_context;
