@@ -58,6 +58,7 @@ CSLSListener::CSLSListener()
     m_idle_streams_timeout = UNLIMITED_TIMEOUT;
     m_idle_streams_timeout_role = 0;
     m_stat_info = {};
+    memset(m_default_sid, 0, STR_MAX_LEN);
     memset(m_http_url_role, 0, URL_MAX_LEN);
     memset(m_record_hls_path_prefix, 0, URL_MAX_LEN);
 
@@ -140,6 +141,7 @@ int CSLSListener::init_conf_app()
     m_back_log = conf_server->backlog;
     m_idle_streams_timeout_role = conf_server->idle_streams_timeout;
     strlcpy(m_http_url_role, conf_server->on_event_url, sizeof(m_http_url_role));
+    strlcpy(m_default_sid, conf_server->default_sid, sizeof(m_http_url_role));
     spdlog::info("[{}] CSLSListener::init_conf_app, m_back_log={:d}, m_idle_streams_timeout={:d}.",
                  fmt::ptr(this), m_back_log, m_idle_streams_timeout_role);
 
@@ -331,6 +333,7 @@ int CSLSListener::handler()
     int fd_client = 0;
     CSLSSrt *srt = NULL;
     char sid[1024] = {0};
+    std::map<std::string, std::string> sid_kv;
     int sid_size = sizeof(sid);
     char host_name[URL_MAX_LEN] = {0};
     char app_name[URL_MAX_LEN] = {0};
@@ -375,7 +378,37 @@ int CSLSListener::handler()
         return client_count;
     }
 
-    if (0 != srt->libsrt_split_sid(sid, host_name, sizeof(host_name), app_name, sizeof(app_name), stream_name, sizeof(stream_name)))
+    if (strlen(sid) == 0) {
+        strcpy(sid, "uplive.sls.com/live/test");
+        if (strlen(m_default_sid) != 0) {
+            strlcpy(sid, m_default_sid, sizeof(sid));
+        }
+        else {
+            strlcpy(sid, "uplive.sls.com/live/test", sizeof(sid));
+        }
+    }
+
+    sid_kv = srt->libsrt_parse_sid(sid);
+    bool sidValid = true;
+    // Host (defined in spec)
+    if (sid_kv.count("h")) {
+        strlcpy(host_name, sid_kv.at("h").c_str(), sizeof(host_name));
+    } else {
+        sidValid = false;
+    }
+    // Application Name (venor supplied)
+    if (sid_kv.count("sls_app")) {
+        strlcpy(app_name, sid_kv.at("sls_app").c_str(), sizeof(app_name));
+    } else {
+        sidValid = false;
+    }
+    // Resource (defined in spec)
+    if (sid_kv.count("r")) {
+        strlcpy(stream_name, sid_kv.at("r").c_str(), sizeof(stream_name));
+    } else {
+        sidValid = false;
+    }
+    if (!sidValid)
     {
         spdlog::error("[{}] CSLSListener::handler, [{}:{:d}], parse sid='{}' failed.", fmt::ptr(this), peer_name, peer_port, sid);
         srt->libsrt_close();

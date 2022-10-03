@@ -92,6 +92,9 @@ public:
     void set_http_url(const char *http_url);
     int on_connect();
     int on_close();
+    int get_statistics(SRT_TRACEBSTATS *currentStats, int clear);
+    int get_bitrate();
+    int get_uptime();
     int check_http_client();
     int check_http_passed();
 
@@ -100,6 +103,7 @@ public:
 protected:
     CSLSSrt *m_srt;
     bool m_is_write;                //listener: 0, publisher: 0, player: 1
+    int64_t      m_stat_start_time;
     int64_t m_invalid_begin_tm;     //
     int64_t m_stat_bitrate_last_tm; //
     int m_stat_bitrate_interval;    //ms

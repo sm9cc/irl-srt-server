@@ -60,11 +60,11 @@ int CSLSMapData::add(char *key)
                          fmt::ptr(this), key, fmt::ptr(array_data));
             return ret;
         }
-        //m_map_array.erase(item);
+        // m_map_array.erase(item);
     }
 
     CSLSRecycleArray *data_array = new CSLSRecycleArray;
-    //m_map_array.insert(make_pair(strKey, data_array));
+    // m_map_array.insert(make_pair(strKey, data_array));
     m_map_array[strKey] = data_array;
     spdlog::info("[{}] CSLSMapData::add ok, key='{}'.",
                  fmt::ptr(this), key);
@@ -77,6 +77,18 @@ int CSLSMapData::remove(char *key)
     std::string strKey = std::string(key);
 
     CSLSLock lock(&m_rwclock, true);
+
+    std::map<std::string, ts_info *>::iterator item_ti;
+    item_ti = m_map_ts_info.find(strKey);
+    if (item_ti != m_map_ts_info.end())
+    {
+        ts_info *ti = item_ti->second;
+        if (ti)
+        {
+            delete ti;
+        }
+        m_map_ts_info.erase(item_ti);
+    }
 
     std::map<std::string, CSLSRecycleArray *>::iterator item;
     item = m_map_array.find(strKey);
@@ -159,7 +171,7 @@ int CSLSMapData::put(char *key, char *data, int len, int64_t *last_read_time)
         *last_read_time = array_data->get_last_read_time();
     }
 
-    //check sps and pps
+    // check sps and pps
     ts_info *ti = NULL;
     std::map<std::string, ts_info *>::iterator item_ti;
     item_ti = m_map_ts_info.find(strKey);
@@ -211,7 +223,7 @@ int CSLSMapData::get(char *key, char *data, int len, SLSRecycleArrayID *read_id,
     ret = array_data->get(data, len, read_id, aligned);
     if (b_first)
     {
-        //get sps and pps
+        // get sps and pps
         ret = get_ts_info(key, data, len);
         spdlog::info("[{}] CSLSMapData::get, get sps pps ok, key={}, len={:d}.",
                      fmt::ptr(this), key, ret);
@@ -252,11 +264,22 @@ void CSLSMapData::clear()
         it++;
     }
     m_map_array.clear();
+    std::map<std::string, ts_info *>::iterator item_ti;
+    for (item_ti = m_map_ts_info.begin(); item_ti != m_map_ts_info.end();)
+    {
+        ts_info *ti = item_ti->second;
+        if (ti)
+        {
+            delete ti;
+        }
+        item_ti++;
+    }
+    m_map_ts_info.clear();
 }
 
 int CSLSMapData::check_ts_info(char *data, int len, ts_info *ti)
 {
-    //only get the first, suppose the sps and pps are not changed always.
+    // only get the first, suppose the sps and pps are not changed always.
     for (int i = 0; i < len;)
     {
         if (ti->sps_len > 0 && ti->pps_len > 0 && ti->pat_len > 0 && ti->pat_len > 0)

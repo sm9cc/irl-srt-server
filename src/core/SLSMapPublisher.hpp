@@ -47,6 +47,7 @@ public:
     sls_conf_base_t *get_ca(std::string key_app);
 
     CSLSRole *get_publisher(std::string strAppStreamName);
+    std::vector<std::string> get_publisher_names();
 
 private:
     std::map<std::string, std::string> m_map_live_2_uplive;       // 'hostname/live':'hostname/uplive'

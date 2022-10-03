@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.0.0)
-project(srt-live-server VERSION 1.5.1)
+project(srt-live-server VERSION 2.0.0)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_CXX_FLAGS "-Wall -Wno-invalid-offsetof")
+set(CMAKE_CXX_FLAGS "-Wall -Wno-invalid-offsetof -fcompare-debug-second")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -s")
 

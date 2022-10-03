@@ -35,7 +35,7 @@ enum SRTMode
 
 typedef struct SRTContext
 {
-    int fd;
+    SRTSOCKET fd;
     int eid;
     int flag;
     int port;
@@ -73,6 +73,8 @@ typedef struct SRTContext
     char *smoother;
     int messageapi;
     SRT_TRANSTYPE transtype;
+    double mbpsBandwidth;
+    double msRTT;
 } SRTContext;
 
 /**
@@ -95,6 +97,7 @@ public:
     int libsrt_close();
 
     int libsrt_listen(int backlog);
+    int libsrt_set_listen_callback(srt_listen_callback_fn * listen_callback_fn);
     int libsrt_accept();
 
     int libsrt_get_fd();
@@ -110,7 +113,7 @@ public:
     int libsrt_getsockopt(SRT_SOCKOPT optname, const char *optnamestr, void *optval, int *optlen);
     int libsrt_setsockopt(SRT_SOCKOPT optname, const char *optnamestr, const void *optval, int optlen);
 
-    int libsrt_split_sid(char *sid, char *host, size_t host_size, char *app, size_t app_size, char *name, size_t name_size);
+    std::map<std::string, std::string>  libsrt_parse_sid(char *sid);
 
     int libsrt_add_to_epoll(int eid, bool write);
     int libsrt_remove_from_epoll();
@@ -118,6 +121,7 @@ public:
     int libsrt_getsockstate();
     int libsrt_getpeeraddr(char *peer_name, int &port);
     int libsrt_getpeeraddr_raw(unsigned long &address);
+    int libsrt_get_statistics(SRT_TRACEBSTATS *currentStats, int clear);
 
     void libsrt_set_latency(int latency);
 

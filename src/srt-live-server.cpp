@@ -26,13 +26,18 @@
 #include <string.h>
 #include <signal.h>
 #include <unistd.h>
+#include <httplib.h>
 #include "spdlog/spdlog.h"
 
 using namespace std;
+using namespace httplib;
 
+#include <nlohmann/json.hpp>
 #include "SLSLog.hpp"
 #include "SLSManager.hpp"
 #include "HttpClient.hpp"
+
+using json = nlohmann::json;
 
 /*
  * ctrl + c controller
@@ -51,6 +56,8 @@ static void reload_handler(int s)
     b_reload = true;
 }
 
+Server svr;
+
 /**
  * usage information
  */
@@ -59,18 +66,25 @@ static void reload_handler(int s)
 static void usage()
 {
     spdlog::info("{:-<{}}", "", BANNER_WIDTH);
-    spdlog::info("{: ^{}}", "srt-live-server", BANNER_WIDTH);
+    spdlog::info("{: ^{}}", "irl-srt-server", BANNER_WIDTH);
     spdlog::info("{: ^{}}", VERSION_STRING, BANNER_WIDTH);
+    spdlog::info("{: ^{}}", "Based on srt-live-server", BANNER_WIDTH);
+    spdlog::info("{: ^{}}", "Modified by IRLServer (https://github.com/irlserver/irl-srt-server)", BANNER_WIDTH);
     spdlog::info("{:-<{}}", "", BANNER_WIDTH);
 }
 
-//add new parameter here
+// add new parameter here
 static sls_conf_cmd_t conf_cmd_opt[] = {
     SLS_SET_OPT(string, c, conf_file_name, "conf file name", 1, 1023),
     SLS_SET_OPT(string, s, c_cmd, "cmd: reload", 1, 1023),
     SLS_SET_OPT(string, l, log_level, "log level: fatal/error/warning/info/debug/trace", 1, 1023),
     //  SLS_SET_OPT(int, x, xxx,          "", 1, 100),//example
 };
+
+void httpWorker(int bindPort)
+{
+    svr.listen("::", bindPort);
+}
 
 int main(int argc, char *argv[])
 {
@@ -86,6 +100,8 @@ int main(int argc, char *argv[])
     CHttpClient *http_stat_client = new CHttpClient;
 
     int ret = SLS_OK;
+    int httpPort = 8181;
+    char cors_header[URL_MAX_LEN] = "*";
     int l = sizeof(sockaddr_in);
     int64_t tm_begin_ms = 0;
 
@@ -94,11 +110,11 @@ int main(int argc, char *argv[])
 
     usage();
 
-    //parse cmd line
+    // parse cmd line
     memset(&sls_opt, 0, sizeof(sls_opt));
     if (argc > 1)
     {
-        //parset argv
+        // parset argv
         int cmd_size = sizeof(conf_cmd_opt) / sizeof(sls_conf_cmd_t);
         ret = sls_parse_argv(argc, argv, &sls_opt, conf_cmd_opt, cmd_size);
         if (ret != SLS_OK)
@@ -107,37 +123,37 @@ int main(int argc, char *argv[])
         }
     }
 
-    //reload
+    // reload
     if (strcmp(sls_opt.c_cmd, "") != 0)
     {
         return sls_send_cmd(sls_opt.c_cmd);
     }
 
-    //log level
+    // log level
     if (strlen(sls_opt.log_level) > 0)
     {
         sls_set_log_level(sls_opt.log_level);
     }
 
     // Test erro info...
-    //CSLSSrt::libsrt_print_error_info();
+    // CSLSSrt::libsrt_print_error_info();
 
-    //ctrl + c to exit
+    // ctrl + c to exit
     sigIntHandler.sa_handler = ctrl_c_handler;
     sigemptyset(&sigIntHandler.sa_mask);
     sigIntHandler.sa_flags = 0;
     sigaction(SIGINT, &sigIntHandler, 0);
 
-    //hup to reload
+    // hup to reload
     sigHupHandler.sa_handler = reload_handler;
     sigemptyset(&sigHupHandler.sa_mask);
     sigHupHandler.sa_flags = 0;
     sigaction(SIGHUP, &sigHupHandler, 0);
 
-    //init srt
+    // init srt
     CSLSSrt::libsrt_init();
 
-    //parse conf file
+    // parse conf file
     if (strlen(sls_opt.conf_file_name) == 0)
     {
         ret = snprintf(sls_opt.conf_file_name, sizeof(sls_opt.conf_file_name), "./sls.conf");
@@ -161,7 +177,7 @@ int main(int argc, char *argv[])
         goto EXIT_PROC;
     }
 
-    //sls manager
+    // sls manager
     spdlog::info("SRT Live Server is running...");
 
     sls_manager = new CSLSManager;
@@ -184,6 +200,35 @@ int main(int argc, char *argv[])
         http_stat_client->open(conf_srt->stat_post_url, stat_method, conf_srt->stat_post_interval);
     }
 
+    if (strlen(conf_srt->cors_header) > 0) {
+        strcpy(cors_header, conf_srt->cors_header);
+    }
+    
+    svr.Get("/stats", [&](const Request& req, Response& res) {
+        json ret;
+        if (sls_manager != NULL) {
+            int clear = 0;
+            if (req.has_param("reset")) {
+                clear = 1;
+            }
+            if (!req.has_param("publisher")) {
+                ret = sls_manager->generate_json_for_all_publishers(clear);
+            } else {
+                ret = sls_manager->generate_json_for_publisher(req.get_param_value("publisher"), clear);
+            }
+        } else {
+            ret["status"]  = "error";
+            ret["message"] = "sls manager not found";      
+        }
+        res.set_header("Access-Control-Allow-Origin", cors_header);
+        res.set_content(ret.dump(), "application/json");
+    });
+    
+    if (conf_srt->http_port) {
+        httpPort = conf_srt->http_port;
+    }
+    std::thread(httpWorker, std::ref(httpPort)).detach();
+
     while (!b_exit)
     {
         int64_t cur_tm_ms = sls_gettime_ms();
@@ -205,7 +250,7 @@ int main(int argc, char *argv[])
             if (SLS_OK == http_stat_client->check_finished() ||
                 SLS_OK == http_stat_client->check_timeout(cur_tm_ms))
             {
-                //http_stat_client->get_response_info();
+                // http_stat_client->get_response_info();
                 http_stat_client->close();
             }
         }
@@ -213,14 +258,14 @@ int main(int argc, char *argv[])
         msleep(10);
 
         /*for test reload...
-		int64_t tm_cur = sls_gettime();
-		int64_t d = tm_cur - tm;
-		if ( d >= 10000000) {
-			b_reload = !b_reload;
-			tm = tm_cur;
-			printf("\n\n\n\n");
-		}
-		//*/
+        int64_t tm_cur = sls_gettime();
+        int64_t d = tm_cur - tm;
+        if ( d >= 10000000) {
+            b_reload = !b_reload;
+            tm = tm_cur;
+            printf("\n\n\n\n");
+        }
+        //*/
 
         // Check reloaded manager
         std::vector<CSLSManager *>::iterator it;
@@ -286,7 +331,7 @@ int main(int argc, char *argv[])
 EXIT_PROC:
     spdlog::info("Stopping SRT Live Server...");
 
-    //stop srt
+    // stop srt
     if (NULL != sls_manager)
     {
         sls_manager->stop();
@@ -295,7 +340,7 @@ EXIT_PROC:
         spdlog::info("Released sls_manager");
     }
 
-    //release all reload manager
+    // release all reload manager
     spdlog::info("Releasing reload_manager_list, count={:d}.", reload_manager_list.size());
     std::vector<CSLSManager *>::iterator it;
     for (it = reload_manager_list.begin(); it != reload_manager_list.end(); it++)
@@ -312,7 +357,7 @@ EXIT_PROC:
     reload_manager_list.clear();
 
     spdlog::info("Releasing http_stat_client");
-    //release http_stat_client
+    // release http_stat_client
     if (NULL != http_stat_client)
     {
         http_stat_client->close();
@@ -320,7 +365,7 @@ EXIT_PROC:
         http_stat_client = NULL;
     }
 
-    //uninit srt
+    // uninit srt
     spdlog::info("Destroy SRT objects");
     CSLSSrt::libsrt_uninit();
 
