@@ -216,9 +216,11 @@ json CSLSManager::create_json_stats_for_publisher(CSLSRole *role, int clear) {
     ret["rtt"]              = stats.msRTT;
     ret["msRcvBuf"]         = stats.msRcvBuf;
     ret["mbpsBandwidth"]    = stats.mbpsBandwidth;
-    ret["bitrate"]          = role->get_bitrate();
+    ret["bitrate"]          = role->get_bitrate(); // in kbps
+    ret["uptime"]           = role->get_uptime(); // in seconds
     return ret;
 }
+
 
 int CSLSManager::single_thread_handler()
 {
