@@ -65,7 +65,7 @@ int CTCPRole::handler(DATA_PARAM *p)
 int CTCPRole::write(const char *buf, int size)
 {
     int len = 0;
-    len = send(m_fd, buf, size, 0);
+    len = send(m_fd, buf, size, MSG_NOSIGNAL);
     if (len <= 0)
     {
         spdlog::error("[{}] CTCPRole::write, len={:d}, errno={:d}, err='{}'",
