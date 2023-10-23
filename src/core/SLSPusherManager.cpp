@@ -73,7 +73,7 @@ int CSLSPusherManager::connect_all()
 			}
 			endpoint_load_success = true;
 		}
-		catch (fmt::v9::format_error const &error)
+		catch (fmt::v8::format_error const &error)
 		{
 			spdlog::error("[{}] CSLSPusherManager::connect_all key '{{stream_name}}' not found in entry '{}'",
 						  fmt::ptr(this), szTmp);
