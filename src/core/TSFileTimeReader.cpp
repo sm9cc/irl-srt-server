@@ -273,7 +273,7 @@ int64_t CTSFileTimeReader::generate_rts_file(const char *ts_file_name)
                 int n = m_array_data.get(rts_data, TS_UDP_LEN);
                 if (n != TS_UDP_LEN)
                 {
-                    spdlog::error("ts2es: m_array_data.get, wrong n={:d}, not {:d}.", n, TS_UDP_LEN);
+                    spdlog::info("ts2es: m_array_data.get, wrong n={:d}, not {:d}.", n, TS_UDP_LEN);
                     break;
                 }
                 write(m_rts_fd, &rts, sizeof(rts));
