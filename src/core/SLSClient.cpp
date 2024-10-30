@@ -323,7 +323,7 @@ int CSLSClient::read_data_handler()
 
 		if (n != TS_UDP_LEN)
 		{
-			spdlog::info("[{}] CSLSClient::read_data_handler, libsrt_read n={:d}, expect {:d}.", fmt::ptr(this), n, TS_UDP_LEN);
+			spdlog::trace("[{}] CSLSClient::read_data_handler, libsrt_read n={:d}, expect {:d}.", fmt::ptr(this), n, TS_UDP_LEN);
 		}
 		return n;
 	}
