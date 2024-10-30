@@ -203,23 +203,29 @@ int main(int argc, char *argv[])
     if (strlen(conf_srt->cors_header) > 0) {
         strcpy(cors_header, conf_srt->cors_header);
     }
-    
+
     svr.Get("/stats", [&](const Request& req, Response& res) {
         json ret;
-        if (sls_manager != NULL) {
-            int clear = 0;
-            if (req.has_param("reset")) {
-                clear = 1;
-            }
-            if (!req.has_param("publisher")) {
-                ret = sls_manager->generate_json_for_all_publishers(clear);
-            } else {
-                ret = sls_manager->generate_json_for_publisher(req.get_param_value("publisher"), clear);
-            }
-        } else {
+
+        if (!sls_manager) {
             ret["status"]  = "error";
-            ret["message"] = "sls manager not found";      
+            ret["message"] = "sls manager not found";
+            res.set_header("Access-Control-Allow-Origin", cors_header);
+            res.set_content(ret.dump(), "application/json");
+            return;
         }
+
+        if (!req.has_param("publisher")) {
+            ret["status"]  = "error";
+            ret["message"] = "Missing required parameter: publisher";
+            res.set_header("Access-Control-Allow-Origin", cors_header);
+            res.set_content(ret.dump(), "application/json");
+            return;
+        }
+
+        int clear = req.has_param("reset") ? 1 : 0;
+        ret = sls_manager->generate_json_for_publisher(req.get_param_value("publisher"), clear);
+
         res.set_header("Access-Control-Allow-Origin", cors_header);
         res.set_content(ret.dump(), "application/json");
     });
