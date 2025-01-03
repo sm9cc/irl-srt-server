@@ -344,6 +344,7 @@ int CSLSListener::handler()
     char peer_name[IP_MAX_LEN] = {0};
     int peer_port = 0;
     unsigned long peer_addr_raw = 0;
+    struct in6_addr peer_addr6_raw;
     int client_count = 0;
 
     // 1: accept
@@ -500,7 +501,7 @@ int CSLSListener::handler()
         else
         {
             // Get IP address of remote peer
-            if (srt->libsrt_getpeeraddr_raw(peer_addr_raw) == SLS_OK)
+            if (srt->libsrt_getpeeraddr_raw(peer_addr_raw, peer_addr6_raw) == SLS_OK)
             {
                 // If/when we match an address, set this flag to break out of the for loop
                 bool address_matched = false;
@@ -600,7 +601,7 @@ int CSLSListener::handler()
     }
 
     // Check if IP is allowed to publish to the app
-    if (srt->libsrt_getpeeraddr_raw(peer_addr_raw) == SLS_OK)
+    if (srt->libsrt_getpeeraddr_raw(peer_addr_raw, peer_addr6_raw) == SLS_OK)
     {
         // If/when we match an address, set this flag to break out of the for loop
         bool address_matched = false;

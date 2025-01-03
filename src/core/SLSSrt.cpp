@@ -37,6 +37,9 @@
 /**
  * CSLSSrt class implementation
  */
+extern const struct in6_addr in6addr_any;        /* :: */
+extern const struct in6_addr in6addr_loopback;   /* ::1 */
+#define IN6ADDR_ANY_INIT { { { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 } } }
 
 bool CSLSSrt::m_inited = false;
 
@@ -52,6 +55,7 @@ CSLSSrt::CSLSSrt()
     memset(m_peer_name, 0, sizeof(m_peer_name));
     m_peer_port = 0;
     m_peer_addr_raw = 0;
+    m_peer_addr6_raw = in6addr_any;
 }
 CSLSSrt::~CSLSSrt()
 {
@@ -471,31 +475,41 @@ int CSLSSrt::libsrt_getpeeraddr(char *peer_name, int &port)
 }
 
 
-// TODO: Add IPV6 support
-int CSLSSrt::libsrt_getpeeraddr_raw(unsigned long &address)
-{
+int CSLSSrt::libsrt_getpeeraddr_raw(unsigned long &address, struct in6_addr &address6) {
     int ret = SLS_ERROR;
-    struct sockaddr_in peer_addr;
+    struct sockaddr_storage peer_addr; // Use sockaddr_storage
     int peer_addr_len = sizeof(peer_addr);
 
-    if (0 == m_peer_addr_raw)
-    {
+    if (0 == m_peer_addr_raw && !m_is_ipv6) { // Check if no address is stored yet
         ret = srt_getpeername(m_sc.fd, (struct sockaddr *)&peer_addr, &peer_addr_len);
-        if (0 == ret)
-        {
-            m_peer_addr_raw = ntohl(peer_addr.sin_addr.s_addr);
-
-            address = m_peer_addr_raw;
-            ret = SLS_OK;
-        }
-        else
-        {
+        if (0 == ret) {
+            if (peer_addr.ss_family == AF_INET) {
+                // IPv4
+                struct sockaddr_in *addr_in = (struct sockaddr_in *)&peer_addr;
+                m_peer_addr_raw = ntohl(addr_in->sin_addr.s_addr);
+                address = m_peer_addr_raw;
+                m_is_ipv6 = false;
+                ret = SLS_OK;
+            } else if (peer_addr.ss_family == AF_INET6) {
+                // IPv6
+                struct sockaddr_in6 *addr_in6 = (struct sockaddr_in6 *)&peer_addr;
+                m_peer_addr6_raw = addr_in6->sin6_addr;
+                address6 = m_peer_addr6_raw;
+                m_is_ipv6 = true;
+                ret = SLS_OK;
+            } else {
+                spdlog::error("[{}] SLSSrt::libsrt_getpeeraddr_raw failed: unsupported address family", fmt::ptr(this));
+            }
+        } else {
             spdlog::error("[{}] SLSSrt::libsrt_getpeeraddr_raw failed: not get peer IP address [ret={:d}]", fmt::ptr(this), ret);
         }
-    }
-    else
-    {
-        address = m_peer_addr_raw;
+    } else {
+        // Return the stored address based on the flag
+        if (m_is_ipv6) {
+            address6 = m_peer_addr6_raw;
+        } else {
+            address = m_peer_addr_raw;
+        }
         ret = SLS_OK;
     }
 

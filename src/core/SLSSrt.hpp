@@ -25,6 +25,7 @@
 #pragma once
 
 #include <srt/srt.h>
+#include <netinet/in.h>
 
 enum SRTMode
 {
@@ -120,7 +121,7 @@ public:
 
     int libsrt_getsockstate();
     int libsrt_getpeeraddr(char *peer_name, int &port);
-    int libsrt_getpeeraddr_raw(unsigned long &address);
+    int libsrt_getpeeraddr_raw(unsigned long &address, struct in6_addr &address6);
     int libsrt_get_statistics(SRT_TRACEBSTATS *currentStats, int clear);
 
     void libsrt_set_latency(int latency);
@@ -132,7 +133,9 @@ protected:
     SRTContext m_sc;
     char m_peer_name[256]; //peer ip addr, such as 172.12.22.14
     int m_peer_port;
-    unsigned long m_peer_addr_raw; // Peer IP addr in unsigned long format
+    unsigned long m_peer_addr_raw;  //  Peer IP addr in unsigned long format
+    struct in6_addr m_peer_addr6_raw; // IPv6 address
+    bool m_is_ipv6;                 // Flag to indicate if the address is IPv6
 
 private:
     static bool m_inited;
