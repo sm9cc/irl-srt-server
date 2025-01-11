@@ -232,8 +232,33 @@ int CSLSRelay::open(const char *srt_url)
         return SLS_ERROR;
     }
 
-    int lossmaxttlvalue = 40;
-    srt_setsockopt(fd, 0, SRTO_LOSSMAXTTL, &lossmaxttlvalue, sizeof (lossmaxttlvalue));
+    int enable = 0;
+    int fc = 256 * 1000;
+    int lossmaxttlvalue = 200;
+    int rcv_buf = 100 * 1024 * 1024;
+
+    status = srt_setsockopt(fd, SOL_SOCKET, SRTO_IPV6ONLY, &enable, sizeof(enable));
+    if (status < 0) {
+        spdlog::error("[{}] CSLSRelay::open, srt_setsockopt SRTO_IPV6ONLY failure. err={}.", fmt::ptr(this), srt_getlasterror_str());
+        return SLS_ERROR;
+    }
+
+    status = srt_setsockopt(fd, SOL_SOCKET, SRTO_LOSSMAXTTL, &lossmaxttlvalue, sizeof(lossmaxttlvalue));
+    if (status < 0) {
+        spdlog::error("[{}] CSLSRelay::open, srt_setsockopt SRTO_LOSSMAXTTL failure. err={}.", fmt::ptr(this), srt_getlasterror_str());
+        return SLS_ERROR;
+    }
+
+    status = srt_setsockopt(fd, SOL_SOCKET, SRTO_FC, &fc, sizeof(enable));
+    if (status < 0) {
+        spdlog::error("[{}] CSLSRelay::open, srt_setsockopt SRTO_FC failure. err={}.", fmt::ptr(this), srt_getlasterror_str());
+        return SLS_ERROR;
+    }
+    status = srt_setsockopt(fd, SOL_SOCKET, SRTO_RCVBUF, &rcv_buf, sizeof(rcv_buf));
+    if (status < 0) {
+        spdlog::error("[{}] CSLSRelay::open, srt_setsockopt SRTO_RCVBUF failure. err={}.", fmt::ptr(this), srt_getlasterror_str());
+        return SLS_ERROR;
+    }
 
     // srt_setsockflag(fd, SRTO_SENDER, &m_is_write, sizeof m_is_write);
     /*
