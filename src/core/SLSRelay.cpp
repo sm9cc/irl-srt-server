@@ -233,7 +233,7 @@ int CSLSRelay::open(const char *srt_url)
     }
 
     int enable = 0;
-    int fc = 256 * 1000;
+    int fc = 128 * 1000;
     int lossmaxttlvalue = 200;
     int rcv_buf = 100 * 1024 * 1024;
 
