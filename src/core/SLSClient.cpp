@@ -39,7 +39,7 @@
  * CSLSClient class implementation
  */
 
-#define POLLING_TIME 1 /// Time in milliseconds between interrupt check
+#define POLLING_TIME 100 /// Time in milliseconds between interrupt check
 
 CSLSClient::CSLSClient()
 {
