@@ -225,9 +225,14 @@ int CSLSSrt::libsrt_setup(int port)
 
     /* Set the socket's send or receive buffer sizes, if specified.
        If unspecified or setting fails, system default is used. */
-    if (s->latency > 0)
-    {
+    if (s->latency > 0) {
         srt_setsockopt(fd, SOL_SOCKET, SRTO_LATENCY, &s->latency, sizeof(s->latency));
+        // Receiver-side latency (max allowed)
+        srt_setsockopt(fd, SOL_SOCKET, SRTO_RCVLATENCY, &s->latency, sizeof(s->latency));
+        
+        // Sender-side peer latency (must ≤ receiver's SRTO_RCVLATENCY)
+        int peer_latency = s->latency; // Match receiver's value
+        srt_setsockopt(fd, SOL_SOCKET, SRTO_PEERLATENCY, &peer_latency, sizeof(peer_latency));
     }
     if (s->recv_buffer_size > 0)
     {
@@ -242,6 +247,8 @@ int CSLSSrt::libsrt_setup(int port)
         if (srt_setsockopt(fd, SOL_SOCKET, SRTO_REUSEADDR, &s->reuse, sizeof(s->reuse)))
             spdlog::warn("[{}] CSLSSrt::libsrt_setup, setsockopt(SRTO_REUSEADDR) failed.", fmt::ptr(this));
     }
+    int keepalive = 1;
+    srt_setsockopt(fd, SOL_SOCKET, SRTO_SENDER, &keepalive, sizeof(keepalive));
 
     ret = srt_bind(fd, ai->ai_addr, ai->ai_addrlen);
     if (ret)
