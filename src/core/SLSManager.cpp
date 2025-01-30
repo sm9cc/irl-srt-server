@@ -193,7 +193,7 @@ json CSLSManager::generate_json_for_publisher(std::string publisherName, int cle
 
 json CSLSManager::create_json_stats_for_publisher(CSLSRole *role, int clear) {
     json ret = json::object();
-    SRT_TRACEBSTATS stats;
+    SRT_TRACEBSTATS stats = {0};
     role->get_statistics(&stats, clear);
     // Interval
     ret["pktRcvLoss"]       = stats.pktRcvLoss;
