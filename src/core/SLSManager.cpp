@@ -182,7 +182,7 @@ json CSLSManager::generate_json_for_publisher(std::string publisherName, int cle
         if (role == NULL) continue;
 
         ret["status"] = "ok";
-        ret["publishers"] = json::array();
+        ret["publishers"] = json::object();
         ret["publishers"][publisherName] = create_json_stats_for_publisher(role, clear);
         ret.erase("message");
         break;
