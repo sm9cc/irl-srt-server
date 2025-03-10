@@ -195,31 +195,38 @@ int CSLSSrt::libsrt_setup(int port)
         return ret;
     }
 */
-    int enable = 0;
+    int ipv6Only = 0;
+    int srtlaPatches = 1;
     int fc = 128 * 1000;
     int lossmaxttlvalue = 200;
     int rcv_buf = 100 * 1024 * 1024;
 
-    int status = srt_setsockopt(fd, SOL_SOCKET, SRTO_IPV6ONLY, &enable, sizeof(enable));
+    int status = srt_setsockopt(fd, SOL_SOCKET, SRTO_IPV6ONLY, &ipv6Only, sizeof(ipv6Only));
     if (status < 0) {
-        spdlog::error("[{}] CSLSRelay::open, srt_setsockopt SRTO_IPV6ONLY failure. err={}.", fmt::ptr(this), srt_getlasterror_str());
+        spdlog::error("[{}] CSLSSrt::open, srt_setsockopt SRTO_IPV6ONLY failure. err={}.", fmt::ptr(this), srt_getlasterror_str());
         return SLS_ERROR;
     }
 
     status = srt_setsockopt(fd, SOL_SOCKET, SRTO_LOSSMAXTTL, &lossmaxttlvalue, sizeof(lossmaxttlvalue));
     if (status < 0) {
-        spdlog::error("[{}] CSLSRelay::open, srt_setsockopt SRTO_LOSSMAXTTL failure. err={}.", fmt::ptr(this), srt_getlasterror_str());
+        spdlog::error("[{}] CSLSSrt::open, srt_setsockopt SRTO_LOSSMAXTTL failure. err={}.", fmt::ptr(this), srt_getlasterror_str());
         return SLS_ERROR;
     }
 
-    status = srt_setsockopt(fd, SOL_SOCKET, SRTO_FC, &fc, sizeof(enable));
+    status = srt_setsockopt(fd, SOL_SOCKET, SRTO_FC, &fc, sizeof(fc));
     if (status < 0) {
-        spdlog::error("[{}] CSLSRelay::open, srt_setsockopt SRTO_FC failure. err={}.", fmt::ptr(this), srt_getlasterror_str());
+        spdlog::error("[{}] CSLSSrt::open, srt_setsockopt SRTO_FC failure. err={}.", fmt::ptr(this), srt_getlasterror_str());
         return SLS_ERROR;
     }
     status = srt_setsockopt(fd, SOL_SOCKET, SRTO_RCVBUF, &rcv_buf, sizeof(rcv_buf));
     if (status < 0) {
-        spdlog::error("[{}] CSLSRelay::open, srt_setsockopt SRTO_RCVBUF failure. err={}.", fmt::ptr(this), srt_getlasterror_str());
+        spdlog::error("[{}] CSLSSrt::open, srt_setsockopt SRTO_RCVBUF failure. err={}.", fmt::ptr(this), srt_getlasterror_str());
+        return SLS_ERROR;
+    }
+
+    status = srt_setsockopt(fd, SOL_SOCKET, SRTO_SRTLAPATCHES, &srtlaPatches, sizeof(srtlaPatches));
+    if (status < 0) {
+        spdlog::error("[{}] CSLSSrt::open, srt_setsockopt SRTO_SRTLAPATCHES failure. err={}.", fmt::ptr(this), srt_getlasterror_str());
         return SLS_ERROR;
     }
 

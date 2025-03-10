@@ -232,12 +232,12 @@ int CSLSRelay::open(const char *srt_url)
         return SLS_ERROR;
     }
 
-    int enable = 0;
+    int ipv6Only = 0;
     int fc = 128 * 1000;
     int lossmaxttlvalue = 200;
     int rcv_buf = 100 * 1024 * 1024;
 
-    status = srt_setsockopt(fd, SOL_SOCKET, SRTO_IPV6ONLY, &enable, sizeof(enable));
+    status = srt_setsockopt(fd, SOL_SOCKET, SRTO_IPV6ONLY, &ipv6Only, sizeof(ipv6Only));
     if (status < 0) {
         spdlog::error("[{}] CSLSRelay::open, srt_setsockopt SRTO_IPV6ONLY failure. err={}.", fmt::ptr(this), srt_getlasterror_str());
         return SLS_ERROR;
@@ -249,7 +249,7 @@ int CSLSRelay::open(const char *srt_url)
         return SLS_ERROR;
     }
 
-    status = srt_setsockopt(fd, SOL_SOCKET, SRTO_FC, &fc, sizeof(enable));
+    status = srt_setsockopt(fd, SOL_SOCKET, SRTO_FC, &fc, sizeof(fc));
     if (status < 0) {
         spdlog::error("[{}] CSLSRelay::open, srt_setsockopt SRTO_FC failure. err={}.", fmt::ptr(this), srt_getlasterror_str());
         return SLS_ERROR;
