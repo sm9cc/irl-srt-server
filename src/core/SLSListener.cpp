@@ -1,4 +1,3 @@
-
 /**
  * The MIT License (MIT)
  *
@@ -141,7 +140,7 @@ int CSLSListener::init_conf_app()
     m_back_log = conf_server->backlog;
     m_idle_streams_timeout_role = conf_server->idle_streams_timeout;
     strlcpy(m_http_url_role, conf_server->on_event_url, sizeof(m_http_url_role));
-    strlcpy(m_default_sid, conf_server->default_sid, sizeof(m_http_url_role));
+    strlcpy(m_default_sid, conf_server->default_sid, sizeof(m_default_sid));
     spdlog::info("[{}] CSLSListener::init_conf_app, m_back_log={:d}, m_idle_streams_timeout={:d}.",
                  fmt::ptr(this), m_back_log, m_idle_streams_timeout_role);
 
@@ -704,9 +703,9 @@ int CSLSListener::handler()
         return client_count;
     }
 
-    if (SLS_OK != m_map_publisher->set_push_2_pushlisher(key_stream_name, pub))
+    if (SLS_OK != m_map_publisher->set_push_2_publisher(key_stream_name, pub))
     {
-        spdlog::warn("[{}] CSLSListener::handler, m_map_publisher->set_push_2_pushlisher failed, key_stream_name={}.",
+        spdlog::warn("[{}] CSLSListener::handler, m_map_publisher->set_push_2_publisher failed, key_stream_name={}.",
                      fmt::ptr(this), key_stream_name);
         pub->uninit();
         delete pub;

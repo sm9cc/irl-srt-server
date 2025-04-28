@@ -1,4 +1,3 @@
-
 /**
  * The MIT License (MIT)
  *
@@ -596,4 +595,40 @@ int sls_parse_argv(int argc, char *argv[], sls_opt_t *sls_opt, sls_conf_cmd_t *c
         }
     }
     return ret;
+}
+
+// Helper function to trim leading/trailing whitespace
+std::string trim_whitespace(const std::string& str)
+{
+    size_t first = str.find_first_not_of(" \t");
+    if (string::npos == first)
+    {
+        return str;
+    }
+    size_t last = str.find_last_not_of(" \t");
+    return str.substr(first, (last - first + 1));
+}
+
+const char *sls_conf_set_string_list(const char *v, sls_conf_cmd_t *cmd, void *conf)
+{
+    char *p = (char *)conf;
+    std::vector<std::string> *list_ptr = (std::vector<std::string> *)(p + cmd->offset);
+
+    // Clear existing list if any
+    list_ptr->clear();
+
+    std::vector<std::string> tokens = sls_conf_string_split(v, ",");
+    for (const auto& token : tokens)
+    {
+        std::string trimmed_token = trim_whitespace(token);
+        if (!trimmed_token.empty()) {
+            list_ptr->push_back(trimmed_token);
+        }
+    }
+
+     if (list_ptr->size() < cmd->min || list_ptr->size() > cmd->max) {
+         return SLS_CONF_OUT_RANGE;
+     }
+
+    return SLS_CONF_OK;
 }

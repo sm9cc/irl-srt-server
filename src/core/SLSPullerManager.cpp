@@ -191,9 +191,9 @@ int CSLSPullerManager::set_relay_param(CSLSRelay *relay)
 		return SLS_ERROR;
 	}
 
-	if (SLS_OK != m_map_publisher->set_push_2_pushlisher(key_stream_name, relay))
+	if (SLS_OK != m_map_publisher->set_push_2_publisher(key_stream_name, relay))
 	{
-		spdlog::warn("[{}] CSLSRelayManager::set_relay_param, m_map_publisher->set_push_2_pushlisher, stream={}.",
+		spdlog::warn("[{}] CSLSRelayManager::set_relay_param, m_map_publisher->set_push_2_publisher, stream={}.",
 					 fmt::ptr(this), key_stream_name);
 		return SLS_ERROR;
 	}
