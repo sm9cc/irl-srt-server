@@ -1,4 +1,3 @@
-
 /**
  * The MIT License (MIT)
  *
@@ -51,6 +50,7 @@ int stat_post_interval;
 char record_hls_path_prefix[URL_MAX_LEN];
 int http_port;
 char cors_header[URL_MAX_LEN];
+std::vector<std::string> api_keys;
 SLS_CONF_DYNAMIC_DECLARE_END
 
 /**
@@ -67,6 +67,7 @@ SLS_SET_CONF(srt, string, log_file, "save log file name.", 1, URL_MAX_LEN - 1),
     SLS_SET_CONF(srt, string, record_hls_path_prefix, "hls path prefix", 1, URL_MAX_LEN - 1),
     SLS_SET_CONF(srt, int, http_port, "rest api port", 1, 65535),
     SLS_SET_CONF(srt, string, cors_header, "cors header", 1, URL_MAX_LEN - 1),
+    SLS_SET_CONF(srt, string_list, api_keys, "comma-separated list of API keys for /stats endpoint", 0, 10240),
     SLS_CONF_CMD_DYNAMIC_DECLARE_END
 
     /**
@@ -83,6 +84,7 @@ public:
     int reload();
     int single_thread_handler();
     json generate_json_for_publisher(std::string publisherName, int clear);
+    json generate_json_for_all_publishers(int clear);
     json create_json_stats_for_publisher(CSLSRole *role, int clear);
     int check_invalid();
     bool is_single_thread();

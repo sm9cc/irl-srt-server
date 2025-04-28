@@ -1,4 +1,3 @@
-
 /**
  * The MIT License (MIT)
  *
@@ -65,25 +64,25 @@ int CSLSMapPublisher::set_live_2_uplive(std::string strLive, std::string strUpli
     return SLS_OK;
 }
 
-int CSLSMapPublisher::set_push_2_pushlisher(std::string app_streamname, CSLSRole *role)
+int CSLSMapPublisher::set_push_2_publisher(std::string app_streamname, CSLSRole *role)
 {
     CSLSLock lock(&m_rwclock, true);
     std::map<std::string, CSLSRole *>::iterator it;
-    it = m_map_push_2_pushlisher.find(app_streamname);
-    if (it != m_map_push_2_pushlisher.end())
+    it = m_map_push_2_publisher.find(app_streamname);
+    if (it != m_map_push_2_publisher.end())
     {
         CSLSRole *cur_role = it->second;
         if (NULL != cur_role)
         {
-            spdlog::error("[{}] CSLSMapPublisher::set_push_2_pushlisher, failed, cur_role={}, exist, app_streamname={}, m_map_push_2_pushlisher.size()={:d}.",
-                          fmt::ptr(this), fmt::ptr(cur_role), app_streamname.c_str(), m_map_push_2_pushlisher.size());
+            spdlog::error("[{}] CSLSMapPublisher::set_push_2_publisher, failed, cur_role={}, exist, app_streamname={}, m_map_push_2_publisher.size()={:d}.",
+                          fmt::ptr(this), fmt::ptr(cur_role), app_streamname.c_str(), m_map_push_2_publisher.size());
             return SLS_ERROR;
         }
     }
 
-    m_map_push_2_pushlisher[app_streamname] = role;
-    spdlog::info("[{}] CSLSMapPublisher::set_push_2_pushlisher, ok, {}={}, app_streamname={}, m_map_push_2_pushlisher.size()={:d}.",
-                 fmt::ptr(this), role->get_role_name(), fmt::ptr(role), app_streamname.c_str(), m_map_push_2_pushlisher.size());
+    m_map_push_2_publisher[app_streamname] = role;
+    spdlog::info("[{}] CSLSMapPublisher::set_push_2_publisher, ok, {}={}, app_streamname={}, m_map_push_2_publisher.size()={:d}.",
+                 fmt::ptr(this), role->get_role_name(), fmt::ptr(role), app_streamname.c_str(), m_map_push_2_publisher.size());
     return SLS_OK;
 }
 
@@ -120,8 +119,8 @@ CSLSRole *CSLSMapPublisher::get_publisher(std::string strAppStreamName)
 
     CSLSRole *publisher = NULL;
     std::map<std::string, CSLSRole *>::iterator item;
-    item = m_map_push_2_pushlisher.find(strAppStreamName);
-    if (item != m_map_push_2_pushlisher.end())
+    item = m_map_push_2_publisher.find(strAppStreamName);
+    if (item != m_map_push_2_publisher.end())
     {
         publisher = item->second;
     }
@@ -130,11 +129,19 @@ CSLSRole *CSLSMapPublisher::get_publisher(std::string strAppStreamName)
 
 std::vector<std::string> CSLSMapPublisher::get_publisher_names() {
     std::vector<std::string> ret;
-    for (auto val : m_map_push_2_pushlisher) {
+    for (auto val : m_map_push_2_publisher) {
         std::string streamName = val.first;
         ret.push_back(streamName);
     }
     return ret;
+}
+
+std::map<std::string, CSLSRole *> CSLSMapPublisher::get_publishers()
+{
+    CSLSLock lock(&m_rwclock, false); // Read lock
+    // Return a copy of the map to avoid issues with concurrent modification
+    // if the caller iterates while another thread modifies the original map.
+    return m_map_push_2_publisher;
 }
 
 int CSLSMapPublisher::remove(CSLSRole *role)
@@ -143,13 +150,13 @@ int CSLSMapPublisher::remove(CSLSRole *role)
 
     CSLSLock lock(&m_rwclock, true);
 
-    for (auto const &[live_stream_name, pub] : m_map_push_2_pushlisher)
+    for (auto const &[live_stream_name, pub] : m_map_push_2_publisher)
     {
         if (role == pub)
         {
             spdlog::info("[{}] CSLSMapPublisher::remove, {}={}, live_key={}.",
-                         fmt::ptr(this), pub->get_role_name(), fmt::ptr(pub), live_stream_name);
-            m_map_push_2_pushlisher.erase(live_stream_name);
+                         fmt::ptr(this), pub->get_role_name(), fmt::ptr(pub), live_stream_name.c_str());
+            m_map_push_2_publisher.erase(live_stream_name);
             ret = SLS_OK;
             break;
         }
@@ -161,7 +168,7 @@ void CSLSMapPublisher::clear()
 {
     CSLSLock lock(&m_rwclock, true);
     spdlog::debug("[{}] CSLSMapPublisher::clear", fmt::ptr(this));
-    m_map_push_2_pushlisher.clear();
+    m_map_push_2_publisher.clear();
     m_map_live_2_uplive.clear();
     m_map_uplive_2_conf.clear();
 }

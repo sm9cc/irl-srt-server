@@ -1,4 +1,3 @@
-
 /**
  * The MIT License (MIT)
  *
@@ -206,28 +205,53 @@ int main(int argc, char *argv[])
 
     svr.Get("/stats", [&](const Request& req, Response& res) {
         json ret;
+        sls_conf_srt_t *conf_srt = (sls_conf_srt_t *)sls_conf_get_root_conf(); // Get config
 
-        if (!sls_manager) {
+        if (!sls_manager || !conf_srt) { // Check config ptr too
             ret["status"]  = "error";
-            ret["message"] = "sls manager not found";
+            ret["message"] = "Internal server error: manager or config not available";
             res.status = 500;
             res.set_header("Access-Control-Allow-Origin", cors_header);
             res.set_content(ret.dump(), "application/json");
             return;
         }
 
-        if (!req.has_param("publisher")) {
-            ret["status"]  = "error";
-            ret["message"] = "Missing required parameter: publisher";
-            res.set_header("Access-Control-Allow-Origin", cors_header);
-            res.set_content(ret.dump(), "application/json");
-            return;
-        }
-
         int clear = req.has_param("reset") ? 1 : 0;
-        ret = sls_manager->generate_json_for_publisher(req.get_param_value("publisher"), clear);
-        if (ret["status"] == "error") {
-            res.status = 404;
+
+        // If publisher param exists, use old logic
+        if (req.has_param("publisher")) {
+            ret = sls_manager->generate_json_for_publisher(req.get_param_value("publisher"), clear);
+            if (ret["status"] == "error") {
+                res.status = 404; // Not Found
+            }
+        } else {
+            // Publisher param missing: List all publishers, requires API key if configured
+            bool authorized = false;
+            if (conf_srt->api_keys.empty()) {
+                // No API keys configured, allow access
+                authorized = true;
+            } else {
+                // API keys configured, check Authorization header
+                if (req.has_header("Authorization")) {
+                    std::string auth_header = req.get_header_value("Authorization");
+                    for (const auto& key : conf_srt->api_keys) {
+                        if (key == auth_header) {
+                            authorized = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (authorized) {
+                ret = sls_manager->generate_json_for_all_publishers(clear);
+                // Status should already be 'ok' from generate_json_for_all_publishers
+                // No need to set 404 here, as we are listing all (even if empty)
+            } else {
+                ret["status"] = "error";
+                ret["message"] = "Unauthorized: API key required or invalid.";
+                res.status = 401; // Unauthorized
+            }
         }
 
         res.set_header("Access-Control-Allow-Origin", cors_header);

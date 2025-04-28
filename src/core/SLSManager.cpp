@@ -1,4 +1,3 @@
-
 /**
  * The MIT License (MIT)
  *
@@ -191,6 +190,25 @@ json CSLSManager::generate_json_for_publisher(std::string publisherName, int cle
     return ret;
 }
 
+json CSLSManager::generate_json_for_all_publishers(int clear) {
+    json ret;
+    ret["status"] = "ok";
+    ret["publishers"] = json::object();
+
+    for (int i = 0; i < m_server_count; i++) {
+        CSLSMapPublisher *publisher_map = &m_map_publisher[i];
+        // Get all publishers for this server instance
+        std::map<std::string, CSLSRole *> all_pubs = publisher_map->get_publishers();
+
+        for (auto const& [pub_name, role] : all_pubs) {
+            if (role != nullptr) {
+                // Add stats for this publisher to the JSON object
+                ret["publishers"][pub_name] = create_json_stats_for_publisher(role, clear);
+            }
+        }
+    }
+    return ret;
+}
 
 json CSLSManager::create_json_stats_for_publisher(CSLSRole *role, int clear) {
     json ret = json::object();
@@ -210,7 +228,6 @@ json CSLSManager::create_json_stats_for_publisher(CSLSRole *role, int clear) {
     ret["uptime"]           = role->get_uptime(); // in seconds
     return ret;
 }
-
 
 int CSLSManager::single_thread_handler()
 {

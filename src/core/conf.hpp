@@ -1,4 +1,3 @@
-
 /**
  * The MIT License (MIT)
  *
@@ -111,6 +110,7 @@ const char *sls_conf_set_string(const char *v, sls_conf_cmd_t *cmd, void *conf);
 const char *sls_conf_set_double(const char *v, sls_conf_cmd_t *cmd, void *conf);
 const char *sls_conf_set_bool(const char *v, sls_conf_cmd_t *cmd, void *conf);
 const char *sls_conf_set_ipset(const char *v, sls_conf_cmd_t *cmd, void *conf);
+const char *sls_conf_set_string_list(const char *v, sls_conf_cmd_t *cmd, void *conf);
 
 /**
  * runtime conf
