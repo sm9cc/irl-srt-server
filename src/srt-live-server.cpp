@@ -225,11 +225,11 @@ int main(int argc, char *argv[])
                 res.status = 404; // Not Found
             }
         } else {
-            // Publisher param missing: List all publishers, requires API key if configured
+            // Publisher param missing: List all publishers if API key is configured
             bool authorized = false;
             if (conf_srt->api_keys.empty()) {
-                // No API keys configured, allow access
-                authorized = true;
+                // No API keys configured, disallow access
+                authorized = false;
             } else {
                 // API keys configured, check Authorization header
                 if (req.has_header("Authorization")) {
