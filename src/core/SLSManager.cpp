@@ -171,8 +171,8 @@ int CSLSManager::start()
 
 json CSLSManager::generate_json_for_publisher(std::string publisherName, int clear) {
     json ret;
-    ret["status"] = "error";
-    ret["message"] = "publisher not found";
+    ret["status"] = "ok";
+    ret["publishers"] = json::object();
 
     for (int i = 0; i < m_server_count; i++) {
         CSLSMapPublisher *publisher_map = &m_map_publisher[i];
@@ -180,10 +180,7 @@ json CSLSManager::generate_json_for_publisher(std::string publisherName, int cle
 
         if (role == NULL) continue;
 
-        ret["status"] = "ok";
-        ret["publishers"] = json::object();
         ret["publishers"][publisherName] = create_json_stats_for_publisher(role, clear);
-        ret.erase("message");
         break;
     }
 
