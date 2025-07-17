@@ -68,8 +68,11 @@ static void usage()
     spdlog::info("{:-<{}}", "", BANNER_WIDTH);
     spdlog::info("{: ^{}}", "irl-srt-server", BANNER_WIDTH);
     spdlog::info("{: ^{}}", VERSION_STRING, BANNER_WIDTH);
-    spdlog::info("{: ^{}}", "Based on srt-live-server", BANNER_WIDTH);
-    spdlog::info("{: ^{}}", "Modified by IRLServer (https://github.com/irlserver/irl-srt-server)", BANNER_WIDTH);
+    spdlog::info("{: ^{}}", "Originally based on srt-live-server", BANNER_WIDTH);
+    spdlog::info("{: ^{}}", "Modified by IRLServer for IRL streaming", BANNER_WIDTH);
+    spdlog::info("{: ^{}}", "https://github.com/irlserver/irl-srt-server", BANNER_WIDTH);
+    spdlog::info("{: ^{}}", "Further modified by SM9();", BANNER_WIDTH);
+    spdlog::info("{: ^{}}", "https://github.com/sm9cc/irl-srt-server", BANNER_WIDTH);
     spdlog::info("{:-<{}}", "", BANNER_WIDTH);
 }
 
