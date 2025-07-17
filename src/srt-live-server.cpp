@@ -229,8 +229,8 @@ int main(int argc, char *argv[])
             // Publisher param missing: List all publishers if API key is configured
             bool authorized = false;
             if (conf_srt->api_keys.empty()) {
-                // No API keys configured, disallow access
-                authorized = false;
+                // No API keys configured, for backward compatibility allow access
+                authorized = true;
             } else {
                 // API keys configured, check Authorization header
                 if (req.has_header("Authorization")) {
