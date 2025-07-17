@@ -1,3 +1,7 @@
+if(NOT DEFINED SLS_CONFIG_DIR)
+    set(SLS_CONFIG_DIR "/etc/sls" CACHE PATH "Default directory for sls.conf")
+endif()
+
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/core)
 
 add_executable(srt_server ${CMAKE_CURRENT_SOURCE_DIR}/srt-live-server.cpp)
@@ -18,8 +22,6 @@ target_link_libraries(srt_client
 
 # Copy configuration file
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/sls.conf ${CMAKE_BINARY_DIR}/bin/sls.conf COPYONLY)
-
-include(GNUInstallDirs)
 
 # Install binaries
 install(TARGETS srt_server srt_client

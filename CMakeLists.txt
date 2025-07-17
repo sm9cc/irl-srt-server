@@ -30,13 +30,13 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/lib/json)
 # Use threads library
 find_package(Threads)
 
-# Use SLS Core
-add_subdirectory(${PROJECT_SOURCE_DIR}/src)
-
 # Install targets handled in src/CMakeLists.txt
 include(GNUInstallDirs)
 
 # Default config install directory
-set(SLS_CONFIG_DIR "${CMAKE_INSTALL_SYSCONFDIR}/sls" CACHE PATH "Default directory for sls.conf")
+set(SLS_CONFIG_DIR "/etc/sls" CACHE PATH "Default directory for sls.conf")
 
 message(STATUS "Config will be installed to: ${SLS_CONFIG_DIR}")
+
+# Use SLS Core
+add_subdirectory(${PROJECT_SOURCE_DIR}/src)
