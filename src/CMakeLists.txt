@@ -18,3 +18,15 @@ target_link_libraries(srt_client
 
 # Copy configuration file
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/sls.conf ${CMAKE_BINARY_DIR}/bin/sls.conf COPYONLY)
+
+include(GNUInstallDirs)
+
+# Install binaries
+install(TARGETS srt_server srt_client
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+# Install configuration file (only if not already present on the system)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/sls.conf
+        DESTINATION ${SLS_CONFIG_DIR}
+)
